@@ -1,7 +1,12 @@
 const mongoose = require('mongoose');
 
 const billSchema = new mongoose.Schema({
-  name: {
+    householdId: {
+    type: String,
+    required: true
+  },
+  
+    name: {
     type: String,
     required: true
   },
@@ -25,6 +30,7 @@ const billSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+
 });
 
 module.exports = mongoose.model('Bill', billSchema);
