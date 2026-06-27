@@ -9,6 +9,7 @@ const billRoutes = require('./routes/billRoutes');
 const debtRoutes = require('./routes/debtRoutes');
 const billShareRoutes = require('./routes/billShareRoutes');
 const debtTransactionRoutes = require('./routes/debtTransactionRoutes');
+const debtPaymentRoutes = require('./routes/debtPaymentRoutes'); 
 
 //connect to database 
 connectDB();
@@ -26,6 +27,7 @@ app.use('/api/bills', billRoutes);
 app.use('/api/debts', debtRoutes);
 app.use('/api/bill-shares', billShareRoutes);
 app.use('/api/debt-transactions', debtTransactionRoutes);
+app.use('/api/debt-payments', debtPaymentRoutes);
 
 //test route 
 app.get('/', (req, res) => {
