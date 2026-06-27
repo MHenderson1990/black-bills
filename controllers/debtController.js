@@ -98,4 +98,30 @@ const deleteDebt = async (req, res) => {
   }
 };
 
-module.exports = { createDebt, getAllDebts, getDebtById, updateDebt, deleteDebt };
+  //BALANCE CALCULATION
+  const getDebtBalance = async (req, res) => {
+  try {
+    // 1. find the debt by id
+    const debt = await Debt.findById(req.params.id);
+        if (!debt) return res.status(404).json({message: 'Debt not found'});
+
+    const debtTransactions = await DebtTransaction.find({ debt: req.params.id });
+      let transactionTotal = debtTransactions.reduce((total, t) => {
+              return total + t.amount;
+            }, 0);
+
+     const debtPayment = await DebtPayment.find({ debt: req.params.id });
+      let paymentTotal = debtPayment.reduce((total, p) => {
+            return total + p.amount;
+          }, 0);
+
+      let balance = debt.startingBalance + transactionTotal - paymentTotal;
+          res.json({balance});
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+
+};
+
+module.exports = { createDebt, getAllDebts, getDebtById, updateDebt, deleteDebt, getDebtBalance };
