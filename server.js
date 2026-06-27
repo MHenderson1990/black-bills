@@ -6,6 +6,7 @@ const cors = require('cors');
 const connectDB = require('./config/db'); 
 const authRoutes = require('./routes/authRoutes');
 const billRoutes = require('./routes/billRoutes'); 
+const debtRoutes = require('./routes/debtRoutes');
 
 //connect to database 
 connectDB();
@@ -20,6 +21,7 @@ app.use(express.json());
 //routes
 app.use('/api/auth', authRoutes);
 app.use('/api/bills', billRoutes); 
+app.use('/api/debts', debtRoutes);
 
 //test route 
 app.get('/', (req, res) => {
