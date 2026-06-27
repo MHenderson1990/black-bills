@@ -2,6 +2,7 @@ const Bill = require('../models/Bill');
 const BillShare = require('../models/BillShare');
 const User = require('../models/User');
 
+// CREATE BILL
 const createBill = async (req, res) => {
   try {
     let { name, amount, dueDate, category, isShared, householdId } = req.body;
@@ -34,15 +35,26 @@ const createBill = async (req, res) => {
   }
 };
 
+// GET ALL BILLS 
 const getAllBills = async (req, res) => {
   try {
-    const bills = await Bill.find({ householdId: req.query.householdId });
+    let filter = { householdId: req.query.householdId };
+    // ^ same object as before, just given a name now
+
+    if (req.query.category) {
+      filter.category = req.query.category;
+      // ^ ONLY runs if category was actually provided in the URL
+    }
+
+    const bills = await Bill.find(filter);
+    // ^ uses the filter object, whatever it ended up containing
     res.json(bills);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
+//GET BILLS BY ID
 const getBillById = async (req, res) => {
   try {
     const bill = await Bill.findById(req.params.id);
@@ -53,6 +65,8 @@ const getBillById = async (req, res) => {
   }
 };
 
+
+// UPDATE BILL
 const updateBill = async (req, res) => {
   try {
     let bill = await Bill.findByIdAndUpdate(
@@ -80,6 +94,7 @@ const updateBill = async (req, res) => {
   }
 };
 
+//DELETE BILL 
 const deleteBill = async (req, res) => {
   try {
     let bill = await Bill.findByIdAndDelete(req.params.id);
