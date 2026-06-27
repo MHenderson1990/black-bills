@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const savingsGoalSchema = new mongoose.Schema({
+  householdId: {
+    type: String,
+    required: true
+  },
+  
   name: {
     type: String,
     required: true
