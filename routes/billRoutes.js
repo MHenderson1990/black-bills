@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { createBill, getAllBills, getBillById, updateBill, deleteBill } = require('../controllers/billController');
+const { protect } = require('../middlewares/authMiddleware');
 
 // 5 routes go here
-router.post('/',createBill);
-router.get('/',getAllBills);
-router.get('/:id',getBillById);
-router.put('/:id',updateBill);
-router.delete('/:id',deleteBill);
+router.post('/',protect, createBill);
+router.get('/',protect, getAllBills);
+router.get('/:id',protect, getBillById);
+router.put('/:id',protect, updateBill);
+router.delete('/:id',protect, deleteBill);
 
 module.exports = router; 

@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const jwt = require('jsonwebtoken');
 
 const registerUser = async (req, res) => {
     console.log('Register route hit');
@@ -41,12 +42,18 @@ const loginUser = async (req, res) => {
         if (!user || !(await user.matchPassword(password))) {
             return res.status(401).json({message: 'Invalid email or password'});
         }
+        let token = jwt.sign(
+            { id: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: '30d' }
+        );
 
         res.json({
             _id: user._id,
             name: user.name,
             email: user.email,
-            householdId: user.householdId
+            householdId: user.householdId,
+            token 
         });
     } catch (error) {
         console.log('Error:', error.message);
