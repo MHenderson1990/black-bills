@@ -1,4 +1,6 @@
 const Paycheck = require('../models/Paycheck');
+const Bill = require('../models/Bill');
+const BillShare = require('../models/BillShare'); 
 
 // CREATE PAYCHECK
 const createPaycheck = async (req, res) => {
@@ -74,4 +76,36 @@ const deletePaycheck = async (req, res) => {
   }
 };
 
-module.exports = { createPaycheck, getAllPaychecks, getPaycheckById, updatePaycheck, deletePaycheck };
+
+//LEFTOVER AMOUNT
+const calculatePaycheckLeftover = async (req, res) => {
+  try {
+    const paycheck = await Paycheck.findById(req.params.id);
+    if (!paycheck) return res.status(404).json({ message: 'Paycheck not found' });
+
+    // step 2: find unpaid BillShares for paycheck.earnedBy
+    let unpaidBillShares = await BillShare.find({ owner: paycheck.earnedBy, paid: false });
+    
+    //total of unpaid billshares 
+    let billShareTotal = unpaidBillShares.reduce((total, share) => {
+      return total + share.amount;
+  }, 0);
+
+    // find unpaid personal bills 
+    let unpaidPersonalBills = await Bill.find({ owner: paycheck.earnedBy, isShared: false, paid: false });
+
+    //find sum of unpaid personal bills
+    let personalBillsTotal = unpaidPersonalBills.reduce((total, personal) => {
+      return total + personal.amount;
+    }, 0); 
+
+    //find sum of billshare and personal
+    let leftoverAmount = paycheck.amount - (billShareTotal + personalBillsTotal);
+    let updatedPaycheck = await Paycheck.findByIdAndUpdate(req.params.id, { leftoverAmount }, { new: true });
+      res.json(updatedPaycheck);
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+module.exports = { createPaycheck, getAllPaychecks, getPaycheckById, updatePaycheck, deletePaycheck, calculatePaycheckLeftover };

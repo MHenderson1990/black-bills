@@ -5,7 +5,7 @@ const User = require('../models/User');
 // CREATE BILL
 const createBill = async (req, res) => {
   try {
-    let { name, amount, dueDate, category, isShared, householdId } = req.body;
+    let { name, amount, dueDate, category, isShared, owner, householdId } = req.body;
 
     const bill = await Bill.create({
       householdId,
@@ -13,7 +13,8 @@ const createBill = async (req, res) => {
       amount,
       dueDate,
       category,
-      isShared
+      isShared,
+      owner,
     });
 
     if (isShared) {
