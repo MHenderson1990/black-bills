@@ -1,4 +1,6 @@
 const SavingsGoal = require('../models/SavingsGoal');
+const Contribution = require('../models/Contribution');
+
 
 // CREATE SAVINGS GOAL
 const createSavingsGoal = async (req, res) => {
@@ -86,4 +88,24 @@ const deleteSavingsGoal = async (req, res) => {
   }
 };
 
-module.exports = { createSavingsGoal, getAllSavingsGoals, getSavingsGoalById, updateSavingsGoal, deleteSavingsGoal };
+  //CONTRIBUTION CALCULATION
+  const getSavingsGoalAmount = async (req,res) => {
+  try {
+    const savingsGoal = await SavingsGoal.findById(req.params.id);
+    if (!savingsGoal) return res.status(404).json({ message: 'Savings goal not found' });
+
+    const contribution = await Contribution.find({savingsGoal: req.params.id});
+
+    let contributionTotal = contribution.reduce((total, c) => {
+      return total + c.amount;
+    }, 0);
+
+    let currentAmount = savingsGoal.startingBalance + contributionTotal;
+    res.json({ currentAmount });
+  
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+    }
+  };
+
+module.exports = { createSavingsGoal, getAllSavingsGoals, getSavingsGoalById, updateSavingsGoal, deleteSavingsGoal, getSavingsGoalAmount };
