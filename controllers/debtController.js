@@ -124,4 +124,84 @@ const deleteDebt = async (req, res) => {
 
 };
 
-module.exports = { createDebt, getAllDebts, getDebtById, updateDebt, deleteDebt, getDebtBalance };
+
+//GET AVERAGE PAYMENT 
+const getAveragePayment = async (req, res) => {
+  try {
+    // get debt by ID 
+     const debt = await Debt.findById(req.params.id);
+        if (!debt) return res.status(404).json({message: 'Debt not found'});
+
+    let recentPayments = await DebtPayment.find({ debt: req.params.id })
+      .sort({ date: -1 })
+      .limit(3);
+
+      if (recentPayments.length === 0) {
+      return res.json({ averagePayment: 0 });
+    }
+
+      let paymentTotal = recentPayments.reduce((total, p) => {
+      return total + p.amount;}, 0);
+        let average = paymentTotal / recentPayments.length;
+
+        res.json({ averagePayment:average});
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+//GET PAYOFF CALCULATION 
+const getDebtPayoffProjection = async (req, res) => {
+  try {
+    const debt = await Debt.findById(req.params.id);
+    if (!debt) return res.status(404).json({ message: 'Debt not found' });
+
+    // you need the CURRENT BALANCE here — same logic as
+    // getDebtBalance (find transactions, find payments, combine)
+    const debtTransactions = await DebtTransaction.find({ debt: req.params.id });
+      let transactionTotal = debtTransactions.reduce((total, t) => {
+              return total + t.amount;
+            }, 0);
+
+     const debtPayment = await DebtPayment.find({ debt: req.params.id });
+      let paymentTotal = debtPayment.reduce((total, p) => {
+            return total + p.amount;
+          }, 0);
+
+      let balance = debt.startingBalance + transactionTotal - paymentTotal;
+
+    // you need the AVERAGE PAYMENT here — same logic as
+    // getAveragePayment (find recent payments, sum, divide)
+    let recentPayments = await DebtPayment.find({ debt: req.params.id })
+      .sort({ date: -1 })
+      .limit(3);
+
+      if (recentPayments.length === 0) {
+        return res.json({ monthsToPayoff: null, message: 'Not enough payment history yet' });
+}
+
+    let recentTotal = recentPayments.reduce((total, p) => {
+      return total + p.amount;
+  }, 0);
+
+    let averagePayment = recentTotal / recentPayments.length;
+
+    // then run the while loop using both of those numbers
+    let monthsToPayoff = 0;
+    let runningBalance = balance;
+    let monthlyRate = (debt.interestRate / 100) / 12;
+
+  while (runningBalance > 0 && monthsToPayoff < 1200) {
+    runningBalance = runningBalance + (runningBalance * monthlyRate);
+    runningBalance = runningBalance - averagePayment;
+    monthsToPayoff = monthsToPayoff + 1;
+}
+    // respond with monthsToPayoff
+    res.json({ monthsToPayoff });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+module.exports = { createDebt, getAllDebts, getDebtById, updateDebt, deleteDebt, getDebtBalance, getAveragePayment, getDebtPayoffProjection };

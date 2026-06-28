@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createDebt, getAllDebts, getDebtById, updateDebt, deleteDebt, getDebtBalance } = require('../controllers/debtController');
+const { createDebt, getAllDebts, getDebtById, updateDebt, deleteDebt, getDebtBalance, getAveragePayment, getDebtPayoffProjection } = require('../controllers/debtController');
 
 // 5 routes go here
 router.post('/',createDebt);
@@ -9,5 +9,7 @@ router.get('/:id',getDebtById);
 router.put('/:id',updateDebt);
 router.delete('/:id',deleteDebt);
 router.get('/:id/balance', getDebtBalance);
+router.get('/:id/average', getAveragePayment);
+router.get('/:id/payoff', getDebtPayoffProjection);
 
 module.exports = router; 
