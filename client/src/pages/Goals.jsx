@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getAllSavingsGoals, getSavingsGoalAmount } from '../services/api';
+import { getAllSavingsGoals, getSavingsGoalAmount, deleteSavingsGoal } from '../services/api';
 
 function Goals() {
   let [goals, setGoals] = useState([]);
@@ -37,6 +37,13 @@ function Goals() {
   if (activeTab === 'mo') return !goal.isShared && goal.owner === userId;
   return false;
 });
+
+    async function handleDelete(goalId) {
+  if (window.confirm('Delete this goal? This cannot be undone.')) {
+    await deleteSavingsGoal(goalId);
+    setGoals(goals.filter(g => g._id !== goalId));
+  }
+}
 
   if (loading) return <p style={{ padding: '40px', color: '#fff', background: '#0D1117', minHeight: '100vh' }}>Loading...</p>;
 
@@ -92,23 +99,39 @@ function Goals() {
                 borderRadius: '12px',
                 padding: '20px'
               }}>
+                
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <p style={{
+                <p style={{
                     fontWeight: 'bold',
                     fontSize: '16px',
                     background: 'linear-gradient(135deg, #1DB954, #5C8A3A)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text'
-                  }}>
-                    {goal.name}
-                  </p>
-                  {goal.targetDate && (
-                    <p style={{ color: '#8B949E', fontSize: '13px' }}>
-                      Target: {new Date(goal.targetDate).toLocaleDateString()}
+                }}>
+                {goal.name}
                     </p>
-                  )}
-                </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        {goal.targetDate && (
+                        <p style={{ color: '#8B949E', fontSize: '13px' }}>
+                            Target: {new Date(goal.targetDate).toLocaleDateString()}
+                        </p>
+                        )}
+                        <button
+                        onClick={() => handleDelete(goal._id)}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#FF6B6B',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            padding: '4px'
+                        }}
+                        >
+      ✕
+    </button>
+  </div>
+</div>
 
                 <div style={{
                   background: '#0D1117',

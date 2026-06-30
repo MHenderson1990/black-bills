@@ -61,4 +61,13 @@ const loginUser = async (req, res) => {
     }
 };
 
-module.exports = { registerUser, loginUser };
+const getHouseholdMembers = async (req, res) => {
+  try {
+    let users = await User.find({ householdId: req.query.householdId }).select('-password');
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { registerUser, loginUser, getHouseholdMembers };

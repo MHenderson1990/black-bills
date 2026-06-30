@@ -23,3 +23,8 @@ export let getAllDebts = (householdId) => api.get(`/debts?householdId=${househol
 export let getDebtBalance = (debtId) => api.get(`/debts/${debtId}/balance`);
 export let getAllSavingsGoals = (householdId) => api.get(`/savings-goals?householdId=${householdId}`);
 export let getSavingsGoalAmount = (goalId) => api.get(`/savings-goals/${goalId}/amount`);
+export let deleteDebt = (debtId) => api.delete(`/debts/${debtId}`);
+export let deleteSavingsGoal = (goalId) => api.delete(`/savings-goals/${goalId}`);
+export let getDebtTransactions = (debtId) => api.get(`/debt-transactions?debt=${debtId}`);
+export let createDebtTransaction = (data) => api.post('/debt-transactions', data);
+export let getHouseholdMembers = (householdId) => api.get(`/auth/household-members?householdId=${householdId}`);
