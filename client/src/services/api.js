@@ -21,3 +21,5 @@ export let getSpendingByCategory = (owner, start, end) => api.get(`/dashboard?ow
 export let getAllBills = (householdId) => api.get(`/bills?householdId=${householdId}`);
 export let getAllDebts = (householdId) => api.get(`/debts?householdId=${householdId}`);
 export let getDebtBalance = (debtId) => api.get(`/debts/${debtId}/balance`);
+export let getAllSavingsGoals = (householdId) => api.get(`/savings-goals?householdId=${householdId}`);
+export let getSavingsGoalAmount = (goalId) => api.get(`/savings-goals/${goalId}/amount`);
