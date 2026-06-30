@@ -1,6 +1,7 @@
 const Paycheck = require('../models/Paycheck');
 const Bill = require('../models/Bill');
 const BillShare = require('../models/BillShare'); 
+const User = require('../models/User'); 
 
 // CREATE PAYCHECK
 const createPaycheck = async (req, res) => {
@@ -108,4 +109,34 @@ const calculatePaycheckLeftover = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-module.exports = { createPaycheck, getAllPaychecks, getPaycheckById, updatePaycheck, deletePaycheck, calculatePaycheckLeftover };
+
+const getNextPayDate = async (req, res) => {
+  try {
+    // 1. find the user
+    const user = await User.findById(req.params.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+
+    // 2. if no payAnchorDate set, return a helpful message
+    if (!user.payAnchorDate) {
+      return res.json({message: 'No Pay schedule set yet'});
+    };
+
+    // 3. run the while loop
+    let fourteenDaysInMs = 14 * 24 * 60 * 60 * 1000;
+    let nextPayDate = new Date(user.payAnchorDate);
+
+    while (nextPayDate < new Date()) {
+    nextPayDate = new Date(nextPayDate.getTime() + fourteenDaysInMs);
+  };
+
+    // 4. respond with nextPayDate
+    res.json({nextPayDate});
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+module.exports = { createPaycheck, getAllPaychecks, getPaycheckById, updatePaycheck, deletePaycheck, calculatePaycheckLeftover, getNextPayDate };

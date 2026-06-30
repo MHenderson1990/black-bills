@@ -19,6 +19,10 @@ const userSchema = new mongoose.Schema({
   householdId: {
     type: String,
     required: true
+  },
+
+  payAnchorDate: {
+    type: Date,
   }
 });
 

@@ -22,6 +22,18 @@ const billShareSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+
+  paymentMethod: {
+  type: {
+    type: String
+  },
+  accountName: {
+    type: String
+  },
+  last4: {
+    type: String
+  }
+}
 });
 
 module.exports = mongoose.model('BillShare', billShareSchema);

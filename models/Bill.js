@@ -36,6 +36,17 @@ const billSchema = new mongoose.Schema({
     default: false
   },
 
+  paymentMethod: {
+  type: {
+    type: String
+  },
+  accountName: {
+    type: String
+  },
+  last4: {
+    type: String
+  }
+}
 });
 
 module.exports = mongoose.model('Bill', billSchema);

@@ -24,6 +24,10 @@ const debtTransactionSchema = new mongoose.Schema({
    required: true,
   },
 
+  category: {
+    type: String,
+    default: 'Misc.'
+  },
 });
 
 module.exports = mongoose.model('DebtTransaction', debtTransactionSchema);

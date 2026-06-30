@@ -3,14 +3,15 @@ const DebtTransaction = require('../models/DebtTransaction');
 //CREATE 
 const createDebtTransaction = async (req,res) => {
     try { 
-        let { debt, item, madeBy, date, amount } = req.body;
+        let { debt, item, madeBy, date, amount, category } = req.body;
 
         const debtTransaction = await DebtTransaction.create({
             debt, 
             item,
             madeBy,
             date, 
-            amount
+            amount,
+            category
 
         });
 
