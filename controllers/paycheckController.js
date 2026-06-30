@@ -110,6 +110,7 @@ const calculatePaycheckLeftover = async (req, res) => {
   }
 };
 
+// GET NEXT PAY DATE 
 const getNextPayDate = async (req, res) => {
   try {
     // 1. find the user
@@ -139,4 +140,38 @@ const getNextPayDate = async (req, res) => {
 };
 
 
-module.exports = { createPaycheck, getAllPaychecks, getPaycheckById, updatePaycheck, deletePaycheck, calculatePaycheckLeftover, getNextPayDate };
+// GET RECENT PAY DATE 
+const getRecentPayDate = async (req, res) => {
+  try {
+    // 1. find the user
+    const user = await User.findById(req.params.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+
+    // 2. if no payAnchorDate set, return a helpful message
+    if (!user.payAnchorDate) {
+      return res.json({message: 'No Pay schedule set yet'});
+    };
+
+    // 3. run the while loop
+    let recentPayDate = new Date(user.payAnchorDate);
+    let nextPayDate = new Date(user.payAnchorDate);
+    let fourteenDaysInMs = 14 * 24 * 60 * 60 * 1000; 
+    let oneDayInMs = 24 * 60 * 60 * 1000; 
+
+    while (nextPayDate < new Date()) {
+      recentPayDate = new Date(nextPayDate); // save the OLD value first
+      nextPayDate = new Date(nextPayDate.getTime() + fourteenDaysInMs); // THEN jump forward
+      
+}
+
+    let periodEnd = new Date(nextPayDate.getTime() - oneDayInMs);
+
+    // 4. respond with recentPayDate
+    res.json({recentPayDate, periodEnd});
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+module.exports = { createPaycheck, getAllPaychecks, getPaycheckById, updatePaycheck, deletePaycheck, calculatePaycheckLeftover, getNextPayDate, getRecentPayDate };
