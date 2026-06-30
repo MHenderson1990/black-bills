@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getAllDebts, getDebtBalance, deleteDebt, getDebtTransactions, createDebtTransaction, getHouseholdMembers } from '../services/api';
-import { CATEGORIES } from '../constants';
-
-let CATEGORIES = ['Misc.', 'Housing', 'Food', 'Utilities', 'Subscriptions', 'Shopping', 'Entertainment', 'Travel'];
+import { CATEGORIES, MONTHS, YEARS } from '../constants';
 
 function DebtPage() {
   let [debts, setDebts] = useState([]);
@@ -10,6 +8,9 @@ function DebtPage() {
   let [loading, setLoading] = useState(true);
   let [expandedId, setExpandedId] = useState(null);
   let [transactions, setTransactions] = useState([]);
+  let now = new Date();
+  let [selectedYear, setSelectedYear] = useState(String(now.getFullYear()));
+  let [selectedMonthNum, setSelectedMonthNum] = useState(String(now.getMonth() + 1).padStart(2, '0'));
   let [newItem, setNewItem] = useState('');
   let [newAmount, setNewAmount] = useState('');
   let [newCategory, setNewCategory] = useState('Misc.');
@@ -124,6 +125,7 @@ function DebtPage() {
             let percentPaid = Math.max(0, Math.min(100, (paidSoFar / debt.startingBalance) * 100));
             let accent = getDebtAccent(debt);
             let isExpanded = expandedId === debt._id;
+            let filteredTransactions = transactions.filter(t => t.date.slice(0, 7) === `${selectedYear}-${selectedMonthNum}`);
 
             return (
               <div key={debt._id} style={{
@@ -190,11 +192,28 @@ function DebtPage() {
 
                 {isExpanded && (
                   <div style={{ marginTop: '14px', borderTop: '1px solid #30363D', paddingTop: '14px' }}>
-                    {transactions.length === 0 ? (
-                      <p style={{ color: '#8B949E', fontSize: '13px', marginBottom: '12px' }}>No transactions yet</p>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                      <select
+                        value={selectedMonthNum}
+                        onChange={e => setSelectedMonthNum(e.target.value)}
+                        style={{ ...inputStyle, flex: 1 }}
+                      >
+                        {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                      </select>
+                      <select
+                        value={selectedYear}
+                        onChange={e => setSelectedYear(e.target.value)}
+                        style={{ ...inputStyle, flex: 1 }}
+                      >
+                        {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                      </select>
+                    </div>
+
+                    {filteredTransactions.length === 0 ? (
+                      <p style={{ color: '#8B949E', fontSize: '13px', marginBottom: '12px' }}>No transactions this month</p>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
-                        {transactions.map(t => (
+                        {filteredTransactions.map(t => (
                           <div key={t._id} style={{
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                             padding: '8px 12px', background: '#0D1117', borderRadius: '6px', fontSize: '12px'
