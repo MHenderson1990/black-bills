@@ -73,4 +73,17 @@ const getHouseholdMembers = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, loginUser, getHouseholdMembers };
+const updatePayAnchorDate = async (req, res) => {
+  try {
+    let user = await User.findByIdAndUpdate(
+      req.user.id,
+      { payAnchorDate: req.body.payAnchorDate },
+      { new: true }
+    ).select('-password');
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { registerUser, loginUser, getHouseholdMembers, updatePayAnchorDate };
