@@ -1,13 +1,21 @@
 import { useState, useEffect } from 'react';
-import { getAllDebts, getDebtBalance, deleteDebt, getDebtTransactions, createDebtTransaction, getHouseholdMembers, createDebt } from '../services/api';
+import { getAllDebts, getDebtBalance, deleteDebt, getDebtTransactions, createDebtTransaction, getHouseholdMembers, createDebt, getDebtPayoff, createDebtPayment, getDebtPayments } from '../services/api';
 import { CATEGORIES, MONTHS, YEARS, formatDate } from '../constants';
+
+function payoffDateLabel(months) {
+  let d = new Date();
+  d.setMonth(d.getMonth() + months);
+  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
 
 function DebtPage() {
   let [debts, setDebts] = useState([]);
   let [members, setMembers] = useState([]);
   let [loading, setLoading] = useState(true);
   let [expandedId, setExpandedId] = useState(null);
+  let [expandedView, setExpandedView] = useState('transactions');
   let [transactions, setTransactions] = useState([]);
+  let [payments, setPayments] = useState([]);
   let now = new Date();
   let [selectedYear, setSelectedYear] = useState(String(now.getFullYear()));
   let [selectedMonthNum, setSelectedMonthNum] = useState(String(now.getMonth() + 1).padStart(2, '0'));
@@ -16,6 +24,9 @@ function DebtPage() {
   let [newCategory, setNewCategory] = useState('Misc.');
   let [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0]);
   let [newMadeBy, setNewMadeBy] = useState('');
+  let [newPaymentAmount, setNewPaymentAmount] = useState('');
+  let [newPaymentDate, setNewPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  let [newPaymentMadeBy, setNewPaymentMadeBy] = useState('');
   let [showAddDebt, setShowAddDebt] = useState(false);
   let [newDebtName, setNewDebtName] = useState('');
   let [newStartingBalance, setNewStartingBalance] = useState('');
@@ -34,13 +45,18 @@ function DebtPage() {
   async function fetchDebts() {
     try {
       let debtsRes = await getAllDebts(householdId);
-      let debtsWithBalance = await Promise.all(
+      let debtsWithData = await Promise.all(
         debtsRes.data.map(async (debt) => {
           let balanceRes = await getDebtBalance(debt._id);
-          return { ...debt, currentBalance: balanceRes.data.balance };
+          let payoffRes = await getDebtPayoff(debt._id);
+          return {
+            ...debt,
+            currentBalance: balanceRes.data.balance,
+            payoff: payoffRes.data
+          };
         })
       );
-      setDebts(debtsWithBalance);
+      setDebts(debtsWithData);
     } catch (error) {
       console.error(error);
     } finally {
@@ -52,8 +68,10 @@ function DebtPage() {
     let res = await getHouseholdMembers(householdId);
     setMembers(res.data);
     if (res.data.length > 0) {
-      setNewMadeBy(res.data.find(m => m._id === userId)?._id || res.data[0]._id);
-      setNewOwner(res.data.find(m => m._id === userId)?._id || res.data[0]._id);
+      let me = res.data.find(m => m._id === userId)?._id || res.data[0]._id;
+      setNewMadeBy(me);
+      setNewPaymentMadeBy(me);
+      setNewOwner(me);
     }
   }
 
@@ -70,8 +88,13 @@ function DebtPage() {
       return;
     }
     setExpandedId(debtId);
-    let res = await getDebtTransactions(debtId);
-    setTransactions(res.data);
+    setExpandedView('transactions');
+    let [tRes, pRes] = await Promise.all([
+      getDebtTransactions(debtId),
+      getDebtPayments(debtId)
+    ]);
+    setTransactions(tRes.data);
+    setPayments(pRes.data);
   }
 
   async function handleAddTransaction(debtId) {
@@ -91,6 +114,26 @@ function DebtPage() {
     let res = await getDebtTransactions(debtId);
     setTransactions(res.data);
     fetchDebts();
+  }
+
+  async function handleAddPayment(debtId) {
+    if (!newPaymentAmount || !newPaymentMadeBy) return;
+    try {
+      await createDebtPayment({
+        debt: debtId,
+        madeBy: newPaymentMadeBy,
+        date: newPaymentDate,
+        amount: Number(newPaymentAmount)
+      });
+      setNewPaymentAmount('');
+      setNewPaymentDate(new Date().toISOString().split('T')[0]);
+      let res = await getDebtPayments(debtId);
+      setPayments(res.data);
+      fetchDebts();
+    } catch (error) {
+      console.error(error);
+      alert('Failed to save payment');
+    }
   }
 
   async function handleAddDebt() {
@@ -116,6 +159,47 @@ function DebtPage() {
     if (debt.isShared) return 'linear-gradient(135deg, #B8334D, #8B1E3F)';
     if (debt.owner === userId) return 'linear-gradient(135deg, #4DA3FF, #0080FF)';
     return 'linear-gradient(135deg, #FF8FC7, #FF4DA6)';
+  }
+
+  function renderPayoff(debt) {
+    let p = debt.payoff;
+    if (!p) return null;
+
+    if (p.monthsToPayoff === null || p.monthsToPayoff === undefined) {
+      let msg = p.message === 'Payment too low to outpace interest'
+        ? '⚠️ Recent payments are too low to outpace interest — balance will grow'
+        : 'Add payments to see a payoff projection';
+      return (
+        <p style={{ color: '#8B949E', fontSize: '12px', margin: '0 0 12px 0' }}>{msg}</p>
+      );
+    }
+
+    let years = Math.floor(p.monthsToPayoff / 12);
+    let months = p.monthsToPayoff % 12;
+    let lengthLabel = years > 0
+      ? `${years} yr${years > 1 ? 's' : ''}${months > 0 ? ` ${months} mo` : ''}`
+      : `${months} mo`;
+
+    return (
+      <div style={{
+        background: '#0D1117',
+        borderRadius: '8px',
+        padding: '10px 14px',
+        marginBottom: '12px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '8px',
+        fontSize: '12px'
+      }}>
+        <span style={{ color: '#8B949E' }}>
+          Paid off <span style={{ color: '#E8F5E9', fontWeight: 'bold' }}>{payoffDateLabel(p.monthsToPayoff)}</span> ({lengthLabel})
+        </span>
+        <span style={{ color: '#8B949E' }}>
+          Avg payment <span style={{ color: '#E8F5E9', fontWeight: 'bold' }}>${p.averagePayment?.toFixed(2)}</span>/mo
+        </span>
+      </div>
+    );
   }
 
   let inputStyle = {
@@ -240,6 +324,7 @@ function DebtPage() {
             let accent = getDebtAccent(debt);
             let isExpanded = expandedId === debt._id;
             let filteredTransactions = transactions.filter(t => t.date.slice(0, 7) === `${selectedYear}-${selectedMonthNum}`);
+            let filteredPayments = payments.filter(p => p.date.slice(0, 7) === `${selectedYear}-${selectedMonthNum}`);
 
             return (
               <div key={debt._id} style={{
@@ -277,10 +362,12 @@ function DebtPage() {
                   {percentPaid.toFixed(0)}% paid off
                 </p>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '12px', flexWrap: 'wrap', gap: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '10px', flexWrap: 'wrap', gap: '4px' }}>
                   <span style={{ color: '#cfcfcf' }}>${paidSoFar.toFixed(2)} paid of ${debt.startingBalance.toFixed(2)}</span>
                   <span style={{ color: '#cfcfcf' }}>${debt.currentBalance.toFixed(2)} remaining</span>
                 </div>
+
+                {renderPayoff(debt)}
 
                 <button
                   onClick={() => toggleExpand(debt._id)}
@@ -290,11 +377,36 @@ function DebtPage() {
                     color: '#8B949E', fontSize: '13px', cursor: 'pointer'
                   }}
                 >
-                  {isExpanded ? '▲ Hide Transactions' : '▼ View Transactions'}
+                  {isExpanded ? '▲ Hide Activity' : '▼ View Activity'}
                 </button>
 
                 {isExpanded && (
                   <div style={{ marginTop: '14px', borderTop: '1px solid #30363D', paddingTop: '14px' }}>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                      <button
+                        onClick={() => setExpandedView('transactions')}
+                        style={{
+                          flex: 1, padding: '8px', borderRadius: '8px', border: 'none',
+                          fontWeight: 'bold', fontSize: '12px', cursor: 'pointer',
+                          background: expandedView === 'transactions' ? accent : '#0D1117',
+                          color: expandedView === 'transactions' ? 'white' : '#8B949E'
+                        }}
+                      >
+                        Charges
+                      </button>
+                      <button
+                        onClick={() => setExpandedView('payments')}
+                        style={{
+                          flex: 1, padding: '8px', borderRadius: '8px', border: 'none',
+                          fontWeight: 'bold', fontSize: '12px', cursor: 'pointer',
+                          background: expandedView === 'payments' ? 'linear-gradient(135deg, #1DB954, #107C41)' : '#0D1117',
+                          color: expandedView === 'payments' ? 'white' : '#8B949E'
+                        }}
+                      >
+                        Payments
+                      </button>
+                    </div>
+
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
                       <select
                         value={selectedMonthNum}
@@ -312,72 +424,134 @@ function DebtPage() {
                       </select>
                     </div>
 
-                    {filteredTransactions.length === 0 ? (
-                      <p style={{ color: '#8B949E', fontSize: '13px', marginBottom: '12px' }}>No transactions this month</p>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
-                        {filteredTransactions.map(t => (
-                          <div key={t._id} style={{
-                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                            padding: '8px 12px', background: '#0D1117', borderRadius: '6px', fontSize: '12px', gap: '8px', flexWrap: 'wrap'
-                          }}>
-                            <span style={{ color: '#E8F5E9', flex: 1, minWidth: '80px' }}>{t.item}</span>
-                            <span style={{ color: '#8B949E', flex: 1, textAlign: 'center' }}>{t.category}</span>
-                            <span style={{ color: '#cfcfcf', flex: 1, textAlign: 'center' }}>{formatDate(t.date)}</span>
-                            <span style={{ fontWeight: 'bold', color: '#E8F5E9' }}>${t.amount}</span>
+                    {expandedView === 'transactions' && (
+                      <>
+                        {filteredTransactions.length === 0 ? (
+                          <p style={{ color: '#8B949E', fontSize: '13px', marginBottom: '12px' }}>No charges this month</p>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+                            {filteredTransactions.map(t => (
+                              <div key={t._id} style={{
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                padding: '8px 12px', background: '#0D1117', borderRadius: '6px', fontSize: '12px', gap: '8px', flexWrap: 'wrap'
+                              }}>
+                                <span style={{ color: '#E8F5E9', flex: 1, minWidth: '80px' }}>{t.item}</span>
+                                <span style={{ color: '#8B949E', flex: 1, textAlign: 'center' }}>{t.category}</span>
+                                <span style={{ color: '#cfcfcf', flex: 1, textAlign: 'center' }}>{formatDate(t.date)}</span>
+                                <span style={{ fontWeight: 'bold', color: '#E8F5E9' }}>${t.amount}</span>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
+                        )}
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            <input
+                              placeholder="Item"
+                              value={newItem}
+                              onChange={e => setNewItem(e.target.value)}
+                              style={{ ...inputStyle, flex: '2 1 140px' }}
+                            />
+                            <input
+                              placeholder="Amount"
+                              type="number"
+                              value={newAmount}
+                              onChange={e => setNewAmount(e.target.value)}
+                              style={{ ...inputStyle, flex: '1 1 90px' }}
+                            />
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            <select
+                              value={newCategory}
+                              onChange={e => setNewCategory(e.target.value)}
+                              style={{ ...inputStyle, flex: '1 1 100px' }}
+                            >
+                              {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                            </select>
+                            <input
+                              type="date"
+                              value={newDate}
+                              onChange={e => setNewDate(e.target.value)}
+                              style={{ ...inputStyle, flex: '1 1 120px', colorScheme: 'dark' }}
+                            />
+                            <select
+                              value={newMadeBy}
+                              onChange={e => setNewMadeBy(e.target.value)}
+                              style={{ ...inputStyle, flex: '1 1 100px' }}
+                            >
+                              {members.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
+                            </select>
+                          </div>
+                          <button
+                            onClick={() => handleAddTransaction(debt._id)}
+                            style={{
+                              padding: '10px', borderRadius: '6px', border: 'none',
+                              background: accent, color: 'white', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'
+                            }}
+                          >
+                            Add Charge
+                          </button>
+                        </div>
+                      </>
                     )}
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        <input
-                          placeholder="Item"
-                          value={newItem}
-                          onChange={e => setNewItem(e.target.value)}
-                          style={{ ...inputStyle, flex: '2 1 140px' }}
-                        />
-                        <input
-                          placeholder="Amount"
-                          type="number"
-                          value={newAmount}
-                          onChange={e => setNewAmount(e.target.value)}
-                          style={{ ...inputStyle, flex: '1 1 90px' }}
-                        />
-                      </div>
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        <select
-                          value={newCategory}
-                          onChange={e => setNewCategory(e.target.value)}
-                          style={{ ...inputStyle, flex: '1 1 100px' }}
-                        >
-                          {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                        </select>
-                        <input
-                          type="date"
-                          value={newDate}
-                          onChange={e => setNewDate(e.target.value)}
-                          style={{ ...inputStyle, flex: '1 1 120px', colorScheme: 'dark' }}
-                        />
-                        <select
-                          value={newMadeBy}
-                          onChange={e => setNewMadeBy(e.target.value)}
-                          style={{ ...inputStyle, flex: '1 1 100px' }}
-                        >
-                          {members.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
-                        </select>
-                      </div>
-                      <button
-                        onClick={() => handleAddTransaction(debt._id)}
-                        style={{
-                          padding: '10px', borderRadius: '6px', border: 'none',
-                          background: accent, color: 'white', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'
-                        }}
-                      >
-                        Add Transaction
-                      </button>
-                    </div>
+                    {expandedView === 'payments' && (
+                      <>
+                        {filteredPayments.length === 0 ? (
+                          <p style={{ color: '#8B949E', fontSize: '13px', marginBottom: '12px' }}>No payments this month</p>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+                            {filteredPayments.map(p => (
+                              <div key={p._id} style={{
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                padding: '8px 12px', background: '#0D1117', borderRadius: '6px', fontSize: '12px', gap: '8px'
+                              }}>
+                                <span style={{ color: '#E8F5E9', flex: 1 }}>
+                                  {members.find(m => m._id === p.madeBy)?.name || 'Payment'}
+                                </span>
+                                <span style={{ color: '#cfcfcf', flex: 1, textAlign: 'center' }}>{formatDate(p.date)}</span>
+                                <span style={{ fontWeight: 'bold', color: '#1DB954' }}>-${p.amount}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            <input
+                              placeholder="Payment amount"
+                              type="number"
+                              value={newPaymentAmount}
+                              onChange={e => setNewPaymentAmount(e.target.value)}
+                              style={{ ...inputStyle, flex: '1 1 110px' }}
+                            />
+                            <input
+                              type="date"
+                              value={newPaymentDate}
+                              onChange={e => setNewPaymentDate(e.target.value)}
+                              style={{ ...inputStyle, flex: '1 1 120px', colorScheme: 'dark' }}
+                            />
+                            <select
+                              value={newPaymentMadeBy}
+                              onChange={e => setNewPaymentMadeBy(e.target.value)}
+                              style={{ ...inputStyle, flex: '1 1 100px' }}
+                            >
+                              {members.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
+                            </select>
+                          </div>
+                          <button
+                            onClick={() => handleAddPayment(debt._id)}
+                            style={{
+                              padding: '10px', borderRadius: '6px', border: 'none',
+                              background: 'linear-gradient(135deg, #1DB954, #107C41)',
+                              color: 'white', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'
+                            }}
+                          >
+                            Add Payment
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>

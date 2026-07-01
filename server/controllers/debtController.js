@@ -192,13 +192,17 @@ const getDebtPayoffProjection = async (req, res) => {
     let runningBalance = balance;
     let monthlyRate = (debt.interestRate / 100) / 12;
 
-  while (runningBalance > 0 && monthsToPayoff < 1200) {
-    runningBalance = runningBalance + (runningBalance * monthlyRate);
-    runningBalance = runningBalance - averagePayment;
-    monthsToPayoff = monthsToPayoff + 1;
-}
-    // respond with monthsToPayoff
-    res.json({ monthsToPayoff });
+    while (runningBalance > 0 && monthsToPayoff < 1200) {
+      runningBalance = runningBalance + (runningBalance * monthlyRate);
+      runningBalance = runningBalance - averagePayment;
+      monthsToPayoff = monthsToPayoff + 1;
+    }
+
+    if (runningBalance > 0) {
+      return res.json({ monthsToPayoff: null, averagePayment, message: 'Payment too low to outpace interest' });
+    }
+
+    res.json({ monthsToPayoff, averagePayment });
 
   } catch (error) {
     res.status(500).json({ message: error.message });
