@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getSharedBills, getBillShares, markBillSharePaid, getAllDebts, getDebtBalance, getPaychecks, createPaycheck, calculateLeftover, createBill } from '../services/api';
+import { getSharedBills, getBillShares, markBillSharePaid, getAllDebts, getDebtBalance, getPaychecks, createPaycheck, calculateLeftover, createBill, updatePayAnchorDate } from '../services/api';
 import { MONTHS, YEARS, CATEGORIES } from '../constants';
 
 let BLUE_ACCENTS = [
@@ -32,6 +32,9 @@ function MyPage() {
   let [showPaycheckHistory, setShowPaycheckHistory] = useState(false);
   let [showAddPaycheck, setShowAddPaycheck] = useState(false);
   let [showAddBill, setShowAddBill] = useState(false);
+  let [showPaySchedule, setShowPaySchedule] = useState(false);
+  let [payAnchorDate, setPayAnchorDate] = useState('');
+  let [payScheduleSaved, setPayScheduleSaved] = useState(false);
   let [newPaycheckAmount, setNewPaycheckAmount] = useState('');
   let [newPaycheckDate, setNewPaycheckDate] = useState(new Date().toISOString().split('T')[0]);
   let [newBillName, setNewBillName] = useState('');
@@ -138,6 +141,14 @@ function MyPage() {
     setNewBillCategory('Misc.');
     setShowAddBill(false);
     fetchAll();
+  }
+
+  async function handleUpdatePayAnchor() {
+    if (!payAnchorDate) return;
+    await updatePayAnchorDate({ payAnchorDate });
+    setPayScheduleSaved(true);
+    setShowPaySchedule(false);
+    setTimeout(() => setPayScheduleSaved(false), 3000);
   }
 
   let currentPaycheck = paychecks.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
@@ -457,6 +468,68 @@ function MyPage() {
 
       {activeTab === 'paycheck' && (
         <div>
+          <div style={{
+            background: '#161B22',
+            border: `1px solid ${borderColor}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <p style={{ color: '#8B949E', fontSize: '13px' }}>Pay Schedule</p>
+              <button
+                onClick={() => setShowPaySchedule(!showPaySchedule)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '20px',
+                  border: 'none',
+                  background: primaryGradient,
+                  color: isMo ? '#fff' : '#0D1117',
+                  fontWeight: 'bold',
+                  fontSize: '12px',
+                  cursor: 'pointer'
+                }}
+              >
+                {showPaySchedule ? '✕ Cancel' : 'Set Pay Date'}
+              </button>
+            </div>
+
+            {payScheduleSaved && (
+              <p style={{ color: '#1DB954', fontSize: '12px', marginTop: '8px' }}>✓ Pay schedule updated</p>
+            )}
+
+            {showPaySchedule && (
+              <div style={{ marginTop: '12px' }}>
+                <p style={{ color: '#8B949E', fontSize: '12px', marginBottom: '8px' }}>
+                  Enter your most recent payday — the app will calculate your next pay date from this.
+                </p>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="date"
+                    value={payAnchorDate}
+                    onChange={e => setPayAnchorDate(e.target.value)}
+                    style={{ ...inputStyle, flex: 1 }}
+                  />
+                  <button
+                    onClick={handleUpdatePayAnchor}
+                    style={{
+                      padding: '8px 14px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      background: primaryGradient,
+                      color: isMo ? '#fff' : '#0D1117',
+                      fontWeight: 'bold',
+                      fontSize: '13px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div style={{
             background: '#161B22',
             border: `1px solid ${borderColor}`,
