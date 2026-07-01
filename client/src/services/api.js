@@ -41,4 +41,4 @@ export let calculateLeftover = (paycheckId) => api.put(`/paychecks/${paycheckId}
 export let createDebt = (data) => api.post('/debts', data);
 export let createSavingsGoal = (data) => api.post('/savings-goals', data);
 export let updatePayAnchorDate = (payAnchorDate) =>
-  API.put('/auth/pay-anchor', { payAnchorDate });
+  api.put('/auth/pay-anchor', { payAnchorDate });
