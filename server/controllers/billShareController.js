@@ -3,26 +3,22 @@ const Bill = require('../models/Bill');
 
 const markBillSharePaid = async (req, res) => {
   try {
-   
     let share = await BillShare.findByIdAndUpdate(
-          req.params.id,
-          req.body,
-          { new: true }
-        );
+      req.params.id,
+      req.body,
+      { new: true }
+    );
 
     if (!share) {
-        return res.status(404).json({message: 'Share not found'})
+      return res.status(404).json({ message: 'Share not found' });
     }
 
-   let allShares = await BillShare.find({ bill: share.bill });
-   let allPaid = allShares.every(s => s.paid === true);
+    let allShares = await BillShare.find({ bill: share.bill });
+    let allPaid = allShares.every(s => s.paid === true);
 
-    if(allPaid) {
-        await Bill.findByIdAndUpdate(share.bill, {paid: true});
-    }
+    await Bill.findByIdAndUpdate(share.bill, { paid: allPaid });
 
     res.json(share);
-   
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -42,3 +42,6 @@ export let createDebt = (data) => api.post('/debts', data);
 export let createSavingsGoal = (data) => api.post('/savings-goals', data);
 export let updatePayAnchorDate = (payAnchorDate) =>
   api.put('/auth/pay-anchor', { payAnchorDate });
+export let updateBill = (billId, data) => api.put(`/bills/${billId}`, data);
+export let getPersonalBills = (householdId, owner) =>
+  api.get(`/bills?householdId=${householdId}&isShared=false&owner=${owner}`);

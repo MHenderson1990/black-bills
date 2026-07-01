@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getSharedBills, getBillShares, markBillSharePaid, createBill, deleteBill } from '../services/api';
+import { getSharedBills, getBillShares, markBillSharePaid, createBill, updateBill, deleteBill, getHouseholdMembers } from '../services/api';
 import { CATEGORIES } from '../constants';
 
 let GOLD_ACCENTS = [
@@ -11,12 +11,19 @@ let GOLD_ACCENTS = [
   'linear-gradient(135deg, #F0C040, #D4A010)',
 ];
 
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('en-US', { timeZone: 'UTC' });
+}
+
 function SharedBills() {
   let [bills, setBills] = useState([]);
   let [loading, setLoading] = useState(true);
   let [expandedId, setExpandedId] = useState(null);
   let [billShares, setBillShares] = useState([]);
+  let [members, setMembers] = useState({});
   let [showAddForm, setShowAddForm] = useState(false);
+  let [editingBillId, setEditingBillId] = useState(null);
   let [newName, setNewName] = useState('');
   let [newAmount, setNewAmount] = useState('');
   let [newDueDate, setNewDueDate] = useState('');
@@ -27,6 +34,7 @@ function SharedBills() {
 
   useEffect(function() {
     fetchBills();
+    fetchMembers();
   }, []);
 
   async function fetchBills() {
@@ -37,6 +45,19 @@ function SharedBills() {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function fetchMembers() {
+    try {
+      let res = await getHouseholdMembers(householdId);
+      let map = {};
+      for (let user of res.data) {
+        map[user._id] = user.name;
+      }
+      setMembers(map);
+    } catch (error) {
+      console.error(error);
     }
   }
 
@@ -57,22 +78,55 @@ function SharedBills() {
     fetchBills();
   }
 
-  async function handleAddBill() {
-    if (!newName || !newAmount) return;
-    await createBill({
-      name: newName,
-      amount: Number(newAmount),
-      dueDate: newDueDate || undefined,
-      category: newCategory,
-      isShared: true,
-      householdId
-    });
+  function resetForm() {
     setNewName('');
     setNewAmount('');
     setNewDueDate('');
     setNewCategory('Misc.');
     setShowAddForm(false);
-    fetchBills();
+    setEditingBillId(null);
+  }
+
+  function startEdit(bill) {
+    setEditingBillId(bill._id);
+    setNewName(bill.name);
+    setNewAmount(String(bill.amount));
+    setNewDueDate(bill.dueDate ? bill.dueDate.slice(0, 10) : '');
+    setNewCategory(bill.category || 'Misc.');
+    setShowAddForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function handleSaveBill() {
+    if (!newName || !newAmount) return;
+    try {
+      if (editingBillId) {
+        await updateBill(editingBillId, {
+          name: newName,
+          amount: Number(newAmount),
+          dueDate: newDueDate || undefined,
+          category: newCategory
+        });
+      } else {
+        await createBill({
+          name: newName,
+          amount: Number(newAmount),
+          dueDate: newDueDate || undefined,
+          category: newCategory,
+          isShared: true,
+          householdId
+        });
+      }
+      resetForm();
+      fetchBills();
+      if (expandedId) {
+        let res = await getBillShares(expandedId);
+        setBillShares(res.data);
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Failed to save bill');
+    }
   }
 
   async function handleDelete(billId) {
@@ -83,28 +137,37 @@ function SharedBills() {
   }
 
   let inputStyle = {
-    padding: '8px',
+    padding: '10px',
     borderRadius: '6px',
     border: '1px solid #30363D',
     background: '#0D1117',
     color: '#fff',
-    fontSize: '13px'
+    fontSize: '16px',
+    minWidth: 0,
+    boxSizing: 'border-box'
   };
 
   if (loading) return <p style={{ padding: '40px', color: '#fff', background: '#0D1117', minHeight: '100vh' }}>Loading...</p>;
 
   return (
-    <div style={{ background: '#0D1117', minHeight: '100vh', padding: '32px', paddingBottom: '80px' }}>
+    <div style={{ background: '#0D1117', minHeight: '100vh', padding: 'clamp(16px, 4vw, 32px)', paddingBottom: '110px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <h1 style={{
-          fontSize: '24px',
+          fontSize: 'clamp(20px, 5vw, 24px)',
+          margin: 0,
           background: 'linear-gradient(135deg, #FFD700, #E6C200)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text'
         }}>Shared Bills</h1>
         <button
-          onClick={() => setShowAddForm(!showAddForm)}
+          onClick={() => {
+            if (showAddForm) {
+              resetForm();
+            } else {
+              setShowAddForm(true);
+            }
+          }}
           style={{
             padding: '8px 16px',
             borderRadius: '20px',
@@ -113,7 +176,8 @@ function SharedBills() {
             color: '#0D1117',
             fontWeight: 'bold',
             fontSize: '13px',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            whiteSpace: 'nowrap'
           }}
         >
           {showAddForm ? '✕ Cancel' : '+ Add Bill'}
@@ -128,28 +192,30 @@ function SharedBills() {
           padding: '20px',
           marginBottom: '24px'
         }}>
-          <h2 style={{ color: '#E8F5E9', fontSize: '15px', marginBottom: '14px' }}>New Shared Bill</h2>
+          <h2 style={{ color: '#E8F5E9', fontSize: '15px', marginBottom: '14px' }}>
+            {editingBillId ? 'Edit Bill' : 'New Shared Bill'}
+          </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <input
                 placeholder="Bill name"
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
-                style={{ ...inputStyle, flex: 2 }}
+                style={{ ...inputStyle, flex: '2 1 140px' }}
               />
               <input
                 placeholder="Amount"
                 type="number"
                 value={newAmount}
                 onChange={e => setNewAmount(e.target.value)}
-                style={{ ...inputStyle, flex: 1 }}
+                style={{ ...inputStyle, flex: '1 1 90px' }}
               />
             </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <select
                 value={newCategory}
                 onChange={e => setNewCategory(e.target.value)}
-                style={{ ...inputStyle, flex: 1 }}
+                style={{ ...inputStyle, flex: '1 1 120px' }}
               >
                 {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
               </select>
@@ -157,13 +223,13 @@ function SharedBills() {
                 type="date"
                 value={newDueDate}
                 onChange={e => setNewDueDate(e.target.value)}
-                style={{ ...inputStyle, flex: 1 }}
+                style={{ ...inputStyle, flex: '1 1 120px', colorScheme: 'dark' }}
               />
             </div>
             <button
-              onClick={handleAddBill}
+              onClick={handleSaveBill}
               style={{
-                padding: '10px',
+                padding: '12px',
                 borderRadius: '8px',
                 border: 'none',
                 background: 'linear-gradient(135deg, #FFD700, #E6C200)',
@@ -173,7 +239,7 @@ function SharedBills() {
                 cursor: 'pointer'
               }}
             >
-              Save Bill
+              {editingBillId ? 'Save Changes' : 'Save Bill'}
             </button>
           </div>
         </div>
@@ -194,10 +260,15 @@ function SharedBills() {
                 borderRadius: '12px',
                 padding: '20px'
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '10px' }}>
                   <p style={{
                     fontWeight: 'bold',
                     fontSize: '16px',
+                    margin: 0,
+                    minWidth: 0,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
                     background: accent,
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
@@ -205,14 +276,21 @@ function SharedBills() {
                   }}>
                     {bill.name}
                   </p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
                     <p style={{
                       fontWeight: 'bold',
+                      margin: 0,
                       background: accent,
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text'
                     }}>${bill.amount}</p>
+                    <button
+                      onClick={() => startEdit(bill)}
+                      style={{ background: 'none', border: 'none', color: '#FFD700', cursor: 'pointer', fontSize: '15px', padding: '4px' }}
+                    >
+                      ✎
+                    </button>
                     <button
                       onClick={() => handleDelete(bill._id)}
                       style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '16px', padding: '4px' }}
@@ -222,10 +300,10 @@ function SharedBills() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', fontSize: '12px' }}>
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', fontSize: '12px', flexWrap: 'wrap' }}>
                   <span style={{ color: '#8B949E' }}>{bill.category}</span>
                   {bill.dueDate && (
-                    <span style={{ color: '#8B949E' }}>Due: {new Date(bill.dueDate).toLocaleDateString()}</span>
+                    <span style={{ color: '#8B949E' }}>Due: {formatDate(bill.dueDate)}</span>
                   )}
                   <span style={{
                     color: bill.paid ? '#1DB954' : '#FFD700',
@@ -270,24 +348,26 @@ function SharedBills() {
                               alignItems: 'center',
                               padding: '10px 14px',
                               borderRadius: '8px',
+                              gap: '10px',
                               background: isMyShare
                                 ? 'linear-gradient(135deg, #0d3a6b, #082849)'
                                 : 'linear-gradient(135deg, #6b1a4a, #4a1233)'
                             }}>
-                              <div>
+                              <div style={{ minWidth: 0 }}>
                                 <p style={{
                                   fontWeight: 'bold',
                                   fontSize: '14px',
+                                  margin: 0,
                                   background: shareAccent,
                                   WebkitBackgroundClip: 'text',
                                   WebkitTextFillColor: 'transparent',
                                   backgroundClip: 'text'
                                 }}>
-                                  {isMyShare ? 'Mo' : 'Kirah'}
+                                  {members[share.owner] || (isMyShare ? 'Me' : 'Partner')}
                                 </p>
-                                <p style={{ color: '#cfcfcf', fontSize: '12px' }}>${share.amount}</p>
+                                <p style={{ color: '#cfcfcf', fontSize: '12px', margin: 0 }}>${share.amount}</p>
                               </div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
                                 <span style={{
                                   fontSize: '12px',
                                   color: share.paid ? '#1DB954' : '#8B949E'

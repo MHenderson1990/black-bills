@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getSharedBills, getBillShares, markBillSharePaid, getAllDebts, getDebtBalance, getPaychecks, getHouseholdMembers } from '../services/api';
+import { getSharedBills, getBillShares, getAllDebts, getDebtBalance, getPaychecks, getHouseholdMembers, getPersonalBills } from '../services/api';
 import { MONTHS, YEARS } from '../constants';
 
 let BLUE_ACCENTS = [
@@ -19,6 +19,11 @@ let PINK_ACCENTS = [
   'linear-gradient(135deg, #FF82AB, #FF3385)',
   'linear-gradient(135deg, #FFB3D9, #FF66B2)',
 ];
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('en-US', { timeZone: 'UTC' });
+}
 
 function TheirPage() {
   let [activeTab, setActiveTab] = useState('shared');
@@ -57,21 +62,22 @@ function TheirPage() {
     try {
       let membersRes = await getHouseholdMembers(householdId);
       let other = membersRes.data.find(m => m._id !== userId);
-      if (!other) return;
+      if (!other) {
+        setLoading(false);
+        return;
+      }
       setOtherId(other._id);
       setOtherName(other.name);
 
-      let [sharedRes, allBillsRes, debtsRes, paychecksRes] = await Promise.all([
+      let [sharedRes, personalRes, debtsRes, paychecksRes] = await Promise.all([
         getSharedBills(householdId),
-        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/bills?householdId=${householdId}&isShared=false`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        }).then(r => r.json()),
+        getPersonalBills(householdId, other._id),
         getAllDebts(householdId),
         getPaychecks(other._id)
       ]);
 
       setSharedBills(sharedRes.data);
-      setPersonalBills(allBillsRes.filter(b => b.owner === other._id));
+      setPersonalBills(personalRes.data);
       setPaychecks(paychecksRes.data);
 
       let debtsWithBalance = await Promise.all(
@@ -100,13 +106,6 @@ function TheirPage() {
     setBillShares(res.data);
   }
 
-  async function handleMarkPaid(shareId, currentPaidStatus) {
-    await markBillSharePaid(shareId, { paid: !currentPaidStatus });
-    let res = await getBillShares(expandedId);
-    setBillShares(res.data);
-    fetchAll();
-  }
-
   let currentPaycheck = paychecks.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
 
   let filteredPaychecks = paychecks.filter(p =>
@@ -114,21 +113,30 @@ function TheirPage() {
   );
 
   let inputStyle = {
-    padding: '8px',
+    padding: '10px',
     borderRadius: '6px',
     border: '1px solid #30363D',
     background: '#0D1117',
     color: '#fff',
-    fontSize: '13px'
+    fontSize: '16px',
+    minWidth: 0,
+    boxSizing: 'border-box'
+  };
+
+  let cardGrid = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+    gap: '16px'
   };
 
   if (loading) return <p style={{ padding: '40px', color: '#fff', background: '#0D1117', minHeight: '100vh' }}>Loading...</p>;
 
   return (
-    <div style={{ background: '#0D1117', minHeight: '100vh', padding: '32px', paddingBottom: '80px' }}>
+    <div style={{ background: '#0D1117', minHeight: '100vh', padding: 'clamp(16px, 4vw, 32px)', paddingBottom: '110px' }}>
       <h1 style={{
-        fontSize: '24px',
+        fontSize: 'clamp(20px, 5vw, 24px)',
         marginBottom: '20px',
+        marginTop: 0,
         background: primaryGradient,
         WebkitBackgroundClip: 'text',
         WebkitTextFillColor: 'transparent',
@@ -146,7 +154,7 @@ function TheirPage() {
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             style={{
-              padding: '8px 16px',
+              padding: '8px 14px',
               borderRadius: '20px',
               border: 'none',
               fontWeight: 'bold',
@@ -166,7 +174,7 @@ function TheirPage() {
           {sharedBills.length === 0 ? (
             <p style={{ color: '#8B949E' }}>No shared bills</p>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={cardGrid}>
               {sharedBills.map((bill, index) => {
                 let accent = ACCENTS[index % ACCENTS.length];
                 let isExpanded = expandedId === bill._id;
@@ -178,20 +186,21 @@ function TheirPage() {
                     borderRadius: '12px',
                     padding: '16px'
                   }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', gap: '8px' }}>
                       <p style={{
-                        fontWeight: 'bold', fontSize: '15px',
+                        fontWeight: 'bold', fontSize: '15px', margin: 0,
+                        minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         background: accent, WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                       }}>{bill.name}</p>
                       <p style={{
-                        fontWeight: 'bold',
+                        fontWeight: 'bold', margin: 0, flexShrink: 0,
                         background: accent, WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                       }}>${bill.amount}</p>
                     </div>
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', fontSize: '11px', flexWrap: 'wrap' }}>
-                      {bill.dueDate && <span style={{ color: '#8B949E' }}>Due: {new Date(bill.dueDate).toLocaleDateString()}</span>}
+                      {bill.dueDate && <span style={{ color: '#8B949E' }}>Due: {formatDate(bill.dueDate)}</span>}
                       <span style={{ color: bill.paid ? '#1DB954' : unpaidColor, fontWeight: 'bold' }}>
                         {bill.paid ? '✓ Paid' : 'Unpaid'}
                       </span>
@@ -215,24 +224,24 @@ function TheirPage() {
                           return (
                             <div key={share._id} style={{
                               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                              padding: '8px 10px', borderRadius: '6px', marginBottom: '6px',
+                              padding: '8px 10px', borderRadius: '6px', marginBottom: '6px', gap: '8px',
                               background: isOtherShare
                                 ? isMo ? 'linear-gradient(135deg, #6b1a4a, #4a1233)' : 'linear-gradient(135deg, #0d3a6b, #082849)'
                                 : isMo ? 'linear-gradient(135deg, #0d3a6b, #082849)' : 'linear-gradient(135deg, #6b1a4a, #4a1233)'
                             }}>
-                              <div>
+                              <div style={{ minWidth: 0 }}>
                                 <p style={{
-                                  fontWeight: 'bold', fontSize: '12px',
+                                  fontWeight: 'bold', fontSize: '12px', margin: 0,
                                   background: shareAccent, WebkitBackgroundClip: 'text',
                                   WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                                 }}>
                                   {isOtherShare ? otherName : userName}
                                 </p>
-                                <p style={{ color: '#cfcfcf', fontSize: '11px' }}>${share.amount}</p>
+                                <p style={{ color: '#cfcfcf', fontSize: '11px', margin: 0 }}>${share.amount}</p>
                               </div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                                 <span style={{ fontSize: '11px', color: share.paid ? '#1DB954' : '#8B949E' }}>
-                                  {share.paid ? '✓' : 'Unpaid'}
+                                  {share.paid ? '✓ Paid' : 'Unpaid'}
                                 </span>
                               </div>
                             </div>
@@ -253,7 +262,7 @@ function TheirPage() {
           {personalBills.length === 0 ? (
             <p style={{ color: '#8B949E' }}>No personal bills</p>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={cardGrid}>
               {personalBills.map((bill, index) => {
                 let accent = ACCENTS[index % ACCENTS.length];
                 return (
@@ -263,21 +272,22 @@ function TheirPage() {
                     borderRadius: '12px',
                     padding: '16px'
                   }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', gap: '8px' }}>
                       <p style={{
-                        fontWeight: 'bold', fontSize: '15px',
+                        fontWeight: 'bold', fontSize: '15px', margin: 0,
+                        minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         background: accent, WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                       }}>{bill.name}</p>
                       <p style={{
-                        fontWeight: 'bold',
+                        fontWeight: 'bold', margin: 0, flexShrink: 0,
                         background: accent, WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                       }}>${bill.amount}</p>
                     </div>
                     <div style={{ display: 'flex', gap: '8px', fontSize: '11px', flexWrap: 'wrap' }}>
                       <span style={{ color: '#8B949E' }}>{bill.category}</span>
-                      {bill.dueDate && <span style={{ color: '#8B949E' }}>Due: {new Date(bill.dueDate).toLocaleDateString()}</span>}
+                      {bill.dueDate && <span style={{ color: '#8B949E' }}>Due: {formatDate(bill.dueDate)}</span>}
                       <span style={{ color: bill.paid ? '#1DB954' : unpaidColor, fontWeight: 'bold' }}>
                         {bill.paid ? '✓ Paid' : 'Unpaid'}
                       </span>
@@ -307,13 +317,14 @@ function TheirPage() {
                   borderRadius: '12px',
                   padding: '20px'
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', gap: '8px' }}>
                     <p style={{
-                      fontWeight: 'bold', fontSize: '16px',
+                      fontWeight: 'bold', fontSize: '16px', margin: 0,
+                      minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                       background: accent, WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                     }}>{debt.name}</p>
-                    <p style={{ color: '#8B949E', fontSize: '13px' }}>{debt.interestRate}% APR</p>
+                    <p style={{ color: '#8B949E', fontSize: '13px', margin: 0, flexShrink: 0 }}>{debt.interestRate}% APR</p>
                   </div>
 
                   <div style={{ background: '#0D1117', borderRadius: '8px', height: '12px', overflow: 'hidden', marginBottom: '10px' }}>
@@ -321,13 +332,13 @@ function TheirPage() {
                   </div>
 
                   <p style={{
-                    fontSize: '13px', fontWeight: 'bold', marginBottom: '4px',
+                    fontSize: '13px', fontWeight: 'bold', marginBottom: '4px', marginTop: 0,
                     background: accent, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                   }}>
                     {percentPaid.toFixed(0)}% paid off
                   </p>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', flexWrap: 'wrap', gap: '4px' }}>
                     <span style={{ color: '#cfcfcf' }}>${paidSoFar.toFixed(2)} paid of ${debt.startingBalance.toFixed(2)}</span>
                     <span style={{ color: '#cfcfcf' }}>${debt.currentBalance.toFixed(2)} remaining</span>
                   </div>
@@ -348,11 +359,12 @@ function TheirPage() {
             marginBottom: '16px',
             textAlign: 'center'
           }}>
-            <p style={{ color: '#8B949E', fontSize: '13px', marginBottom: '8px' }}>Current Leftover</p>
+            <p style={{ color: '#8B949E', fontSize: '13px', marginBottom: '8px', marginTop: 0 }}>Current Leftover</p>
             {currentPaycheck ? (
               <p style={{
                 fontSize: '36px',
                 fontWeight: 'bold',
+                margin: 0,
                 background: primaryGradient,
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -361,11 +373,11 @@ function TheirPage() {
                 ${currentPaycheck.leftoverAmount?.toFixed(2) ?? '—'}
               </p>
             ) : (
-              <p style={{ color: '#8B949E' }}>No paycheck recorded yet</p>
+              <p style={{ color: '#8B949E', margin: 0 }}>No paycheck recorded yet</p>
             )}
             {currentPaycheck && (
-              <p style={{ color: '#8B949E', fontSize: '12px', marginTop: '6px' }}>
-                From paycheck on {new Date(currentPaycheck.date).toLocaleDateString()}
+              <p style={{ color: '#8B949E', fontSize: '12px', marginTop: '6px', marginBottom: 0 }}>
+                From paycheck on {formatDate(currentPaycheck.date)}
               </p>
             )}
           </div>
@@ -413,17 +425,17 @@ function TheirPage() {
                         display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                       }}>
                         <div>
-                          <p style={{ color: '#8B949E', fontSize: '12px' }}>{new Date(p.date).toLocaleDateString()}</p>
+                          <p style={{ color: '#8B949E', fontSize: '12px', margin: 0 }}>{formatDate(p.date)}</p>
                           <p style={{
-                            fontSize: '15px', fontWeight: 'bold',
+                            fontSize: '15px', fontWeight: 'bold', margin: 0,
                             background: accent, WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                           }}>${p.amount.toFixed(2)}</p>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                          <p style={{ color: '#8B949E', fontSize: '11px' }}>Leftover</p>
+                          <p style={{ color: '#8B949E', fontSize: '11px', margin: 0 }}>Leftover</p>
                           <p style={{
-                            fontSize: '15px', fontWeight: 'bold',
+                            fontSize: '15px', fontWeight: 'bold', margin: 0,
                             background: accent, WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                           }}>${p.leftoverAmount?.toFixed(2) ?? '—'}</p>

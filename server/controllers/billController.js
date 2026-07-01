@@ -41,15 +41,20 @@ const createBill = async (req, res) => {
 const getAllBills = async (req, res) => {
   try {
     let filter = { householdId: req.query.householdId };
-    // ^ same object as before, just given a name now
 
     if (req.query.category) {
       filter.category = req.query.category;
-      // ^ ONLY runs if category was actually provided in the URL
+    }
+
+    if (req.query.isShared !== undefined) {
+      filter.isShared = req.query.isShared === 'true';
+    }
+
+    if (req.query.owner) {
+      filter.owner = req.query.owner;
     }
 
     const bills = await Bill.find(filter);
-    // ^ uses the filter object, whatever it ended up containing
     res.json(bills);
   } catch (error) {
     res.status(500).json({ message: error.message });
