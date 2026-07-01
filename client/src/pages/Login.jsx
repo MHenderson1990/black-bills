@@ -17,6 +17,7 @@ function Login(props) {
     localStorage.setItem('userName', res.data.name);
     localStorage.setItem('householdId', res.data.householdId);
     props.onLogin(res.data.token);
+    navigate('/');
   } catch (err) {
     setError(err.response?.data?.message || 'Login failed');
   }
