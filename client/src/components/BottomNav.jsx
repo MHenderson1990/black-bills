@@ -1,16 +1,18 @@
 import { Link, useLocation } from 'react-router-dom';
 
-let tabs = [
-  { path: '/', label: 'Dashboard', icon: '🏠' },
-  { path: '/shared', label: 'Shared', icon: '👥' },
-  { path: '/kirah', label: "Kirah", icon: '💗' },
-  { path: '/mo', label: "Mo", icon: '💪🏾' },
-  { path: '/debt', label: 'Debt', icon: '💳' },
-  { path: '/goals', label: 'Goals', icon: '🎯' }
-];
-
 function BottomNav() {
   let location = useLocation();
+  let userName = localStorage.getItem('userName');
+  let isMo = userName === 'Mo';
+
+  let tabs = [
+    { path: '/', label: 'Dashboard', icon: '🏠' },
+    { path: '/shared', label: 'Shared', icon: '👥' },
+    { path: '/me', label: isMo ? 'Mo' : 'Kirah', icon: isMo ? '💪🏾' : '💗' },
+    { path: '/them', label: isMo ? 'Kirah' : 'Mo', icon: isMo ? '💗' : '💪🏾' },
+    { path: '/debt', label: 'Debt', icon: '💳' },
+    { path: '/goals', label: 'Goals', icon: '🎯' }
+  ];
 
   return (
     <nav style={{

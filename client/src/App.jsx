@@ -32,8 +32,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/shared" element={<SharedBills />} />
-        <Route path="/kirah" element={<TheirPage />} />
-        <Route path="/mo" element={<MyPage />} />
+        <Route path="/me" element={<MyPage />} />
+        <Route path="/them" element={<TheirPage />} />
         <Route path="/debt" element={<DebtPage />} />
         <Route path="/goals" element={<Goals />} />
       </Routes>
