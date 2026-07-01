@@ -2,25 +2,25 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
-function Login() {
+function Login(props) {
   let [email, setEmail] = useState('');
   let [password, setPassword] = useState('');
   let [error, setError] = useState('');
   let navigate = useNavigate();
 
   async function handleSubmit(e) {
-    e.preventDefault();
-    try {
-      let res = await api.post('/auth/login', { email, password });
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('userId', res.data._id);
-      localStorage.setItem('userName', res.data.name);
-      localStorage.setItem('householdId', res.data.householdId);
-      navigate('/');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
-    }
+  e.preventDefault();
+  try {
+    let res = await api.post('/auth/login', { email, password });
+    localStorage.setItem('token', res.data.token);
+    localStorage.setItem('userId', res.data._id);
+    localStorage.setItem('userName', res.data.name);
+    localStorage.setItem('householdId', res.data.householdId);
+    props.onLogin(res.data.token);
+  } catch (err) {
+    setError(err.response?.data?.message || 'Login failed');
   }
+}
 
   return (
     <div style={{

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -9,13 +10,17 @@ import Goals from './pages/Goals';
 import BottomNav from './components/BottomNav';
 
 function App() {
-  let token = localStorage.getItem('token');
+  let [token, setToken] = useState(localStorage.getItem('token'));
+
+  function handleLogin(tokenValue) {
+    setToken(tokenValue);
+  }
 
   if (!token) {
     return (
       <Router>
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<Login onLogin={handleLogin} />} />
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
       </Router>
