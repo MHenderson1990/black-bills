@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { getNextPayDate, getRecentPayDate, getSpendingByCategory, getAllBills, updatePayAnchorDate } from '../services/api';
+import { MONTHS, YEARS, CATEGORIES, formatDate } from '../constants';
 
 let CATEGORY_GRADIENTS = [
   ['#1DB954', '#107C41'],
@@ -13,10 +14,7 @@ let CATEGORY_GRADIENTS = [
   ['#C9A227', '#A8851C']
 ];
 
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-  return new Date(dateStr).toLocaleDateString('en-US', { timeZone: 'UTC' });
-}
+
 
 function Dashboard() {
   let [nextPayDate, setNextPayDate] = useState(null);

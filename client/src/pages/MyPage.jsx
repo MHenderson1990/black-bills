@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getSharedBills, getBillShares, markBillSharePaid, getAllDebts, getDebtBalance, getPaychecks, createPaycheck, calculateLeftover, createBill, updateBill, deleteBill, getPersonalBills, updatePayAnchorDate } from '../services/api';
 import { MONTHS, YEARS, CATEGORIES } from '../constants';
+import { MONTHS, YEARS, CATEGORIES, formatDate } from '../constants';
 
 let BLUE_ACCENTS = [
   'linear-gradient(135deg, #4DA3FF, #0080FF)',
@@ -20,10 +21,7 @@ let PINK_ACCENTS = [
   'linear-gradient(135deg, #FFB3D9, #FF66B2)',
 ];
 
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-  return new Date(dateStr).toLocaleDateString('en-US', { timeZone: 'UTC' });
-}
+
 
 function MyPage() {
   let [activeTab, setActiveTab] = useState('shared');

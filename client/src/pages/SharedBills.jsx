@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getSharedBills, getBillShares, markBillSharePaid, createBill, updateBill, deleteBill, getHouseholdMembers } from '../services/api';
+import { MONTHS, YEARS, CATEGORIES, formatDate } from '../constants';
 import { CATEGORIES } from '../constants';
 
 let GOLD_ACCENTS = [
@@ -11,10 +12,7 @@ let GOLD_ACCENTS = [
   'linear-gradient(135deg, #F0C040, #D4A010)',
 ];
 
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-  return new Date(dateStr).toLocaleDateString('en-US', { timeZone: 'UTC' });
-}
+
 
 function SharedBills() {
   let [bills, setBills] = useState([]);

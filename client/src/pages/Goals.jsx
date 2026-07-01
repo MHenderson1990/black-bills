@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getAllSavingsGoals, getSavingsGoalAmount, deleteSavingsGoal, getContributions, createContribution, getHouseholdMembers, createSavingsGoal } from '../services/api';
-import { MONTHS, YEARS } from '../constants';
+import { MONTHS, YEARS, formatDate } from '../constants';
 
 function Goals() {
   let [goals, setGoals] = useState([]);
@@ -24,6 +24,8 @@ function Goals() {
 
   let userId = localStorage.getItem('userId');
   let householdId = localStorage.getItem('householdId');
+
+  let otherMember = members.find(m => m._id !== userId);
 
   useEffect(function() {
     fetchGoals();
@@ -109,18 +111,20 @@ function Goals() {
 
   let filteredGoals = goals.filter(goal => {
     if (activeTab === 'shared') return goal.isShared;
-    if (activeTab === 'kirah') return !goal.isShared && goal.owner !== userId;
-    if (activeTab === 'mo') return !goal.isShared && goal.owner === userId;
+    if (activeTab === 'mine') return !goal.isShared && goal.owner === userId;
+    if (activeTab === 'theirs') return !goal.isShared && goal.owner !== userId;
     return false;
   });
 
   let inputStyle = {
-    padding: '8px',
+    padding: '10px',
     borderRadius: '6px',
     border: '1px solid #30363D',
     background: '#0D1117',
     color: '#fff',
-    fontSize: '13px'
+    fontSize: '16px',
+    minWidth: 0,
+    boxSizing: 'border-box'
   };
 
   function memberName(id) {
@@ -130,10 +134,11 @@ function Goals() {
   if (loading) return <p style={{ padding: '40px', color: '#fff', background: '#0D1117', minHeight: '100vh' }}>Loading...</p>;
 
   return (
-    <div style={{ background: '#0D1117', minHeight: '100vh', padding: '32px', paddingBottom: '80px' }}>
+    <div style={{ background: '#0D1117', minHeight: '100vh', padding: 'clamp(16px, 4vw, 32px)', paddingBottom: '110px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h1 style={{
-          fontSize: '24px',
+          fontSize: 'clamp(20px, 5vw, 24px)',
+          margin: 0,
           background: 'linear-gradient(135deg, #1DB954, #5C8A3A)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
@@ -149,7 +154,8 @@ function Goals() {
             color: '#0D1117',
             fontWeight: 'bold',
             fontSize: '13px',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            whiteSpace: 'nowrap'
           }}
         >
           {showAddGoal ? '✕ Cancel' : '+ Add Goal'}
@@ -164,21 +170,21 @@ function Goals() {
           padding: '20px',
           marginBottom: '24px'
         }}>
-          <h2 style={{ color: '#E8F5E9', fontSize: '15px', marginBottom: '14px' }}>New Goal</h2>
+          <h2 style={{ color: '#E8F5E9', fontSize: '15px', marginTop: 0, marginBottom: '14px' }}>New Goal</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <input
                 placeholder="Goal name"
                 value={newGoalName}
                 onChange={e => setNewGoalName(e.target.value)}
-                style={{ ...inputStyle, flex: 2 }}
+                style={{ ...inputStyle, flex: '2 1 140px' }}
               />
               <input
                 placeholder="Target amount"
                 type="number"
                 value={newTargetAmount}
                 onChange={e => setNewTargetAmount(e.target.value)}
-                style={{ ...inputStyle, flex: 1 }}
+                style={{ ...inputStyle, flex: '1 1 100px' }}
               />
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -186,11 +192,11 @@ function Goals() {
                 type="date"
                 value={newTargetDate}
                 onChange={e => setNewTargetDate(e.target.value)}
-                style={{ ...inputStyle, flex: 1 }}
+                style={{ ...inputStyle, flex: 1, colorScheme: 'dark' }}
                 placeholder="Target date (optional)"
               />
             </div>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
               <label style={{ color: '#8B949E', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <input
                   type="checkbox"
@@ -203,7 +209,7 @@ function Goals() {
                 <select
                   value={newOwner}
                   onChange={e => setNewOwner(e.target.value)}
-                  style={{ ...inputStyle, flex: 1 }}
+                  style={{ ...inputStyle, flex: '1 1 120px' }}
                 >
                   {members.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
                 </select>
@@ -212,7 +218,7 @@ function Goals() {
             <button
               onClick={handleAddGoal}
               style={{
-                padding: '10px',
+                padding: '12px',
                 borderRadius: '8px',
                 border: 'none',
                 background: 'linear-gradient(135deg, #1DB954, #5C8A3A)',
@@ -228,11 +234,11 @@ function Goals() {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
         {[
           { key: 'shared', label: 'Shared' },
-          { key: 'kirah', label: "Kirah's" },
-          { key: 'mo', label: "Mo's" }
+          { key: 'mine', label: 'Mine' },
+          { key: 'theirs', label: otherMember ? `${otherMember.name}'s` : 'Theirs' }
         ].map(tab => (
           <button
             key={tab.key}
@@ -256,7 +262,7 @@ function Goals() {
       </div>
 
       {filteredGoals.length === 0 ? (
-        <p style={{ color: '#8B949E' }}>No {activeTab} goals yet</p>
+        <p style={{ color: '#8B949E' }}>No goals here yet</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {filteredGoals.map(goal => {
@@ -271,18 +277,19 @@ function Goals() {
                 borderRadius: '12px',
                 padding: '20px'
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', gap: '8px' }}>
                   <p style={{
-                    fontWeight: 'bold', fontSize: '16px',
+                    fontWeight: 'bold', fontSize: '16px', margin: 0,
+                    minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     background: 'linear-gradient(135deg, #1DB954, #5C8A3A)',
                     WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                   }}>
                     {goal.name}
                   </p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
                     {goal.targetDate && (
-                      <p style={{ color: '#8B949E', fontSize: '13px' }}>
-                        Target: {new Date(goal.targetDate).toLocaleDateString()}
+                      <p style={{ color: '#8B949E', fontSize: '13px', margin: 0 }}>
+                        Target: {formatDate(goal.targetDate)}
                       </p>
                     )}
                     <button
@@ -300,14 +307,14 @@ function Goals() {
                 </div>
 
                 <p style={{
-                  fontSize: '13px', fontWeight: 'bold', marginBottom: '4px',
+                  fontSize: '13px', fontWeight: 'bold', marginBottom: '4px', marginTop: 0,
                   background: 'linear-gradient(135deg, #1DB954, #5C8A3A)',
                   WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                 }}>
                   {percentSaved.toFixed(0)}% saved
                 </p>
 
-                <p style={{ color: '#cfcfcf', fontSize: '13px', marginBottom: '12px' }}>
+                <p style={{ color: '#cfcfcf', fontSize: '13px', marginBottom: '12px', marginTop: 0 }}>
                   ${goal.currentAmount.toFixed(2)} of ${goal.targetAmount.toFixed(2)}
                 </p>
 
@@ -348,10 +355,10 @@ function Goals() {
                         {filteredContributions.map(c => (
                           <div key={c._id} style={{
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                            padding: '8px 12px', background: '#0D1117', borderRadius: '6px', fontSize: '12px'
+                            padding: '8px 12px', background: '#0D1117', borderRadius: '6px', fontSize: '12px', gap: '8px'
                           }}>
                             <span style={{ color: '#E8F5E9', flex: 1 }}>{memberName(c.contributedBy)}</span>
-                            <span style={{ color: '#cfcfcf', flex: 1, textAlign: 'center' }}>{new Date(c.date).toLocaleDateString()}</span>
+                            <span style={{ color: '#cfcfcf', flex: 1, textAlign: 'center' }}>{formatDate(c.date)}</span>
                             <span style={{ fontWeight: 'bold', color: '#E8F5E9' }}>${c.amount}</span>
                           </div>
                         ))}
@@ -359,24 +366,24 @@ function Goals() {
                     )}
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <div style={{ display: 'flex', gap: '8px' }}>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         <input
                           placeholder="Amount"
                           type="number"
                           value={newAmount}
                           onChange={e => setNewAmount(e.target.value)}
-                          style={{ ...inputStyle, flex: 1 }}
+                          style={{ ...inputStyle, flex: '1 1 90px' }}
                         />
                         <input
                           type="date"
                           value={newDate}
                           onChange={e => setNewDate(e.target.value)}
-                          style={{ ...inputStyle, flex: 1 }}
+                          style={{ ...inputStyle, flex: '1 1 120px', colorScheme: 'dark' }}
                         />
                         <select
                           value={newContributedBy}
                           onChange={e => setNewContributedBy(e.target.value)}
-                          style={{ ...inputStyle, flex: 1 }}
+                          style={{ ...inputStyle, flex: '1 1 100px' }}
                         >
                           {members.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
                         </select>
@@ -384,7 +391,7 @@ function Goals() {
                       <button
                         onClick={() => handleAddContribution(goal._id)}
                         style={{
-                          padding: '8px', borderRadius: '6px', border: 'none',
+                          padding: '10px', borderRadius: '6px', border: 'none',
                           background: 'linear-gradient(135deg, #1DB954, #5C8A3A)',
                           color: '#0D1117', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'
                         }}

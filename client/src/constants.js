@@ -15,3 +15,8 @@ export let MONTHS = [
 ];
 
 export let YEARS = ['2025', '2026', '2027'];
+
+export function formatDate(dateStr) {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('en-US', { timeZone: 'UTC' });
+}

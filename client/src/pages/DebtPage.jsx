@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getAllDebts, getDebtBalance, deleteDebt, getDebtTransactions, createDebtTransaction, getHouseholdMembers, createDebt } from '../services/api';
-import { CATEGORIES, MONTHS, YEARS } from '../constants';
+import { CATEGORIES, MONTHS, YEARS, formatDate } from '../constants';
 
 function DebtPage() {
   let [debts, setDebts] = useState([]);
@@ -113,27 +113,30 @@ function DebtPage() {
   }
 
   function getDebtAccent(debt) {
-  if (debt.isShared) return 'linear-gradient(135deg, #B8334D, #8B1E3F)';
-  if (debt.owner === userId) return 'linear-gradient(135deg, #4DA3FF, #0080FF)';
-  return 'linear-gradient(135deg, #FF8FC7, #FF4DA6)';
-}
+    if (debt.isShared) return 'linear-gradient(135deg, #B8334D, #8B1E3F)';
+    if (debt.owner === userId) return 'linear-gradient(135deg, #4DA3FF, #0080FF)';
+    return 'linear-gradient(135deg, #FF8FC7, #FF4DA6)';
+  }
 
   let inputStyle = {
-    padding: '8px',
+    padding: '10px',
     borderRadius: '6px',
     border: '1px solid #30363D',
     background: '#0D1117',
     color: '#fff',
-    fontSize: '13px'
+    fontSize: '16px',
+    minWidth: 0,
+    boxSizing: 'border-box'
   };
 
   if (loading) return <p style={{ padding: '40px', color: '#fff', background: '#0D1117', minHeight: '100vh' }}>Loading...</p>;
 
   return (
-    <div style={{ background: '#0D1117', minHeight: '100vh', padding: '32px', paddingBottom: '80px' }}>
+    <div style={{ background: '#0D1117', minHeight: '100vh', padding: 'clamp(16px, 4vw, 32px)', paddingBottom: '110px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <h1 style={{
-          fontSize: '24px',
+          fontSize: 'clamp(20px, 5vw, 24px)',
+          margin: 0,
           background: 'linear-gradient(135deg, #B8334D, #8B1E3F)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
@@ -149,7 +152,8 @@ function DebtPage() {
             color: 'white',
             fontWeight: 'bold',
             fontSize: '13px',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            whiteSpace: 'nowrap'
           }}
         >
           {showAddDebt ? '✕ Cancel' : '+ Add Debt'}
@@ -164,31 +168,31 @@ function DebtPage() {
           padding: '20px',
           marginBottom: '24px'
         }}>
-          <h2 style={{ color: '#E8F5E9', fontSize: '15px', marginBottom: '14px' }}>New Debt</h2>
+          <h2 style={{ color: '#E8F5E9', fontSize: '15px', marginTop: 0, marginBottom: '14px' }}>New Debt</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <input
                 placeholder="Debt name"
                 value={newDebtName}
                 onChange={e => setNewDebtName(e.target.value)}
-                style={{ ...inputStyle, flex: 2 }}
+                style={{ ...inputStyle, flex: '2 1 140px' }}
               />
               <input
                 placeholder="Starting balance"
                 type="number"
                 value={newStartingBalance}
                 onChange={e => setNewStartingBalance(e.target.value)}
-                style={{ ...inputStyle, flex: 1 }}
+                style={{ ...inputStyle, flex: '1 1 110px' }}
               />
               <input
                 placeholder="Interest rate %"
                 type="number"
                 value={newInterestRate}
                 onChange={e => setNewInterestRate(e.target.value)}
-                style={{ ...inputStyle, flex: 1 }}
+                style={{ ...inputStyle, flex: '1 1 100px' }}
               />
             </div>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
               <label style={{ color: '#8B949E', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <input
                   type="checkbox"
@@ -201,7 +205,7 @@ function DebtPage() {
                 <select
                   value={newOwner}
                   onChange={e => setNewOwner(e.target.value)}
-                  style={{ ...inputStyle, flex: 1 }}
+                  style={{ ...inputStyle, flex: '1 1 120px' }}
                 >
                   {members.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
                 </select>
@@ -210,7 +214,7 @@ function DebtPage() {
             <button
               onClick={handleAddDebt}
               style={{
-                padding: '10px',
+                padding: '12px',
                 borderRadius: '8px',
                 border: 'none',
                 background: 'linear-gradient(135deg, #B8334D, #8B1E3F)',
@@ -244,16 +248,17 @@ function DebtPage() {
                 borderRadius: '12px',
                 padding: '20px'
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', gap: '8px' }}>
                   <p style={{
-                    fontWeight: 'bold', fontSize: '16px',
+                    fontWeight: 'bold', fontSize: '16px', margin: 0,
+                    minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     background: accent, WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                   }}>
                     {debt.name}
                   </p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <p style={{ color: '#8B949E', fontSize: '13px' }}>{debt.interestRate}% APR</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+                    <p style={{ color: '#8B949E', fontSize: '13px', margin: 0 }}>{debt.interestRate}% APR</p>
                     <button
                       onClick={() => handleDelete(debt._id)}
                       style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '16px', padding: '4px' }}
@@ -266,13 +271,13 @@ function DebtPage() {
                 </div>
 
                 <p style={{
-                  fontSize: '13px', fontWeight: 'bold', marginBottom: '4px',
+                  fontSize: '13px', fontWeight: 'bold', marginBottom: '4px', marginTop: 0,
                   background: accent, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                 }}>
                   {percentPaid.toFixed(0)}% paid off
                 </p>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '12px', flexWrap: 'wrap', gap: '4px' }}>
                   <span style={{ color: '#cfcfcf' }}>${paidSoFar.toFixed(2)} paid of ${debt.startingBalance.toFixed(2)}</span>
                   <span style={{ color: '#cfcfcf' }}>${debt.currentBalance.toFixed(2)} remaining</span>
                 </div>
@@ -314,11 +319,11 @@ function DebtPage() {
                         {filteredTransactions.map(t => (
                           <div key={t._id} style={{
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                            padding: '8px 12px', background: '#0D1117', borderRadius: '6px', fontSize: '12px'
+                            padding: '8px 12px', background: '#0D1117', borderRadius: '6px', fontSize: '12px', gap: '8px', flexWrap: 'wrap'
                           }}>
-                            <span style={{ color: '#E8F5E9', flex: 1 }}>{t.item}</span>
+                            <span style={{ color: '#E8F5E9', flex: 1, minWidth: '80px' }}>{t.item}</span>
                             <span style={{ color: '#8B949E', flex: 1, textAlign: 'center' }}>{t.category}</span>
-                            <span style={{ color: '#cfcfcf', flex: 1, textAlign: 'center' }}>{new Date(t.date).toLocaleDateString()}</span>
+                            <span style={{ color: '#cfcfcf', flex: 1, textAlign: 'center' }}>{formatDate(t.date)}</span>
                             <span style={{ fontWeight: 'bold', color: '#E8F5E9' }}>${t.amount}</span>
                           </div>
                         ))}
@@ -326,26 +331,26 @@ function DebtPage() {
                     )}
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <div style={{ display: 'flex', gap: '8px' }}>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         <input
                           placeholder="Item"
                           value={newItem}
                           onChange={e => setNewItem(e.target.value)}
-                          style={{ ...inputStyle, flex: 2 }}
+                          style={{ ...inputStyle, flex: '2 1 140px' }}
                         />
                         <input
                           placeholder="Amount"
                           type="number"
                           value={newAmount}
                           onChange={e => setNewAmount(e.target.value)}
-                          style={{ ...inputStyle, flex: 1 }}
+                          style={{ ...inputStyle, flex: '1 1 90px' }}
                         />
                       </div>
-                      <div style={{ display: 'flex', gap: '8px' }}>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         <select
                           value={newCategory}
                           onChange={e => setNewCategory(e.target.value)}
-                          style={{ ...inputStyle, flex: 1 }}
+                          style={{ ...inputStyle, flex: '1 1 100px' }}
                         >
                           {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                         </select>
@@ -353,12 +358,12 @@ function DebtPage() {
                           type="date"
                           value={newDate}
                           onChange={e => setNewDate(e.target.value)}
-                          style={{ ...inputStyle, flex: 1 }}
+                          style={{ ...inputStyle, flex: '1 1 120px', colorScheme: 'dark' }}
                         />
                         <select
                           value={newMadeBy}
                           onChange={e => setNewMadeBy(e.target.value)}
-                          style={{ ...inputStyle, flex: 1 }}
+                          style={{ ...inputStyle, flex: '1 1 100px' }}
                         >
                           {members.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
                         </select>
@@ -366,7 +371,7 @@ function DebtPage() {
                       <button
                         onClick={() => handleAddTransaction(debt._id)}
                         style={{
-                          padding: '8px', borderRadius: '6px', border: 'none',
+                          padding: '10px', borderRadius: '6px', border: 'none',
                           background: accent, color: 'white', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'
                         }}
                       >
