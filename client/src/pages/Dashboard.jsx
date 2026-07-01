@@ -17,6 +17,7 @@ function formatDate(dateStr) {
   if (!dateStr) return '';
   return new Date(dateStr).toLocaleDateString('en-US', { timeZone: 'UTC' });
 }
+
 function Dashboard() {
   let [nextPayDate, setNextPayDate] = useState(null);
   let [periodStart, setPeriodStart] = useState(null);
@@ -116,10 +117,10 @@ function Dashboard() {
       <div style={{
         background: '#161B22',
         borderBottom: '1px solid #30363D',
-        padding: '32px'
+        padding: 'clamp(16px, 4vw, 32px)'
       }}>
         <h1 style={{
-          fontSize: '28px',
+          fontSize: 'clamp(22px, 5vw, 28px)',
           margin: 0,
           fontWeight: 'bold',
           background: 'linear-gradient(135deg, #FFD700, #E6C200)',
@@ -131,12 +132,12 @@ function Dashboard() {
         </h1>
       </div>
 
-      <div style={{ padding: '32px' }}>
+      <div style={{ padding: 'clamp(16px, 4vw, 32px)', paddingBottom: '110px' }}>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
           gap: '16px',
-          marginBottom: '32px'
+          marginBottom: '24px'
         }}>
           <div
             onClick={function() {
@@ -169,12 +170,13 @@ function Dashboard() {
                   onChange={function(e) { setPayDateInput(e.target.value); }}
                   style={{
                     width: '100%',
+                    boxSizing: 'border-box',
                     background: '#0D1117',
                     border: '1px solid #1DB95455',
                     borderRadius: '8px',
                     padding: '10px 12px',
                     color: '#E8F5E9',
-                    fontSize: '14px',
+                    fontSize: '16px',
                     marginBottom: '10px',
                     colorScheme: 'dark'
                   }}
@@ -256,8 +258,12 @@ function Dashboard() {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-          <div style={{ background: '#161B22', padding: '24px', borderRadius: '12px', border: '1px solid #30363D' }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: '20px'
+        }}>
+          <div style={{ background: '#161B22', padding: '20px', borderRadius: '12px', border: '1px solid #30363D' }}>
             <h2 style={{ fontSize: '16px', marginBottom: '16px', color: '#E8F5E9' }}>Upcoming Bills</h2>
             {upcomingBills.length === 0 ? (
               <p style={{ color: '#8B949E' }}>No upcoming bills</p>
@@ -272,26 +278,33 @@ function Dashboard() {
                       alignItems: 'center',
                       padding: '14px 16px',
                       borderRadius: '10px',
-                      background: style.background
+                      background: style.background,
+                      gap: '12px'
                     }}>
-                      <div>
+                      <div style={{ minWidth: 0 }}>
                         <p style={{
                           fontWeight: 'bold',
                           fontSize: '15px',
                           background: style.accent,
                           WebkitBackgroundClip: 'text',
                           WebkitTextFillColor: 'transparent',
-                          backgroundClip: 'text'
+                          backgroundClip: 'text',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          margin: 0
                         }}>
                           {bill.name}
                         </p>
-                        <p style={{ color: '#cfcfcf', fontSize: '12px' }}>
+                        <p style={{ color: '#cfcfcf', fontSize: '12px', margin: 0 }}>
                           {formatDate(bill.dueDate)}
                         </p>
                       </div>
                       <p style={{
                         fontWeight: 'bold',
                         fontSize: '16px',
+                        whiteSpace: 'nowrap',
+                        margin: 0,
                         background: style.accent,
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
@@ -306,7 +319,7 @@ function Dashboard() {
             )}
           </div>
 
-          <div style={{ background: '#161B22', padding: '24px', borderRadius: '12px', border: '1px solid #30363D' }}>
+          <div style={{ background: '#161B22', padding: '20px', borderRadius: '12px', border: '1px solid #30363D' }}>
             <h2 style={{ fontSize: '16px', marginBottom: '16px', color: '#E8F5E9' }}>Spending By Category</h2>
             {pieData.length === 0 ? (
               <p style={{ color: '#8B949E' }}>No spending data for this period</p>
@@ -327,13 +340,13 @@ function Dashboard() {
                 </svg>
                 <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
-                    <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={{ fill: '#E8F5E9' }}>
+                    <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={{ fill: '#E8F5E9' }}>
                       {pieData.map((entry, index) => (
                         <Cell key={index} fill={`url(#pieGrad${index})`} />
                       ))}
                     </Pie>
                     <Tooltip contentStyle={{ background: '#161B22', border: '1px solid #30363D', color: '#fff' }} />
-                    <Legend wrapperStyle={{ color: '#E8F5E9' }} />
+                    <Legend wrapperStyle={{ color: '#E8F5E9', fontSize: '12px' }} />
                   </PieChart>
                 </ResponsiveContainer>
               </>
