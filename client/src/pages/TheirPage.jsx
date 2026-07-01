@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getSharedBills, getBillShares, getAllDebts, getDebtBalance, getPaychecks, getHouseholdMembers, getPersonalBills } from '../services/api';
-import { MONTHS, YEARS } from '../constants';
-import { MONTHS, YEARS, CATEGORIES, formatDate } from '../constants';
+import { MONTHS, YEARS, formatDate } from '../constants';
 
 let BLUE_ACCENTS = [
   'linear-gradient(135deg, #4DA3FF, #0080FF)',

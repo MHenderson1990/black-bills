@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { getNextPayDate, getRecentPayDate, getSpendingByCategory, getAllBills, updatePayAnchorDate } from '../services/api';
-import { MONTHS, YEARS, CATEGORIES, formatDate } from '../constants';
+import { formatDate } from '../constants';
 
 let CATEGORY_GRADIENTS = [
   ['#1DB954', '#107C41'],

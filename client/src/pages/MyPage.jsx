@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { getSharedBills, getBillShares, markBillSharePaid, getAllDebts, getDebtBalance, getPaychecks, createPaycheck, calculateLeftover, createBill, updateBill, deleteBill, getPersonalBills, updatePayAnchorDate } from '../services/api';
-import { MONTHS, YEARS, CATEGORIES } from '../constants';
 import { MONTHS, YEARS, CATEGORIES, formatDate } from '../constants';
 
 let BLUE_ACCENTS = [

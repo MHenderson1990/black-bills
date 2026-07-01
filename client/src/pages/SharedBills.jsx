@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getSharedBills, getBillShares, markBillSharePaid, createBill, updateBill, deleteBill, getHouseholdMembers } from '../services/api';
-import { MONTHS, YEARS, CATEGORIES, formatDate } from '../constants';
-import { CATEGORIES } from '../constants';
+import { CATEGORIES, formatDate } from '../constants';
+
 
 let GOLD_ACCENTS = [
   'linear-gradient(135deg, #FFD700, #E6C200)',
