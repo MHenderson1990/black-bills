@@ -25,23 +25,25 @@ function Dashboard() {
   let householdId = localStorage.getItem('householdId');
 
   useEffect(function() {
-    async function fetchData() {
-      try {
-        let nextRes = await getNextPayDate(userId);
-        let recentRes = await getRecentPayDate(userId);
+  console.log('Dashboard mounting, VITE_API_URL:', import.meta.env.VITE_API_URL);
+  
+  async function fetchData() {
+    try {
+      let nextRes = await getNextPayDate(userId);
+      let recentRes = await getRecentPayDate(userId);
 
-        setNextPayDate(nextRes.data.nextPayDate);
-        setPeriodStart(recentRes.data.recentPayDate);
-        setPeriodEnd(recentRes.data.periodEnd);
+      setNextPayDate(nextRes.data.nextPayDate);
+      setPeriodStart(recentRes.data.recentPayDate);
+      setPeriodEnd(recentRes.data.periodEnd);
 
-        if (recentRes.data.recentPayDate && recentRes.data.periodEnd) {
-          let spendingRes = await getSpendingByCategory(
-            userId,
-            recentRes.data.recentPayDate,
-            recentRes.data.periodEnd
-          );
-          setSpending(spendingRes.data);
-        }
+      if (recentRes.data.recentPayDate && recentRes.data.periodEnd) {
+        let spendingRes = await getSpendingByCategory(
+          userId,
+          recentRes.data.recentPayDate,
+          recentRes.data.periodEnd
+        );
+        setSpending(spendingRes.data);
+      }
 
         let billsRes = await getAllBills(householdId);
         setBills(billsRes.data);
