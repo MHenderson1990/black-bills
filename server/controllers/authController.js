@@ -19,10 +19,13 @@ const registerUser = async (req, res) => {
             password,
             householdId
         });
-        res.status(201).json({
+
+       res.status(201).json({
             _id: user._id,
             name: user.name,
-            email: user.email, 
+            email: user.email,
+            householdId: user.householdId,
+            token: jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '30d' })
         });
     } catch (error) {
         console.log('Error:', error.message);
