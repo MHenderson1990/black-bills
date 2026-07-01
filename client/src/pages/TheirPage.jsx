@@ -63,7 +63,7 @@ function TheirPage() {
 
       let [sharedRes, allBillsRes, debtsRes, paychecksRes] = await Promise.all([
         getSharedBills(householdId),
-        fetch(`http://localhost:5001/api/bills?householdId=${householdId}&isShared=false`, {
+        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001/api'}/bills?householdId=${householdId}&isShared=false`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         }).then(r => r.json()),
         getAllDebts(householdId),
