@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getAllSavingsGoals, getSavingsGoalAmount, deleteSavingsGoal, getContributions, createContribution, getHouseholdMembers } from '../services/api';
+import { getAllSavingsGoals, getSavingsGoalAmount, deleteSavingsGoal, getContributions, createContribution, getHouseholdMembers, createSavingsGoal } from '../services/api';
 import { MONTHS, YEARS } from '../constants';
 
 function Goals() {
@@ -15,6 +15,12 @@ function Goals() {
   let [newAmount, setNewAmount] = useState('');
   let [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0]);
   let [newContributedBy, setNewContributedBy] = useState('');
+  let [showAddGoal, setShowAddGoal] = useState(false);
+  let [newGoalName, setNewGoalName] = useState('');
+  let [newTargetAmount, setNewTargetAmount] = useState('');
+  let [newTargetDate, setNewTargetDate] = useState('');
+  let [newIsShared, setNewIsShared] = useState(true);
+  let [newOwner, setNewOwner] = useState('');
 
   let userId = localStorage.getItem('userId');
   let householdId = localStorage.getItem('householdId');
@@ -27,14 +33,12 @@ function Goals() {
   async function fetchGoals() {
     try {
       let goalsRes = await getAllSavingsGoals(householdId);
-
       let goalsWithAmount = await Promise.all(
         goalsRes.data.map(async (goal) => {
           let amountRes = await getSavingsGoalAmount(goal._id);
           return { ...goal, currentAmount: amountRes.data.currentAmount };
         })
       );
-
       setGoals(goalsWithAmount);
     } catch (error) {
       console.error(error);
@@ -48,6 +52,7 @@ function Goals() {
     setMembers(res.data);
     if (res.data.length > 0) {
       setNewContributedBy(res.data.find(m => m._id === userId)?._id || res.data[0]._id);
+      setNewOwner(res.data.find(m => m._id === userId)?._id || res.data[0]._id);
     }
   }
 
@@ -83,6 +88,25 @@ function Goals() {
     fetchGoals();
   }
 
+  async function handleAddGoal() {
+    if (!newGoalName || !newTargetAmount) return;
+    await createSavingsGoal({
+      name: newGoalName,
+      targetAmount: Number(newTargetAmount),
+      targetDate: newTargetDate || undefined,
+      isShared: newIsShared,
+      owner: newIsShared ? undefined : (newOwner || userId),
+      householdId
+    });
+    setNewGoalName('');
+    setNewTargetAmount('');
+    setNewTargetDate('');
+    setNewIsShared(true);
+    setNewOwner('');
+    setShowAddGoal(false);
+    fetchGoals();
+  }
+
   let filteredGoals = goals.filter(goal => {
     if (activeTab === 'shared') return goal.isShared;
     if (activeTab === 'kirah') return !goal.isShared && goal.owner !== userId;
@@ -107,14 +131,102 @@ function Goals() {
 
   return (
     <div style={{ background: '#0D1117', minHeight: '100vh', padding: '32px', paddingBottom: '80px' }}>
-      <h1 style={{
-        fontSize: '24px',
-        marginBottom: '20px',
-        background: 'linear-gradient(135deg, #1DB954, #5C8A3A)',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text'
-      }}>Goals</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h1 style={{
+          fontSize: '24px',
+          background: 'linear-gradient(135deg, #1DB954, #5C8A3A)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text'
+        }}>Goals</h1>
+        <button
+          onClick={() => setShowAddGoal(!showAddGoal)}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '20px',
+            border: 'none',
+            background: 'linear-gradient(135deg, #1DB954, #5C8A3A)',
+            color: '#0D1117',
+            fontWeight: 'bold',
+            fontSize: '13px',
+            cursor: 'pointer'
+          }}
+        >
+          {showAddGoal ? '✕ Cancel' : '+ Add Goal'}
+        </button>
+      </div>
+
+      {showAddGoal && (
+        <div style={{
+          background: '#161B22',
+          border: '1px solid #30363D',
+          borderRadius: '12px',
+          padding: '20px',
+          marginBottom: '24px'
+        }}>
+          <h2 style={{ color: '#E8F5E9', fontSize: '15px', marginBottom: '14px' }}>New Goal</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                placeholder="Goal name"
+                value={newGoalName}
+                onChange={e => setNewGoalName(e.target.value)}
+                style={{ ...inputStyle, flex: 2 }}
+              />
+              <input
+                placeholder="Target amount"
+                type="number"
+                value={newTargetAmount}
+                onChange={e => setNewTargetAmount(e.target.value)}
+                style={{ ...inputStyle, flex: 1 }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                type="date"
+                value={newTargetDate}
+                onChange={e => setNewTargetDate(e.target.value)}
+                style={{ ...inputStyle, flex: 1 }}
+                placeholder="Target date (optional)"
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <label style={{ color: '#8B949E', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <input
+                  type="checkbox"
+                  checked={newIsShared}
+                  onChange={e => setNewIsShared(e.target.checked)}
+                />
+                Shared goal
+              </label>
+              {!newIsShared && (
+                <select
+                  value={newOwner}
+                  onChange={e => setNewOwner(e.target.value)}
+                  style={{ ...inputStyle, flex: 1 }}
+                >
+                  {members.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
+                </select>
+              )}
+            </div>
+            <button
+              onClick={handleAddGoal}
+              style={{
+                padding: '10px',
+                borderRadius: '8px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #1DB954, #5C8A3A)',
+                color: '#0D1117',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                cursor: 'pointer'
+              }}
+            >
+              Save Goal
+            </button>
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
         {[
@@ -161,12 +273,9 @@ function Goals() {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <p style={{
-                    fontWeight: 'bold',
-                    fontSize: '16px',
+                    fontWeight: 'bold', fontSize: '16px',
                     background: 'linear-gradient(135deg, #1DB954, #5C8A3A)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text'
+                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                   }}>
                     {goal.name}
                   </p>
@@ -179,30 +288,21 @@ function Goals() {
                     <button
                       onClick={() => handleDelete(goal._id)}
                       style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '16px', padding: '4px' }}
-                    >
-                      ✕
-                    </button>
+                    >✕</button>
                   </div>
                 </div>
 
                 <div style={{ background: '#0D1117', borderRadius: '8px', height: '12px', overflow: 'hidden', marginBottom: '10px' }}>
                   <div style={{
                     background: 'linear-gradient(135deg, #1DB954, #5C8A3A)',
-                    height: '100%',
-                    width: `${percentSaved}%`,
-                    borderRadius: '8px',
-                    transition: 'width 0.3s'
+                    height: '100%', width: `${percentSaved}%`, borderRadius: '8px', transition: 'width 0.3s'
                   }} />
                 </div>
 
                 <p style={{
-                  fontSize: '13px',
-                  fontWeight: 'bold',
-                  marginBottom: '4px',
+                  fontSize: '13px', fontWeight: 'bold', marginBottom: '4px',
                   background: 'linear-gradient(135deg, #1DB954, #5C8A3A)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text'
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                 }}>
                   {percentSaved.toFixed(0)}% saved
                 </p>
@@ -214,14 +314,9 @@ function Goals() {
                 <button
                   onClick={() => toggleExpand(goal._id)}
                   style={{
-                    width: '100%',
-                    padding: '8px',
-                    background: '#0D1117',
-                    border: '1px solid #30363D',
-                    borderRadius: '8px',
-                    color: '#8B949E',
-                    fontSize: '13px',
-                    cursor: 'pointer'
+                    width: '100%', padding: '8px', background: '#0D1117',
+                    border: '1px solid #30363D', borderRadius: '8px',
+                    color: '#8B949E', fontSize: '13px', cursor: 'pointer'
                   }}
                 >
                   {isExpanded ? '▲ Hide Contributions' : '▼ View Contributions'}
@@ -290,7 +385,8 @@ function Goals() {
                         onClick={() => handleAddContribution(goal._id)}
                         style={{
                           padding: '8px', borderRadius: '6px', border: 'none',
-                          background: 'linear-gradient(135deg, #1DB954, #5C8A3A)', color: 'white', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'
+                          background: 'linear-gradient(135deg, #1DB954, #5C8A3A)',
+                          color: '#0D1117', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'
                         }}
                       >
                         Add Contribution

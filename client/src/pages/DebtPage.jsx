@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getAllDebts, getDebtBalance, deleteDebt, getDebtTransactions, createDebtTransaction, getHouseholdMembers } from '../services/api';
+import { getAllDebts, getDebtBalance, deleteDebt, getDebtTransactions, createDebtTransaction, getHouseholdMembers, createDebt } from '../services/api';
 import { CATEGORIES, MONTHS, YEARS } from '../constants';
 
 function DebtPage() {
@@ -16,6 +16,12 @@ function DebtPage() {
   let [newCategory, setNewCategory] = useState('Misc.');
   let [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0]);
   let [newMadeBy, setNewMadeBy] = useState('');
+  let [showAddDebt, setShowAddDebt] = useState(false);
+  let [newDebtName, setNewDebtName] = useState('');
+  let [newStartingBalance, setNewStartingBalance] = useState('');
+  let [newInterestRate, setNewInterestRate] = useState('');
+  let [newIsShared, setNewIsShared] = useState(false);
+  let [newOwner, setNewOwner] = useState('');
 
   let userId = localStorage.getItem('userId');
   let householdId = localStorage.getItem('householdId');
@@ -28,14 +34,12 @@ function DebtPage() {
   async function fetchDebts() {
     try {
       let debtsRes = await getAllDebts(householdId);
-
       let debtsWithBalance = await Promise.all(
         debtsRes.data.map(async (debt) => {
           let balanceRes = await getDebtBalance(debt._id);
           return { ...debt, currentBalance: balanceRes.data.balance };
         })
       );
-
       setDebts(debtsWithBalance);
     } catch (error) {
       console.error(error);
@@ -49,6 +53,7 @@ function DebtPage() {
     setMembers(res.data);
     if (res.data.length > 0) {
       setNewMadeBy(res.data.find(m => m._id === userId)?._id || res.data[0]._id);
+      setNewOwner(res.data.find(m => m._id === userId)?._id || res.data[0]._id);
     }
   }
 
@@ -88,11 +93,30 @@ function DebtPage() {
     fetchDebts();
   }
 
-  function getDebtAccent(debt) {
-    if (debt.isShared) return 'linear-gradient(135deg, #B8334D, #8B1E3F)';
-    if (debt.owner === userId) return 'linear-gradient(135deg, #7C2D3E, #5C1F2D)';
-    return 'linear-gradient(135deg, #A13C5C, #7A2844)';
+  async function handleAddDebt() {
+    if (!newDebtName || !newStartingBalance || newInterestRate === '') return;
+    await createDebt({
+      name: newDebtName,
+      startingBalance: Number(newStartingBalance),
+      interestRate: Number(newInterestRate),
+      isShared: newIsShared,
+      owner: newIsShared ? undefined : (newOwner || userId),
+      householdId
+    });
+    setNewDebtName('');
+    setNewStartingBalance('');
+    setNewInterestRate('');
+    setNewIsShared(false);
+    setNewOwner('');
+    setShowAddDebt(false);
+    fetchDebts();
   }
+
+  function getDebtAccent(debt) {
+  if (debt.isShared) return 'linear-gradient(135deg, #B8334D, #8B1E3F)';
+  if (debt.owner === userId) return 'linear-gradient(135deg, #4DA3FF, #0080FF)';
+  return 'linear-gradient(135deg, #FF8FC7, #FF4DA6)';
+}
 
   let inputStyle = {
     padding: '8px',
@@ -107,14 +131,100 @@ function DebtPage() {
 
   return (
     <div style={{ background: '#0D1117', minHeight: '100vh', padding: '32px', paddingBottom: '80px' }}>
-      <h1 style={{
-        fontSize: '24px',
-        marginBottom: '24px',
-        background: 'linear-gradient(135deg, #B8334D, #8B1E3F)',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text'
-      }}>Debt</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <h1 style={{
+          fontSize: '24px',
+          background: 'linear-gradient(135deg, #B8334D, #8B1E3F)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text'
+        }}>Debt</h1>
+        <button
+          onClick={() => setShowAddDebt(!showAddDebt)}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '20px',
+            border: 'none',
+            background: 'linear-gradient(135deg, #B8334D, #8B1E3F)',
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '13px',
+            cursor: 'pointer'
+          }}
+        >
+          {showAddDebt ? '✕ Cancel' : '+ Add Debt'}
+        </button>
+      </div>
+
+      {showAddDebt && (
+        <div style={{
+          background: '#161B22',
+          border: '1px solid #30363D',
+          borderRadius: '12px',
+          padding: '20px',
+          marginBottom: '24px'
+        }}>
+          <h2 style={{ color: '#E8F5E9', fontSize: '15px', marginBottom: '14px' }}>New Debt</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                placeholder="Debt name"
+                value={newDebtName}
+                onChange={e => setNewDebtName(e.target.value)}
+                style={{ ...inputStyle, flex: 2 }}
+              />
+              <input
+                placeholder="Starting balance"
+                type="number"
+                value={newStartingBalance}
+                onChange={e => setNewStartingBalance(e.target.value)}
+                style={{ ...inputStyle, flex: 1 }}
+              />
+              <input
+                placeholder="Interest rate %"
+                type="number"
+                value={newInterestRate}
+                onChange={e => setNewInterestRate(e.target.value)}
+                style={{ ...inputStyle, flex: 1 }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <label style={{ color: '#8B949E', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <input
+                  type="checkbox"
+                  checked={newIsShared}
+                  onChange={e => setNewIsShared(e.target.checked)}
+                />
+                Shared debt
+              </label>
+              {!newIsShared && (
+                <select
+                  value={newOwner}
+                  onChange={e => setNewOwner(e.target.value)}
+                  style={{ ...inputStyle, flex: 1 }}
+                >
+                  {members.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
+                </select>
+              )}
+            </div>
+            <button
+              onClick={handleAddDebt}
+              style={{
+                padding: '10px',
+                borderRadius: '8px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #B8334D, #8B1E3F)',
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                cursor: 'pointer'
+              }}
+            >
+              Save Debt
+            </button>
+          </div>
+        </div>
+      )}
 
       {debts.length === 0 ? (
         <p style={{ color: '#8B949E' }}>No debts yet</p>
@@ -136,25 +246,18 @@ function DebtPage() {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <p style={{
-                    fontWeight: 'bold',
-                    fontSize: '16px',
-                    background: accent,
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text'
+                    fontWeight: 'bold', fontSize: '16px',
+                    background: accent, WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                   }}>
                     {debt.name}
                   </p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <p style={{ color: '#8B949E', fontSize: '13px' }}>
-                      {debt.interestRate}% APR
-                    </p>
+                    <p style={{ color: '#8B949E', fontSize: '13px' }}>{debt.interestRate}% APR</p>
                     <button
                       onClick={() => handleDelete(debt._id)}
                       style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '16px', padding: '4px' }}
-                    >
-                      ✕
-                    </button>
+                    >✕</button>
                   </div>
                 </div>
 
@@ -177,14 +280,9 @@ function DebtPage() {
                 <button
                   onClick={() => toggleExpand(debt._id)}
                   style={{
-                    width: '100%',
-                    padding: '8px',
-                    background: '#0D1117',
-                    border: '1px solid #30363D',
-                    borderRadius: '8px',
-                    color: '#8B949E',
-                    fontSize: '13px',
-                    cursor: 'pointer'
+                    width: '100%', padding: '8px', background: '#0D1117',
+                    border: '1px solid #30363D', borderRadius: '8px',
+                    color: '#8B949E', fontSize: '13px', cursor: 'pointer'
                   }}
                 >
                   {isExpanded ? '▲ Hide Transactions' : '▼ View Transactions'}

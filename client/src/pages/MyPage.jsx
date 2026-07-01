@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getSharedBills, getBillShares, markBillSharePaid, getAllDebts, getDebtBalance, getPaychecks, createPaycheck, calculateLeftover } from '../services/api';
-import { MONTHS, YEARS } from '../constants';
+import { getSharedBills, getBillShares, markBillSharePaid, getAllDebts, getDebtBalance, getPaychecks, createPaycheck, calculateLeftover, createBill } from '../services/api';
+import { MONTHS, YEARS, CATEGORIES } from '../constants';
 
 let BLUE_ACCENTS = [
   'linear-gradient(135deg, #4DA3FF, #0080FF)',
@@ -31,8 +31,13 @@ function MyPage() {
   let [billShares, setBillShares] = useState([]);
   let [showPaycheckHistory, setShowPaycheckHistory] = useState(false);
   let [showAddPaycheck, setShowAddPaycheck] = useState(false);
+  let [showAddBill, setShowAddBill] = useState(false);
   let [newPaycheckAmount, setNewPaycheckAmount] = useState('');
   let [newPaycheckDate, setNewPaycheckDate] = useState(new Date().toISOString().split('T')[0]);
+  let [newBillName, setNewBillName] = useState('');
+  let [newBillAmount, setNewBillAmount] = useState('');
+  let [newBillDueDate, setNewBillDueDate] = useState('');
+  let [newBillCategory, setNewBillCategory] = useState('Misc.');
   let now = new Date();
   let [selectedYear, setSelectedYear] = useState(String(now.getFullYear()));
   let [selectedMonthNum, setSelectedMonthNum] = useState(String(now.getMonth() + 1).padStart(2, '0'));
@@ -114,6 +119,25 @@ function MyPage() {
     setShowAddPaycheck(false);
     let paychecksRes = await getPaychecks(userId);
     setPaychecks(paychecksRes.data);
+  }
+
+  async function handleAddBill() {
+    if (!newBillName || !newBillAmount) return;
+    await createBill({
+      name: newBillName,
+      amount: Number(newBillAmount),
+      dueDate: newBillDueDate || undefined,
+      category: newBillCategory,
+      isShared: false,
+      owner: userId,
+      householdId
+    });
+    setNewBillName('');
+    setNewBillAmount('');
+    setNewBillDueDate('');
+    setNewBillCategory('Misc.');
+    setShowAddBill(false);
+    fetchAll();
   }
 
   let currentPaycheck = paychecks.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
@@ -271,6 +295,78 @@ function MyPage() {
 
       {activeTab === 'personal' && (
         <div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+            <button
+              onClick={() => setShowAddBill(!showAddBill)}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '20px',
+                border: 'none',
+                background: primaryGradient,
+                color: isMo ? '#fff' : '#0D1117',
+                fontWeight: 'bold',
+                fontSize: '13px',
+                cursor: 'pointer'
+              }}
+            >
+              {showAddBill ? '✕ Cancel' : '+ Add Bill'}
+            </button>
+          </div>
+
+          {showAddBill && (
+            <div style={{
+              background: '#161B22',
+              border: '1px solid #30363D',
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '16px'
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    placeholder="Bill name"
+                    value={newBillName}
+                    onChange={e => setNewBillName(e.target.value)}
+                    style={{ ...inputStyle, flex: 2 }}
+                  />
+                  <input
+                    placeholder="Amount"
+                    type="number"
+                    value={newBillAmount}
+                    onChange={e => setNewBillAmount(e.target.value)}
+                    style={{ ...inputStyle, flex: 1 }}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <select
+                    value={newBillCategory}
+                    onChange={e => setNewBillCategory(e.target.value)}
+                    style={{ ...inputStyle, flex: 1 }}
+                  >
+                    {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  </select>
+                  <input
+                    type="date"
+                    value={newBillDueDate}
+                    onChange={e => setNewBillDueDate(e.target.value)}
+                    style={{ ...inputStyle, flex: 1 }}
+                  />
+                </div>
+                <button
+                  onClick={handleAddBill}
+                  style={{
+                    padding: '10px', borderRadius: '8px', border: 'none',
+                    background: primaryGradient,
+                    color: isMo ? '#fff' : '#0D1117',
+                    fontWeight: 'bold', fontSize: '14px', cursor: 'pointer'
+                  }}
+                >
+                  Save Bill
+                </button>
+              </div>
+            </div>
+          )}
+
           {personalBills.length === 0 ? (
             <p style={{ color: '#8B949E' }}>No personal bills</p>
           ) : (

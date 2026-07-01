@@ -38,3 +38,5 @@ export let deleteBill = (billId) => api.delete(`/bills/${billId}`);
 export let getPaychecks = (userId) => api.get(`/paychecks?earnedBy=${userId}`);
 export let createPaycheck = (data) => api.post('/paychecks', data);
 export let calculateLeftover = (paycheckId) => api.put(`/paychecks/${paycheckId}/leftover`);
+export let createDebt = (data) => api.post('/debts', data);
+export let createSavingsGoal = (data) => api.post('/savings-goals', data);
