@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react';
-import { getSharedBills, getBillShares, markBillSharePaid, getAllDebts, getDebtBalance, getHouseholdMembers, getPaychecks, createPaycheck, calculateLeftover } from '../services/api';
+import { getSharedBills, getBillShares, markBillSharePaid, getAllDebts, getDebtBalance, getPaychecks, createPaycheck, calculateLeftover } from '../services/api';
 import { MONTHS, YEARS } from '../constants';
+
+let BLUE_ACCENTS = [
+  'linear-gradient(135deg, #4DA3FF, #0080FF)',
+  'linear-gradient(135deg, #60B0FF, #1A8CFF)',
+  'linear-gradient(135deg, #80C4FF, #3399FF)',
+  'linear-gradient(135deg, #1A8CFF, #0066CC)',
+  'linear-gradient(135deg, #99CCFF, #4DA3FF)',
+  'linear-gradient(135deg, #3399FF, #0055BB)',
+];
 
 let PINK_ACCENTS = [
   'linear-gradient(135deg, #FF8FC7, #FF4DA6)',
@@ -11,13 +20,12 @@ let PINK_ACCENTS = [
   'linear-gradient(135deg, #FFB3D9, #FF66B2)',
 ];
 
-function KirahPage() {
+function MyPage() {
   let [activeTab, setActiveTab] = useState('shared');
   let [sharedBills, setSharedBills] = useState([]);
   let [personalBills, setPersonalBills] = useState([]);
   let [debts, setDebts] = useState([]);
   let [paychecks, setPaychecks] = useState([]);
-  let [kirahId, setKirahId] = useState(null);
   let [loading, setLoading] = useState(true);
   let [expandedId, setExpandedId] = useState(null);
   let [billShares, setBillShares] = useState([]);
@@ -30,7 +38,16 @@ function KirahPage() {
   let [selectedMonthNum, setSelectedMonthNum] = useState(String(now.getMonth() + 1).padStart(2, '0'));
 
   let userId = localStorage.getItem('userId');
+  let userName = localStorage.getItem('userName');
   let householdId = localStorage.getItem('householdId');
+
+  let isMo = userName === 'Mo';
+  let ACCENTS = isMo ? BLUE_ACCENTS : PINK_ACCENTS;
+  let primaryGradient = isMo
+    ? 'linear-gradient(135deg, #4DA3FF, #0080FF)'
+    : 'linear-gradient(135deg, #FF8FC7, #FF4DA6)';
+  let borderColor = isMo ? '#0080FF33' : '#FF4DA633';
+  let unpaidColor = isMo ? '#4DA3FF' : '#FF8FC7';
 
   useEffect(function() {
     fetchAll();
@@ -38,27 +55,22 @@ function KirahPage() {
 
   async function fetchAll() {
     try {
-      let membersRes = await getHouseholdMembers(householdId);
-      let kirah = membersRes.data.find(m => m._id !== userId);
-      if (!kirah) return;
-      setKirahId(kirah._id);
-
       let [sharedRes, allBillsRes, debtsRes, paychecksRes] = await Promise.all([
         getSharedBills(householdId),
         fetch(`http://localhost:5001/api/bills?householdId=${householdId}&isShared=false`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         }).then(r => r.json()),
         getAllDebts(householdId),
-        getPaychecks(kirah._id)
+        getPaychecks(userId)
       ]);
 
       setSharedBills(sharedRes.data);
-      setPersonalBills(allBillsRes.filter(b => b.owner === kirah._id));
+      setPersonalBills(allBillsRes.filter(b => b.owner === userId));
       setPaychecks(paychecksRes.data);
 
       let debtsWithBalance = await Promise.all(
         debtsRes.data
-          .filter(d => !d.isShared && d.owner === kirah._id)
+          .filter(d => !d.isShared && d.owner === userId)
           .map(async (debt) => {
             let balanceRes = await getDebtBalance(debt._id);
             return { ...debt, currentBalance: balanceRes.data.balance };
@@ -90,9 +102,9 @@ function KirahPage() {
   }
 
   async function handleAddPaycheck() {
-    if (!newPaycheckAmount || !kirahId) return;
+    if (!newPaycheckAmount) return;
     let res = await createPaycheck({
-      earnedBy: kirahId,
+      earnedBy: userId,
       amount: Number(newPaycheckAmount),
       date: newPaycheckDate
     });
@@ -100,7 +112,7 @@ function KirahPage() {
     setNewPaycheckAmount('');
     setNewPaycheckDate(new Date().toISOString().split('T')[0]);
     setShowAddPaycheck(false);
-    let paychecksRes = await getPaychecks(kirahId);
+    let paychecksRes = await getPaychecks(userId);
     setPaychecks(paychecksRes.data);
   }
 
@@ -126,11 +138,11 @@ function KirahPage() {
       <h1 style={{
         fontSize: '24px',
         marginBottom: '20px',
-        background: 'linear-gradient(135deg, #FF8FC7, #FF4DA6)',
+        background: primaryGradient,
         WebkitBackgroundClip: 'text',
         WebkitTextFillColor: 'transparent',
         backgroundClip: 'text'
-      }}>Kirah's Page</h1>
+      }}>{userName}'s Page</h1>
 
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
         {[
@@ -149,10 +161,8 @@ function KirahPage() {
               fontWeight: 'bold',
               fontSize: '13px',
               cursor: 'pointer',
-              background: activeTab === tab.key
-                ? 'linear-gradient(135deg, #FF8FC7, #FF4DA6)'
-                : '#161B22',
-              color: activeTab === tab.key ? '#0D1117' : '#8B949E'
+              background: activeTab === tab.key ? primaryGradient : '#161B22',
+              color: activeTab === tab.key ? (isMo ? '#fff' : '#0D1117') : '#8B949E'
             }}
           >
             {tab.label}
@@ -167,13 +177,13 @@ function KirahPage() {
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               {sharedBills.map((bill, index) => {
-                let accent = PINK_ACCENTS[index % PINK_ACCENTS.length];
+                let accent = ACCENTS[index % ACCENTS.length];
                 let isExpanded = expandedId === bill._id;
 
                 return (
                   <div key={bill._id} style={{
                     background: '#161B22',
-                    border: `1px solid ${bill.paid ? '#1DB95444' : '#FF4DA633'}`,
+                    border: `1px solid ${bill.paid ? '#1DB95444' : borderColor}`,
                     borderRadius: '12px',
                     padding: '16px'
                   }}>
@@ -191,7 +201,7 @@ function KirahPage() {
                     </div>
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', fontSize: '11px', flexWrap: 'wrap' }}>
                       {bill.dueDate && <span style={{ color: '#8B949E' }}>Due: {new Date(bill.dueDate).toLocaleDateString()}</span>}
-                      <span style={{ color: bill.paid ? '#1DB954' : '#FF8FC7', fontWeight: 'bold' }}>
+                      <span style={{ color: bill.paid ? '#1DB954' : unpaidColor, fontWeight: 'bold' }}>
                         {bill.paid ? '✓ Paid' : 'Unpaid'}
                       </span>
                     </div>
@@ -205,18 +215,19 @@ function KirahPage() {
                     {isExpanded && (
                       <div style={{ marginTop: '10px', borderTop: '1px solid #30363D', paddingTop: '10px' }}>
                         {billShares.map(share => {
-                          let isKirahShare = share.owner === kirahId;
-                          let shareAccent = isKirahShare
-                            ? 'linear-gradient(135deg, #FF8FC7, #FF4DA6)'
-                            : 'linear-gradient(135deg, #4DA3FF, #0080FF)';
+                          let isMyShare = share.owner === userId;
+                          let shareAccent = isMyShare ? primaryGradient
+                            : isMo
+                              ? 'linear-gradient(135deg, #FF8FC7, #FF4DA6)'
+                              : 'linear-gradient(135deg, #4DA3FF, #0080FF)';
 
                           return (
                             <div key={share._id} style={{
                               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                               padding: '8px 10px', borderRadius: '6px', marginBottom: '6px',
-                              background: isKirahShare
-                                ? 'linear-gradient(135deg, #6b1a4a, #4a1233)'
-                                : 'linear-gradient(135deg, #0d3a6b, #082849)'
+                              background: isMyShare
+                                ? isMo ? 'linear-gradient(135deg, #0d3a6b, #082849)' : 'linear-gradient(135deg, #6b1a4a, #4a1233)'
+                                : isMo ? 'linear-gradient(135deg, #6b1a4a, #4a1233)' : 'linear-gradient(135deg, #0d3a6b, #082849)'
                             }}>
                               <div>
                                 <p style={{
@@ -224,7 +235,7 @@ function KirahPage() {
                                   background: shareAccent, WebkitBackgroundClip: 'text',
                                   WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                                 }}>
-                                  {isKirahShare ? 'Kirah' : 'Mo'}
+                                  {isMyShare ? userName : (isMo ? 'Kirah' : 'Mo')}
                                 </p>
                                 <p style={{ color: '#cfcfcf', fontSize: '11px' }}>${share.amount}</p>
                               </div>
@@ -232,12 +243,12 @@ function KirahPage() {
                                 <span style={{ fontSize: '11px', color: share.paid ? '#1DB954' : '#8B949E' }}>
                                   {share.paid ? '✓' : 'Unpaid'}
                                 </span>
-                                {isKirahShare && (
+                                {isMyShare && (
                                   <button
                                     onClick={() => handleMarkPaid(share._id, share.paid)}
                                     style={{
                                       padding: '4px 8px', borderRadius: '4px', border: 'none',
-                                      background: share.paid ? '#30363D' : 'linear-gradient(135deg, #FF8FC7, #FF4DA6)',
+                                      background: share.paid ? '#30363D' : primaryGradient,
                                       color: 'white', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer'
                                     }}
                                   >
@@ -265,11 +276,11 @@ function KirahPage() {
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               {personalBills.map((bill, index) => {
-                let accent = PINK_ACCENTS[index % PINK_ACCENTS.length];
+                let accent = ACCENTS[index % ACCENTS.length];
                 return (
                   <div key={bill._id} style={{
                     background: '#161B22',
-                    border: `1px solid ${bill.paid ? '#1DB95444' : '#FF4DA633'}`,
+                    border: `1px solid ${bill.paid ? '#1DB95444' : borderColor}`,
                     borderRadius: '12px',
                     padding: '16px'
                   }}>
@@ -288,7 +299,7 @@ function KirahPage() {
                     <div style={{ display: 'flex', gap: '8px', fontSize: '11px', flexWrap: 'wrap' }}>
                       <span style={{ color: '#8B949E' }}>{bill.category}</span>
                       {bill.dueDate && <span style={{ color: '#8B949E' }}>Due: {new Date(bill.dueDate).toLocaleDateString()}</span>}
-                      <span style={{ color: bill.paid ? '#1DB954' : '#FF8FC7', fontWeight: 'bold' }}>
+                      <span style={{ color: bill.paid ? '#1DB954' : unpaidColor, fontWeight: 'bold' }}>
                         {bill.paid ? '✓ Paid' : 'Unpaid'}
                       </span>
                     </div>
@@ -308,7 +319,7 @@ function KirahPage() {
             debts.map((debt, index) => {
               let paidSoFar = debt.startingBalance - debt.currentBalance;
               let percentPaid = Math.max(0, Math.min(100, (paidSoFar / debt.startingBalance) * 100));
-              let accent = PINK_ACCENTS[index % PINK_ACCENTS.length];
+              let accent = ACCENTS[index % ACCENTS.length];
 
               return (
                 <div key={debt._id} style={{
@@ -352,7 +363,7 @@ function KirahPage() {
         <div>
           <div style={{
             background: '#161B22',
-            border: '1px solid #FF4DA633',
+            border: `1px solid ${borderColor}`,
             borderRadius: '12px',
             padding: '24px',
             marginBottom: '16px',
@@ -363,7 +374,7 @@ function KirahPage() {
               <p style={{
                 fontSize: '36px',
                 fontWeight: 'bold',
-                background: 'linear-gradient(135deg, #FF8FC7, #FF4DA6)',
+                background: primaryGradient,
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text'
@@ -384,8 +395,8 @@ function KirahPage() {
             onClick={() => setShowAddPaycheck(!showAddPaycheck)}
             style={{
               width: '100%', padding: '10px', borderRadius: '8px', border: 'none',
-              background: 'linear-gradient(135deg, #FF8FC7, #FF4DA6)',
-              color: '#0D1117', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer',
+              background: primaryGradient,
+              color: isMo ? '#fff' : '#0D1117', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer',
               marginBottom: '16px'
             }}
           >
@@ -416,8 +427,8 @@ function KirahPage() {
                 onClick={handleAddPaycheck}
                 style={{
                   width: '100%', padding: '8px', borderRadius: '6px', border: 'none',
-                  background: 'linear-gradient(135deg, #FF8FC7, #FF4DA6)',
-                  color: '#0D1117', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'
+                  background: primaryGradient,
+                  color: isMo ? '#fff' : '#0D1117', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'
                 }}
               >
                 Save Paycheck
@@ -460,7 +471,7 @@ function KirahPage() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {filteredPaychecks.map((p, index) => {
-                    let accent = PINK_ACCENTS[index % PINK_ACCENTS.length];
+                    let accent = ACCENTS[index % ACCENTS.length];
                     return (
                       <div key={p._id} style={{
                         background: '#161B22', border: '1px solid #30363D',
@@ -496,4 +507,4 @@ function KirahPage() {
   );
 }
 
-export default KirahPage;
+export default MyPage;

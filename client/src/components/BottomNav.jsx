@@ -3,8 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 let tabs = [
   { path: '/', label: 'Dashboard', icon: '🏠' },
   { path: '/shared', label: 'Shared', icon: '👥' },
-  { path: '/kirah', label: "Kirah's", icon: '💗' },
-  { path: '/mo', label: "Mo's", icon: '💙' },
+  { path: '/kirah', label: "Kirah", icon: '💗' },
+  { path: '/mo', label: "Mo", icon: '💪🏾' },
   { path: '/debt', label: 'Debt', icon: '💳' },
   { path: '/goals', label: 'Goals', icon: '🎯' }
 ];
