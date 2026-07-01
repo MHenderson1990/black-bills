@@ -30,3 +30,11 @@ export let createDebtTransaction = (data) => api.post('/debt-transactions', data
 export let getHouseholdMembers = (householdId) => api.get(`/auth/household-members?householdId=${householdId}`);
 export let getContributions = (goalId) => api.get(`/contributions?savingsGoal=${goalId}`);
 export let createContribution = (data) => api.post('/contributions', data);
+export let getSharedBills = (householdId) => api.get(`/bills?householdId=${householdId}&isShared=true`);
+export let getBillShares = (billId) => api.get(`/bill-shares?bill=${billId}`);
+export let markBillSharePaid = (shareId, data) => api.put(`/bill-shares/${shareId}`, data);
+export let createBill = (data) => api.post('/bills', data);
+export let deleteBill = (billId) => api.delete(`/bills/${billId}`);
+export let getPaychecks = (userId) => api.get(`/paychecks?earnedBy=${userId}`);
+export let createPaycheck = (data) => api.post('/paychecks', data);
+export let calculateLeftover = (paycheckId) => api.put(`/paychecks/${paycheckId}/leftover`);

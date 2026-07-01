@@ -28,7 +28,19 @@ const markBillSharePaid = async (req, res) => {
   }
 };
 
-module.exports = { markBillSharePaid };
+      const getAllBillShares = async (req, res) => {
+        try {
+          let filter = {};
+          if (req.query.bill) filter.bill = req.query.bill;
+          const billShares = await BillShare.find(filter);
+          res.json(billShares);
+        } catch (error) {
+          res.status(500).json({ message: error.message });
+        }
+      };
+
+module.exports = { markBillSharePaid, getAllBillShares };
+
 
 
 

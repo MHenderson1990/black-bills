@@ -1,14 +1,331 @@
+import { useState, useEffect } from 'react';
+import { getSharedBills, getBillShares, markBillSharePaid, createBill, deleteBill } from '../services/api';
+import { CATEGORIES } from '../constants';
+
+let GOLD_ACCENTS = [
+  'linear-gradient(135deg, #FFD700, #E6C200)',
+  'linear-gradient(135deg, #E6A817, #C48A00)',
+  'linear-gradient(135deg, #D4AF37, #B8941F)',
+  'linear-gradient(135deg, #FFC125, #E6A800)',
+  'linear-gradient(135deg, #C9A227, #A8851C)',
+  'linear-gradient(135deg, #F0C040, #D4A010)',
+];
+
 function SharedBills() {
+  let [bills, setBills] = useState([]);
+  let [loading, setLoading] = useState(true);
+  let [expandedId, setExpandedId] = useState(null);
+  let [billShares, setBillShares] = useState([]);
+  let [showAddForm, setShowAddForm] = useState(false);
+  let [newName, setNewName] = useState('');
+  let [newAmount, setNewAmount] = useState('');
+  let [newDueDate, setNewDueDate] = useState('');
+  let [newCategory, setNewCategory] = useState('Misc.');
+
+  let userId = localStorage.getItem('userId');
+  let householdId = localStorage.getItem('householdId');
+
+  useEffect(function() {
+    fetchBills();
+  }, []);
+
+  async function fetchBills() {
+    try {
+      let res = await getSharedBills(householdId);
+      setBills(res.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function toggleExpand(billId) {
+    if (expandedId === billId) {
+      setExpandedId(null);
+      return;
+    }
+    setExpandedId(billId);
+    let res = await getBillShares(billId);
+    setBillShares(res.data);
+  }
+
+  async function handleMarkPaid(shareId, currentPaidStatus) {
+    await markBillSharePaid(shareId, { paid: !currentPaidStatus });
+    let res = await getBillShares(expandedId);
+    setBillShares(res.data);
+    fetchBills();
+  }
+
+  async function handleAddBill() {
+    if (!newName || !newAmount) return;
+    await createBill({
+      name: newName,
+      amount: Number(newAmount),
+      dueDate: newDueDate || undefined,
+      category: newCategory,
+      isShared: true,
+      householdId
+    });
+    setNewName('');
+    setNewAmount('');
+    setNewDueDate('');
+    setNewCategory('Misc.');
+    setShowAddForm(false);
+    fetchBills();
+  }
+
+  async function handleDelete(billId) {
+    if (window.confirm('Delete this bill? This cannot be undone.')) {
+      await deleteBill(billId);
+      setBills(bills.filter(b => b._id !== billId));
+    }
+  }
+
+  let inputStyle = {
+    padding: '8px',
+    borderRadius: '6px',
+    border: '1px solid #30363D',
+    background: '#0D1117',
+    color: '#fff',
+    fontSize: '13px'
+  };
+
+  if (loading) return <p style={{ padding: '40px', color: '#fff', background: '#0D1117', minHeight: '100vh' }}>Loading...</p>;
+
   return (
     <div style={{ background: '#0D1117', minHeight: '100vh', padding: '32px', paddingBottom: '80px' }}>
-      <h1 style={{
-        fontSize: '24px',
-        background: 'linear-gradient(135deg, #FFD700, #E6C200)',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text'
-      }}>Shared Bills</h1>
-      <p style={{ color: '#8B949E', marginTop: '12px' }}>Coming soon</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <h1 style={{
+          fontSize: '24px',
+          background: 'linear-gradient(135deg, #FFD700, #E6C200)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text'
+        }}>Shared Bills</h1>
+        <button
+          onClick={() => setShowAddForm(!showAddForm)}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '20px',
+            border: 'none',
+            background: 'linear-gradient(135deg, #FFD700, #E6C200)',
+            color: '#0D1117',
+            fontWeight: 'bold',
+            fontSize: '13px',
+            cursor: 'pointer'
+          }}
+        >
+          {showAddForm ? '✕ Cancel' : '+ Add Bill'}
+        </button>
+      </div>
+
+      {showAddForm && (
+        <div style={{
+          background: '#161B22',
+          border: '1px solid #30363D',
+          borderRadius: '12px',
+          padding: '20px',
+          marginBottom: '24px'
+        }}>
+          <h2 style={{ color: '#E8F5E9', fontSize: '15px', marginBottom: '14px' }}>New Shared Bill</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                placeholder="Bill name"
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                style={{ ...inputStyle, flex: 2 }}
+              />
+              <input
+                placeholder="Amount"
+                type="number"
+                value={newAmount}
+                onChange={e => setNewAmount(e.target.value)}
+                style={{ ...inputStyle, flex: 1 }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <select
+                value={newCategory}
+                onChange={e => setNewCategory(e.target.value)}
+                style={{ ...inputStyle, flex: 1 }}
+              >
+                {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+              </select>
+              <input
+                type="date"
+                value={newDueDate}
+                onChange={e => setNewDueDate(e.target.value)}
+                style={{ ...inputStyle, flex: 1 }}
+              />
+            </div>
+            <button
+              onClick={handleAddBill}
+              style={{
+                padding: '10px',
+                borderRadius: '8px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #FFD700, #E6C200)',
+                color: '#0D1117',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                cursor: 'pointer'
+              }}
+            >
+              Save Bill
+            </button>
+          </div>
+        </div>
+      )}
+
+      {bills.length === 0 ? (
+        <p style={{ color: '#8B949E' }}>No shared bills yet</p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {bills.map((bill, index) => {
+            let isExpanded = expandedId === bill._id;
+            let accent = GOLD_ACCENTS[index % GOLD_ACCENTS.length];
+
+            return (
+              <div key={bill._id} style={{
+                background: '#161B22',
+                border: `1px solid ${bill.paid ? '#1DB95444' : '#FFD70044'}`,
+                borderRadius: '12px',
+                padding: '20px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <p style={{
+                    fontWeight: 'bold',
+                    fontSize: '16px',
+                    background: accent,
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text'
+                  }}>
+                    {bill.name}
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <p style={{
+                      fontWeight: 'bold',
+                      background: accent,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text'
+                    }}>${bill.amount}</p>
+                    <button
+                      onClick={() => handleDelete(bill._id)}
+                      style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '16px', padding: '4px' }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', fontSize: '12px' }}>
+                  <span style={{ color: '#8B949E' }}>{bill.category}</span>
+                  {bill.dueDate && (
+                    <span style={{ color: '#8B949E' }}>Due: {new Date(bill.dueDate).toLocaleDateString()}</span>
+                  )}
+                  <span style={{
+                    color: bill.paid ? '#1DB954' : '#FFD700',
+                    fontWeight: 'bold'
+                  }}>
+                    {bill.paid ? '✓ Paid' : 'Unpaid'}
+                  </span>
+                </div>
+
+                <button
+                  onClick={() => toggleExpand(bill._id)}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    background: '#0D1117',
+                    border: '1px solid #30363D',
+                    borderRadius: '8px',
+                    color: '#8B949E',
+                    fontSize: '13px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {isExpanded ? '▲ Hide Split' : '▼ View Split'}
+                </button>
+
+                {isExpanded && (
+                  <div style={{ marginTop: '14px', borderTop: '1px solid #30363D', paddingTop: '14px' }}>
+                    {billShares.length === 0 ? (
+                      <p style={{ color: '#8B949E', fontSize: '13px' }}>No shares found</p>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {billShares.map(share => {
+                          let isMyShare = share.owner === userId;
+                          let shareAccent = isMyShare
+                            ? 'linear-gradient(135deg, #4DA3FF, #0080FF)'
+                            : 'linear-gradient(135deg, #FF8FC7, #FF4DA6)';
+
+                          return (
+                            <div key={share._id} style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              padding: '10px 14px',
+                              borderRadius: '8px',
+                              background: isMyShare
+                                ? 'linear-gradient(135deg, #0d3a6b, #082849)'
+                                : 'linear-gradient(135deg, #6b1a4a, #4a1233)'
+                            }}>
+                              <div>
+                                <p style={{
+                                  fontWeight: 'bold',
+                                  fontSize: '14px',
+                                  background: shareAccent,
+                                  WebkitBackgroundClip: 'text',
+                                  WebkitTextFillColor: 'transparent',
+                                  backgroundClip: 'text'
+                                }}>
+                                  {isMyShare ? 'Mo' : 'Kirah'}
+                                </p>
+                                <p style={{ color: '#cfcfcf', fontSize: '12px' }}>${share.amount}</p>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <span style={{
+                                  fontSize: '12px',
+                                  color: share.paid ? '#1DB954' : '#8B949E'
+                                }}>
+                                  {share.paid ? '✓ Paid' : 'Unpaid'}
+                                </span>
+                                {isMyShare && (
+                                  <button
+                                    onClick={() => handleMarkPaid(share._id, share.paid)}
+                                    style={{
+                                      padding: '6px 12px',
+                                      borderRadius: '6px',
+                                      border: 'none',
+                                      background: share.paid
+                                        ? '#30363D'
+                                        : 'linear-gradient(135deg, #4DA3FF, #0080FF)',
+                                      color: 'white',
+                                      fontSize: '12px',
+                                      fontWeight: 'bold',
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    {share.paid ? 'Undo' : 'Mark Paid'}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
