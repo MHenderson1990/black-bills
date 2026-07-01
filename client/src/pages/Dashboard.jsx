@@ -13,6 +13,10 @@ let CATEGORY_GRADIENTS = [
   ['#C9A227', '#A8851C']
 ];
 
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('en-US', { timeZone: 'UTC' });
+}
 function Dashboard() {
   let [nextPayDate, setNextPayDate] = useState(null);
   let [periodStart, setPeriodStart] = useState(null);
@@ -224,7 +228,7 @@ function Dashboard() {
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text'
               }}>
-                {nextPayDate ? new Date(nextPayDate).toLocaleDateString() : 'Not set'}
+                {nextPayDate ? formatDate(nextPayDate) : 'Not set'}
               </p>
             )}
           </div>
@@ -246,7 +250,7 @@ function Dashboard() {
               backgroundClip: 'text'
             }}>
               {periodStart && periodEnd
-                ? `${new Date(periodStart).toLocaleDateString()} - ${new Date(periodEnd).toLocaleDateString()}`
+                ? `${formatDate(periodStart)} - ${formatDate(periodEnd)}`
                 : 'Not set'}
             </p>
           </div>
@@ -282,7 +286,7 @@ function Dashboard() {
                           {bill.name}
                         </p>
                         <p style={{ color: '#cfcfcf', fontSize: '12px' }}>
-                          {new Date(bill.dueDate).toLocaleDateString()}
+                          {formatDate(bill.dueDate)}
                         </p>
                       </div>
                       <p style={{
