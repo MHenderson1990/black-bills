@@ -225,15 +225,37 @@ function MyPage() {
 
   return (
     <div style={{ background: '#0D1117', minHeight: '100vh', padding: 'clamp(16px, 4vw, 32px)', paddingBottom: '110px' }}>
-      <h1 style={{
-        fontSize: 'clamp(20px, 5vw, 24px)',
-        marginBottom: '20px',
-        marginTop: 0,
-        background: primaryGradient,
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text'
-      }}>{userName}'s Page</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h1 style={{
+          fontSize: 'clamp(20px, 5vw, 24px)',
+          margin: 0,
+          background: primaryGradient,
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text'
+        }}>{userName}'s Page</h1>
+        <button
+          onClick={function() {
+            if (window.confirm('Log out of BlackBills?')) {
+              localStorage.clear();
+              window.location.href = '/';
+            }
+          }}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '20px',
+            border: '1px solid #30363D',
+            background: 'transparent',
+            color: '#8B949E',
+            fontWeight: 'bold',
+            fontSize: '13px',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          Log Out
+        </button>
+      </div>
 
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
         {[
