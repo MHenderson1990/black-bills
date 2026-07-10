@@ -44,6 +44,7 @@ function MyPage() {
   let [newBillCategory, setNewBillCategory] = useState('Misc.');
   let [newBillIsRecurring, setNewBillIsRecurring] = useState(false);
   let [newIsSetAside, setNewIsSetAside] = useState(false);
+  let [newRecurrenceType, setNewRecurrenceType] = useState('monthly');
   let now = new Date();
   let [selectedYear, setSelectedYear] = useState(String(now.getFullYear()));
   let [selectedMonthNum, setSelectedMonthNum] = useState(String(now.getMonth() + 1).padStart(2, '0'));
