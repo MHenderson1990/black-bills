@@ -364,12 +364,24 @@ function Dashboard() {
                 </svg>
                 <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
-                    <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={{ fill: '#E8F5E9' }}>
+                    <Pie
+                      data={pieData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      labelLine={{ stroke: '#8B949E' }}
+                    >
                       {pieData.map((entry, index) => (
                         <Cell key={index} fill={`url(#pieGrad${index})`} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{ background: '#161B22', border: '1px solid #30363D', color: '#fff' }} />
+                    <Tooltip
+                      formatter={(value) => `$${Number(value).toFixed(2)}`}
+                      contentStyle={{ background: '#161B22', border: '1px solid #30363D', color: '#fff' }}
+                    />
                     <Legend wrapperStyle={{ color: '#E8F5E9', fontSize: '12px' }} />
                   </PieChart>
                 </ResponsiveContainer>
