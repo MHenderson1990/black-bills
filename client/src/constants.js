@@ -1,4 +1,4 @@
-export let CATEGORIES = ['Misc.', 'Housing', 'Food', 'Utilities', 'Subscriptions', 'Shopping', 'Entertainment', 'Travel'];
+export let CATEGORIES = ['Misc.', 'Housing', 'Food', 'Utilities', 'Subscriptions', 'Credit', 'Shopping', 'Entertainment', 'Travel'];
 export let MONTHS = [
   { value: '01', label: 'January' },
   { value: '02', label: 'February' },
