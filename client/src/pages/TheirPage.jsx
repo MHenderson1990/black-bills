@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getSharedBills, getBillShares, getAllDebts, getDebtBalance, getPaychecks, getHouseholdMembers, getPersonalBills } from '../services/api';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { getSharedBills, getBillShares, getAllDebts, getDebtBalance, getPaychecks, getHouseholdMembers, getPersonalBills, getRecentPayDate, getSpendingCashflow } from '../services/api';
 import { MONTHS, YEARS, formatDate } from '../constants';
 
 let BLUE_ACCENTS = [
@@ -20,14 +21,18 @@ let PINK_ACCENTS = [
   'linear-gradient(135deg, #FFB3D9, #FF66B2)',
 ];
 
-
+let BLUE_PIE = [['#4DA3FF', '#0080FF'], ['#60B0FF', '#1A8CFF'], ['#80C4FF', '#3399FF'], ['#1A8CFF', '#0066CC'], ['#99CCFF', '#4DA3FF'], ['#3399FF', '#0055BB'], ['#B3D9FF', '#66B2FF'], ['#0080FF', '#004C99']];
+let PINK_PIE = [['#FF8FC7', '#FF4DA6'], ['#FF69B4', '#FF1493'], ['#FFB6C1', '#FF69B4'], ['#FF4DA6', '#CC0066'], ['#FF82AB', '#FF3385'], ['#FFB3D9', '#FF66B2'], ['#FFC7DE', '#FF8FC7'], ['#FF1493', '#B30059']];
 
 function TheirPage() {
-  let [activeTab, setActiveTab] = useState('shared');
+  let [activeTab, setActiveTab] = useState('overview');
   let [sharedBills, setSharedBills] = useState([]);
   let [personalBills, setPersonalBills] = useState([]);
   let [debts, setDebts] = useState([]);
   let [paychecks, setPaychecks] = useState([]);
+  let [spending, setSpending] = useState({});
+  let [periodStart, setPeriodStart] = useState(null);
+  let [periodEnd, setPeriodEnd] = useState(null);
   let [otherId, setOtherId] = useState(null);
   let [otherName, setOtherName] = useState('');
   let [loading, setLoading] = useState(true);
@@ -45,6 +50,7 @@ function TheirPage() {
   let isMo = userName === 'Mo';
   // "Their" theme is the OPPOSITE of the logged in user
   let ACCENTS = isMo ? PINK_ACCENTS : BLUE_ACCENTS;
+  let PIE_GRADIENTS = isMo ? PINK_PIE : BLUE_PIE;
   let primaryGradient = isMo
     ? 'linear-gradient(135deg, #FF8FC7, #FF4DA6)'
     : 'linear-gradient(135deg, #4DA3FF, #0080FF)';
@@ -66,16 +72,28 @@ function TheirPage() {
       setOtherId(other._id);
       setOtherName(other.name);
 
-      let [sharedRes, personalRes, debtsRes, paychecksRes] = await Promise.all([
+      let [sharedRes, personalRes, debtsRes, paychecksRes, recentRes] = await Promise.all([
         getSharedBills(householdId),
         getPersonalBills(householdId, other._id),
         getAllDebts(householdId),
-        getPaychecks(other._id)
+        getPaychecks(other._id),
+        getRecentPayDate(other._id)
       ]);
 
       setSharedBills(sharedRes.data);
       setPersonalBills(personalRes.data);
       setPaychecks(paychecksRes.data);
+
+      if (recentRes.data.recentPayDate && recentRes.data.periodEnd) {
+        setPeriodStart(recentRes.data.recentPayDate);
+        setPeriodEnd(recentRes.data.periodEnd);
+        let spendingRes = await getSpendingCashflow(
+          other._id,
+          recentRes.data.recentPayDate,
+          recentRes.data.periodEnd
+        );
+        setSpending(spendingRes.data);
+      }
 
       let debtsWithBalance = await Promise.all(
         debtsRes.data
@@ -108,6 +126,13 @@ function TheirPage() {
   let filteredPaychecks = paychecks.filter(p =>
     p.date.slice(0, 7) === `${selectedYear}-${selectedMonthNum}`
   );
+
+  let pieData = Object.keys(spending).map(category => ({
+    name: category,
+    value: spending[category]
+  }));
+
+  let periodTotal = pieData.reduce((total, slice) => total + slice.value, 0);
 
   let inputStyle = {
     padding: '10px',
@@ -142,6 +167,7 @@ function TheirPage() {
 
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
         {[
+          { key: 'overview', label: 'Overview' },
           { key: 'shared', label: 'Shared Bills' },
           { key: 'personal', label: 'Personal Bills' },
           { key: 'debt', label: 'Debt' },
@@ -165,6 +191,90 @@ function TheirPage() {
           </button>
         ))}
       </div>
+
+      {activeTab === 'overview' && (
+        <div>
+          {!periodStart ? (
+            <p style={{ color: '#8B949E' }}>{otherName || 'They'} hasn't set a pay schedule yet, so there's no period overview to show.</p>
+          ) : (
+            <>
+              <p style={{ color: '#8B949E', fontSize: '13px', marginTop: 0, marginBottom: '16px' }}>
+                Pay period: {formatDate(periodStart)} – {formatDate(periodEnd)}
+              </p>
+
+              <div style={{ background: '#161B22', padding: '20px', borderRadius: '12px', border: `1px solid ${borderColor}`, marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '16px', marginTop: 0, marginBottom: '16px', color: '#E8F5E9' }}>{otherName}'s Spending This Period</h2>
+                {pieData.length === 0 ? (
+                  <p style={{ color: '#8B949E' }}>No expenses this period</p>
+                ) : (
+                  <>
+                    <svg width="0" height="0">
+                      <defs>
+                        {pieData.map((entry, index) => {
+                          let [gradStart, gradEnd] = PIE_GRADIENTS[index % PIE_GRADIENTS.length];
+                          return (
+                            <linearGradient key={index} id={`theirPieGrad${index}`} x1="0" y1="0" x2="1" y2="1">
+                              <stop offset="0%" stopColor={gradStart} />
+                              <stop offset="100%" stopColor={gradEnd} />
+                            </linearGradient>
+                          );
+                        })}
+                      </defs>
+                    </svg>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                        <Pie
+                          data={pieData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={80}
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                          labelLine={{ stroke: '#8B949E' }}
+                        >
+                          {pieData.map((entry, index) => (
+                            <Cell key={index} fill={`url(#theirPieGrad${index})`} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          formatter={(value) => `$${Number(value).toFixed(2)}`}
+                          contentStyle={{ background: '#161B22', border: '1px solid #30363D', color: '#fff' }}
+                        />
+                        <Legend wrapperStyle={{ color: '#E8F5E9', fontSize: '12px' }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </>
+                )}
+              </div>
+
+              <div style={{
+                background: '#161B22',
+                border: `1px solid ${borderColor}`,
+                borderRadius: '12px',
+                padding: '20px',
+                textAlign: 'center'
+              }}>
+                <p style={{ color: '#8B949E', fontSize: '13px', marginTop: 0, marginBottom: '8px' }}>Total Expenses This Period</p>
+                <p style={{
+                  fontSize: '30px',
+                  fontWeight: 'bold',
+                  margin: 0,
+                  background: primaryGradient,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
+                  ${periodTotal.toFixed(2)}
+                </p>
+                <p style={{ color: '#8B949E', fontSize: '11px', marginTop: '6px', marginBottom: 0 }}>
+                  Set-aside trackers + personal bills + debt charges due this period
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {activeTab === 'shared' && (
         <div>
@@ -198,6 +308,10 @@ function TheirPage() {
                     </div>
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', fontSize: '11px', flexWrap: 'wrap' }}>
                       {bill.dueDate && <span style={{ color: '#8B949E' }}>Due: {formatDate(bill.dueDate)}</span>}
+                      {bill.isRecurring && (
+                        <span style={{ color: unpaidColor }}>🔁 {bill.recurrenceType === '4weeks' ? '4 wks' : 'Monthly'}</span>
+                      )}
+                      {bill.isSetAside && <span style={{ color: '#8B949E' }}>💰 Set-aside</span>}
                       <span style={{ color: bill.paid ? '#1DB954' : unpaidColor, fontWeight: 'bold' }}>
                         {bill.paid ? '✓ Paid' : 'Unpaid'}
                       </span>
@@ -285,6 +399,10 @@ function TheirPage() {
                     <div style={{ display: 'flex', gap: '8px', fontSize: '11px', flexWrap: 'wrap' }}>
                       <span style={{ color: '#8B949E' }}>{bill.category}</span>
                       {bill.dueDate && <span style={{ color: '#8B949E' }}>Due: {formatDate(bill.dueDate)}</span>}
+                      {bill.isRecurring && (
+                        <span style={{ color: unpaidColor }}>🔁 {bill.recurrenceType === '4weeks' ? '4 wks' : 'Monthly'}</span>
+                      )}
+                      {bill.isSetAside && <span style={{ color: '#8B949E' }}>💰 Set-aside</span>}
                       <span style={{ color: bill.paid ? '#1DB954' : unpaidColor, fontWeight: 'bold' }}>
                         {bill.paid ? '✓ Paid' : 'Unpaid'}
                       </span>
