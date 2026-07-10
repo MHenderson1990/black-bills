@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createPaycheck, getAllPaychecks, getPaycheckById, updatePaycheck, deletePaycheck, calculatePaycheckLeftover, getNextPayDate, getRecentPayDate } = require('../controllers/paycheckController');
+const { createPaycheck, getAllPaychecks, getPaycheckById, updatePaycheck, deletePaycheck, calculatePaycheckLeftover, getNextPayDate, getRecentPayDate, recalculateLeftover } = require('../controllers/paycheckController');
 const { protect } = require('../middlewares/authMiddleware');
 
 router.post('/', protect, createPaycheck);
