@@ -5,7 +5,7 @@ const User = require('../models/User');
 // CREATE BILL
 const createBill = async (req, res) => {
   try {
-    let { name, amount, dueDate, category, isShared, owner, householdId, paymentMethod } = req.body;
+    let { name, amount, dueDate, category, isShared, owner, householdId, paymentMethod, isRecurring } = req.body;
 
     const bill = await Bill.create({
       householdId,
@@ -15,7 +15,8 @@ const createBill = async (req, res) => {
       category,
       isShared,
       owner,
-      paymentMethod
+      paymentMethod,
+      isRecurring,
     });
 
     if (isShared) {
@@ -37,9 +38,35 @@ const createBill = async (req, res) => {
   }
 };
 
+// helper: advance a date one month, clamping the day (Jan 31 → Feb 28, not Mar 3)
+function nextMonth(date) {
+  let d = new Date(date);
+  let day = d.getUTCDate();
+  d.setUTCDate(1);
+  d.setUTCMonth(d.getUTCMonth() + 1);
+  let daysInMonth = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+  d.setUTCDate(Math.min(day, daysInMonth));
+  return d;
+}
+
 // GET ALL BILLS 
 const getAllBills = async (req, res) => {
   try {
+    // Roll forward any recurring bills that are paid and past due
+    let dueForRollover = await Bill.find({
+      householdId: req.query.householdId,
+      isRecurring: true,
+      paid: true,
+      dueDate: { $lt: new Date() }
+    });
+
+    for (let bill of dueForRollover) {
+      bill.dueDate = nextMonth(bill.dueDate);
+      bill.paid = false;
+      await bill.save();
+      await BillShare.updateMany({ bill: bill._id }, { paid: false });
+    }
+
     let filter = { householdId: req.query.householdId };
 
     if (req.query.category) {

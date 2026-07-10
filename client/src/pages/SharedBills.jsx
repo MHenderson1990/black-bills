@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { getSharedBills, getBillShares, markBillSharePaid, createBill, updateBill, deleteBill, getHouseholdMembers } from '../services/api';
 import { CATEGORIES, formatDate } from '../constants';
 
-
 let GOLD_ACCENTS = [
   'linear-gradient(135deg, #FFD700, #E6C200)',
   'linear-gradient(135deg, #E6A817, #C48A00)',
@@ -11,8 +10,6 @@ let GOLD_ACCENTS = [
   'linear-gradient(135deg, #C9A227, #A8851C)',
   'linear-gradient(135deg, #F0C040, #D4A010)',
 ];
-
-
 
 function SharedBills() {
   let [bills, setBills] = useState([]);
@@ -26,6 +23,7 @@ function SharedBills() {
   let [newAmount, setNewAmount] = useState('');
   let [newDueDate, setNewDueDate] = useState('');
   let [newCategory, setNewCategory] = useState('Misc.');
+  let [newIsRecurring, setNewIsRecurring] = useState(false);
 
   let userId = localStorage.getItem('userId');
   let householdId = localStorage.getItem('householdId');
@@ -81,6 +79,7 @@ function SharedBills() {
     setNewAmount('');
     setNewDueDate('');
     setNewCategory('Misc.');
+    setNewIsRecurring(false);
     setShowAddForm(false);
     setEditingBillId(null);
   }
@@ -91,19 +90,25 @@ function SharedBills() {
     setNewAmount(String(bill.amount));
     setNewDueDate(bill.dueDate ? bill.dueDate.slice(0, 10) : '');
     setNewCategory(bill.category || 'Misc.');
+    setNewIsRecurring(bill.isRecurring || false);
     setShowAddForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   async function handleSaveBill() {
     if (!newName || !newAmount) return;
+    if (newIsRecurring && !newDueDate) {
+      alert('Recurring bills need a due date to repeat from');
+      return;
+    }
     try {
       if (editingBillId) {
         await updateBill(editingBillId, {
           name: newName,
           amount: Number(newAmount),
           dueDate: newDueDate || undefined,
-          category: newCategory
+          category: newCategory,
+          isRecurring: newIsRecurring
         });
       } else {
         await createBill({
@@ -112,6 +117,7 @@ function SharedBills() {
           dueDate: newDueDate || undefined,
           category: newCategory,
           isShared: true,
+          isRecurring: newIsRecurring,
           householdId
         });
       }
@@ -190,7 +196,7 @@ function SharedBills() {
           padding: '20px',
           marginBottom: '24px'
         }}>
-          <h2 style={{ color: '#E8F5E9', fontSize: '15px', marginBottom: '14px' }}>
+          <h2 style={{ color: '#E8F5E9', fontSize: '15px', marginTop: 0, marginBottom: '14px' }}>
             {editingBillId ? 'Edit Bill' : 'New Shared Bill'}
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -224,6 +230,14 @@ function SharedBills() {
                 style={{ ...inputStyle, flex: '1 1 120px', colorScheme: 'dark' }}
               />
             </div>
+            <label style={{ color: '#8B949E', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input
+                type="checkbox"
+                checked={newIsRecurring}
+                onChange={e => setNewIsRecurring(e.target.checked)}
+              />
+              🔁 Repeats monthly (rolls to next month after it's paid)
+            </label>
             <button
               onClick={handleSaveBill}
               style={{
@@ -302,6 +316,9 @@ function SharedBills() {
                   <span style={{ color: '#8B949E' }}>{bill.category}</span>
                   {bill.dueDate && (
                     <span style={{ color: '#8B949E' }}>Due: {formatDate(bill.dueDate)}</span>
+                  )}
+                  {bill.isRecurring && (
+                    <span style={{ color: '#FFD700' }}>🔁 Monthly</span>
                   )}
                   <span style={{
                     color: bill.paid ? '#1DB954' : '#FFD700',

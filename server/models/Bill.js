@@ -46,7 +46,12 @@ const billSchema = new mongoose.Schema({
   last4: {
     type: String
   }
-}
+},
+
+isRecurring: {
+    type: Boolean,
+    default: false
+  },
 });
 
 module.exports = mongoose.model('Bill', billSchema);

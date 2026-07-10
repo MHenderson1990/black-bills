@@ -20,8 +20,6 @@ let PINK_ACCENTS = [
   'linear-gradient(135deg, #FFB3D9, #FF66B2)',
 ];
 
-
-
 function MyPage() {
   let [activeTab, setActiveTab] = useState('shared');
   let [sharedBills, setSharedBills] = useState([]);
@@ -44,6 +42,7 @@ function MyPage() {
   let [newBillAmount, setNewBillAmount] = useState('');
   let [newBillDueDate, setNewBillDueDate] = useState('');
   let [newBillCategory, setNewBillCategory] = useState('Misc.');
+  let [newBillIsRecurring, setNewBillIsRecurring] = useState(false);
   let now = new Date();
   let [selectedYear, setSelectedYear] = useState(String(now.getFullYear()));
   let [selectedMonthNum, setSelectedMonthNum] = useState(String(now.getMonth() + 1).padStart(2, '0'));
@@ -135,6 +134,7 @@ function MyPage() {
     setNewBillAmount('');
     setNewBillDueDate('');
     setNewBillCategory('Misc.');
+    setNewBillIsRecurring(false);
     setShowAddBill(false);
     setEditingBillId(null);
   }
@@ -145,18 +145,24 @@ function MyPage() {
     setNewBillAmount(String(bill.amount));
     setNewBillDueDate(bill.dueDate ? bill.dueDate.slice(0, 10) : '');
     setNewBillCategory(bill.category || 'Misc.');
+    setNewBillIsRecurring(bill.isRecurring || false);
     setShowAddBill(true);
   }
 
   async function handleSaveBill() {
     if (!newBillName || !newBillAmount) return;
+    if (newBillIsRecurring && !newBillDueDate) {
+      alert('Recurring bills need a due date to repeat from');
+      return;
+    }
     try {
       if (editingBillId) {
         await updateBill(editingBillId, {
           name: newBillName,
           amount: Number(newBillAmount),
           dueDate: newBillDueDate || undefined,
-          category: newBillCategory
+          category: newBillCategory,
+          isRecurring: newBillIsRecurring
         });
       } else {
         await createBill({
@@ -165,6 +171,7 @@ function MyPage() {
           dueDate: newBillDueDate || undefined,
           category: newBillCategory,
           isShared: false,
+          isRecurring: newBillIsRecurring,
           owner: userId,
           householdId
         });
@@ -315,6 +322,7 @@ function MyPage() {
                     </div>
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', fontSize: '11px', flexWrap: 'wrap' }}>
                       {bill.dueDate && <span style={{ color: '#8B949E' }}>Due: {formatDate(bill.dueDate)}</span>}
+                      {bill.isRecurring && <span style={{ color: unpaidColor }}>🔁 Monthly</span>}
                       <span style={{ color: bill.paid ? '#1DB954' : unpaidColor, fontWeight: 'bold' }}>
                         {bill.paid ? '✓ Paid' : 'Unpaid'}
                       </span>
@@ -451,6 +459,14 @@ function MyPage() {
                     style={{ ...inputStyle, flex: '1 1 120px', colorScheme: 'dark' }}
                   />
                 </div>
+                <label style={{ color: '#8B949E', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input
+                    type="checkbox"
+                    checked={newBillIsRecurring}
+                    onChange={e => setNewBillIsRecurring(e.target.checked)}
+                  />
+                  🔁 Repeats monthly (rolls to next month after it's paid)
+                </label>
                 <button
                   onClick={handleSaveBill}
                   style={{
@@ -509,6 +525,7 @@ function MyPage() {
                     <div style={{ display: 'flex', gap: '8px', fontSize: '11px', flexWrap: 'wrap', marginBottom: '10px' }}>
                       <span style={{ color: '#8B949E' }}>{bill.category}</span>
                       {bill.dueDate && <span style={{ color: '#8B949E' }}>Due: {formatDate(bill.dueDate)}</span>}
+                      {bill.isRecurring && <span style={{ color: unpaidColor }}>🔁 Monthly</span>}
                       <span style={{ color: bill.paid ? '#1DB954' : unpaidColor, fontWeight: 'bold' }}>
                         {bill.paid ? '✓ Paid' : 'Unpaid'}
                       </span>
