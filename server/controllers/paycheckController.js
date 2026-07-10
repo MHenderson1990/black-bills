@@ -78,52 +78,65 @@ const deletePaycheck = async (req, res) => {
 };
 
 
+// shared calculation logic
+async function computeLeftoverForPaycheck(paycheck) {
+  let periodStart = new Date(paycheck.date);
+  let periodEnd = new Date(periodStart.getTime() + 14 * 24 * 60 * 60 * 1000);
+
+  let unpaidBillShares = await BillShare.find({ owner: paycheck.earnedBy, paid: false });
+
+  let billShareTotal = 0;
+  for (let share of unpaidBillShares) {
+    let parentBill = await Bill.findById(share.bill);
+    if (!parentBill || !parentBill.dueDate) continue;
+    if (!parentBill.isSetAside) continue;
+    if (parentBill.dueDate >= periodStart && parentBill.dueDate < periodEnd) {
+      billShareTotal = billShareTotal + share.amount;
+    }
+  }
+
+  let unpaidPersonalBills = await Bill.find({
+    owner: paycheck.earnedBy,
+    isShared: false,
+    paid: false,
+    isSetAside: { $ne: true },
+    dueDate: { $gte: periodStart, $lt: periodEnd }
+  });
+
+  let personalBillsTotal = unpaidPersonalBills.reduce((total, personal) => {
+    return total + personal.amount;
+  }, 0);
+
+  let leftoverAmount = paycheck.amount - (billShareTotal + personalBillsTotal);
+  return await Paycheck.findByIdAndUpdate(paycheck._id, { leftoverAmount }, { new: true });
+}
+
 //LEFTOVER AMOUNT
 const calculatePaycheckLeftover = async (req, res) => {
   try {
     const paycheck = await Paycheck.findById(req.params.id);
     if (!paycheck) return res.status(404).json({ message: 'Paycheck not found' });
 
-    // this paycheck covers the 14 days starting on its date
-    let periodStart = new Date(paycheck.date);
-    let periodEnd = new Date(periodStart.getTime() + 14 * 24 * 60 * 60 * 1000);
-
-    // unpaid bill shares due within this pay period.
-    // Set-aside bills COUNT here (they represent per-check cash flow);
-    // non-set-aside shared bills are skipped (their set-aside halves cover them).
-    let unpaidBillShares = await BillShare.find({ owner: paycheck.earnedBy, paid: false });
-
-    let billShareTotal = 0;
-    for (let share of unpaidBillShares) {
-      let parentBill = await Bill.findById(share.bill);
-      if (!parentBill || !parentBill.dueDate) continue;
-      if (!parentBill.isSetAside) continue;
-      if (parentBill.dueDate >= periodStart && parentBill.dueDate < periodEnd) {
-        billShareTotal = billShareTotal + share.amount;
-      }
-    }
-
-    // unpaid personal bills due within this pay period
-    let unpaidPersonalBills = await Bill.find({
-      owner: paycheck.earnedBy,
-      isShared: false,
-      paid: false,
-      isSetAside: { $ne: true },
-      dueDate: { $gte: periodStart, $lt: periodEnd }
-    });
-
-    let personalBillsTotal = unpaidPersonalBills.reduce((total, personal) => {
-      return total + personal.amount;
-    }, 0);
-
-    let leftoverAmount = paycheck.amount - (billShareTotal + personalBillsTotal);
-    let updatedPaycheck = await Paycheck.findByIdAndUpdate(req.params.id, { leftoverAmount }, { new: true });
+    let updatedPaycheck = await computeLeftoverForPaycheck(paycheck);
     res.json(updatedPaycheck);
-
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
+//RECALCULATE MOST RECENT PAYCHECK FOR A USER
+const recalculateLeftover = async (req, res) => {
+  try {
+    let recentPaycheck = await Paycheck.findOne({ earnedBy: req.query.earnedBy }).sort({ date: -1 });
+    if (!recentPaycheck) return res.json({ message: 'No paychecks yet' });
+
+    let updatedPaycheck = await computeLeftoverForPaycheck(recentPaycheck);
+    res.json(updatedPaycheck);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 
 // GET NEXT PAY DATE 
 const getNextPayDate = async (req, res) => {
@@ -189,4 +202,4 @@ const getRecentPayDate = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-module.exports = { createPaycheck, getAllPaychecks, getPaycheckById, updatePaycheck, deletePaycheck, calculatePaycheckLeftover, getNextPayDate, getRecentPayDate };
+module.exports = { createPaycheck, getAllPaychecks, getPaycheckById, updatePaycheck, deletePaycheck, calculatePaycheckLeftover, getNextPayDate, getRecentPayDate, recalculateLeftover };

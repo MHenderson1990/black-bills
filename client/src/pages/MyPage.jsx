@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getSharedBills, getBillShares, markBillSharePaid, getAllDebts, getDebtBalance, getPaychecks, createPaycheck, calculateLeftover, createBill, updateBill, deleteBill, getPersonalBills, updatePayAnchorDate } from '../services/api';
+import { getSharedBills, getBillShares, markBillSharePaid, getAllDebts, getDebtBalance, getPaychecks, createPaycheck, calculateLeftover, createBill, 
+  updateBill, deleteBill, getPersonalBills, updatePayAnchorDate, recalculateLeftover } from '../services/api';
 import { MONTHS, YEARS, CATEGORIES, formatDate } from '../constants';
 
 let BLUE_ACCENTS = [
@@ -106,6 +107,7 @@ function MyPage() {
 
   async function handleMarkPaid(shareId, currentPaidStatus) {
     await markBillSharePaid(shareId, { paid: !currentPaidStatus });
+    await recalculateLeftover(userId);
     let res = await getBillShares(expandedId);
     setBillShares(res.data);
     fetchAll();
@@ -113,6 +115,7 @@ function MyPage() {
 
   async function handleTogglePersonalPaid(bill) {
     await updateBill(bill._id, { paid: !bill.paid });
+    await recalculateLeftover(userId);
     fetchAll();
   }
 
@@ -186,6 +189,8 @@ function MyPage() {
           householdId
         });
       }
+      await recalculateLeftover(userId);
+
       resetBillForm();
       fetchAll();
     } catch (error) {
@@ -197,6 +202,7 @@ function MyPage() {
   async function handleDeleteBill(billId) {
     if (window.confirm('Delete this bill? This cannot be undone.')) {
       await deleteBill(billId);
+      await recalculateLeftover(userId);
       fetchAll();
     }
   }
