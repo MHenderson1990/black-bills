@@ -49,3 +49,4 @@ export let getDebtPayoff = (debtId) => api.get(`/debts/${debtId}/payoff`);
 export let createDebtPayment = (data) => api.post('/debt-payments', data);
 export let getDebtPayments = (debtId) => api.get(`/debt-payments?debt=${debtId}`);
 export let recalculateLeftover = (userId) => api.put(`/paychecks/recalculate-leftover?earnedBy=${userId}`);
+export let getSpendingCashflow = (owner, start, end) => api.get(`/dashboard?owner=${owner}&start=${start}&end=${end}&mode=cashflow`);

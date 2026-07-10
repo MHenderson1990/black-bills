@@ -4,8 +4,10 @@ const DebtTransaction = require('../models/DebtTransaction');
 
 const getSpendingByCategory = async (req, res) => {
   try {
-    let { owner, start, end } = req.query;
+    let { owner, start, end, mode } = req.query;
+    let cashflow = mode === 'cashflow';
 
+    // personal bills (set-asides excluded in both modes)
     let personalBills = await Bill.find({
       owner,
       isShared: false,
@@ -21,12 +23,16 @@ const getSpendingByCategory = async (req, res) => {
       return totals;
     }, {});
 
+    // shared bill splits
+    // default mode: count non-set-aside splits (household expense view)
+    // cashflow mode: count ONLY set-aside splits (per-check cash flow view)
     let billShares = await BillShare.find({ owner });
 
     for (let share of billShares) {
       let parentBill = await Bill.findById(share.bill);
 
-      if (!parentBill || parentBill.isSetAside || !parentBill.dueDate) continue;
+      if (!parentBill || !parentBill.dueDate) continue;
+      if (cashflow ? !parentBill.isSetAside : parentBill.isSetAside) continue;
 
       if (parentBill.dueDate >= new Date(start) && parentBill.dueDate <= new Date(end)) {
         if (!grouped[parentBill.category]) {
@@ -36,6 +42,7 @@ const getSpendingByCategory = async (req, res) => {
       }
     }
 
+    // debt transactions count in both modes
     let debtTransactions = await DebtTransaction.find({
       madeBy: owner,
       date: { $gte: start, $lte: end }
