@@ -79,14 +79,15 @@ const deletePaycheck = async (req, res) => {
 
 
 // shared calculation logic
+// shared calculation logic
 async function computeLeftoverForPaycheck(paycheck) {
   let periodStart = new Date(paycheck.date);
   let periodEnd = new Date(periodStart.getTime() + 14 * 24 * 60 * 60 * 1000);
 
-  let unpaidBillShares = await BillShare.find({ owner: paycheck.earnedBy, paid: false });
+  let allBillShares = await BillShare.find({ owner: paycheck.earnedBy });
 
   let billShareTotal = 0;
-  for (let share of unpaidBillShares) {
+  for (let share of allBillShares) {
     let parentBill = await Bill.findById(share.bill);
     if (!parentBill || !parentBill.dueDate) continue;
     if (!parentBill.isSetAside) continue;
@@ -95,15 +96,14 @@ async function computeLeftoverForPaycheck(paycheck) {
     }
   }
 
-  let unpaidPersonalBills = await Bill.find({
+  let personalBills = await Bill.find({
     owner: paycheck.earnedBy,
     isShared: false,
-    paid: false,
     isSetAside: { $ne: true },
     dueDate: { $gte: periodStart, $lt: periodEnd }
   });
 
-  let personalBillsTotal = unpaidPersonalBills.reduce((total, personal) => {
+  let personalBillsTotal = personalBills.reduce((total, personal) => {
     return total + personal.amount;
   }, 0);
 
