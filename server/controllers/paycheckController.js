@@ -84,26 +84,41 @@ const calculatePaycheckLeftover = async (req, res) => {
     const paycheck = await Paycheck.findById(req.params.id);
     if (!paycheck) return res.status(404).json({ message: 'Paycheck not found' });
 
-    // step 2: find unpaid BillShares for paycheck.earnedBy
+    // this paycheck covers the 14 days starting on its date
+    let periodStart = new Date(paycheck.date);
+    let periodEnd = new Date(periodStart.getTime() + 14 * 24 * 60 * 60 * 1000);
+
+    // unpaid bill shares due within this pay period.
+    // Set-aside bills COUNT here (they represent per-check cash flow);
+    // non-set-aside shared bills are skipped (their set-aside halves cover them).
     let unpaidBillShares = await BillShare.find({ owner: paycheck.earnedBy, paid: false });
-    
-    //total of unpaid billshares 
-    let billShareTotal = unpaidBillShares.reduce((total, share) => {
-      return total + share.amount;
-  }, 0);
 
-    // find unpaid personal bills 
-    let unpaidPersonalBills = await Bill.find({ owner: paycheck.earnedBy, isShared: false, paid: false });
+    let billShareTotal = 0;
+    for (let share of unpaidBillShares) {
+      let parentBill = await Bill.findById(share.bill);
+      if (!parentBill || !parentBill.dueDate) continue;
+      if (!parentBill.isSetAside) continue;
+      if (parentBill.dueDate >= periodStart && parentBill.dueDate < periodEnd) {
+        billShareTotal = billShareTotal + share.amount;
+      }
+    }
 
-    //find sum of unpaid personal bills
+    // unpaid personal bills due within this pay period
+    let unpaidPersonalBills = await Bill.find({
+      owner: paycheck.earnedBy,
+      isShared: false,
+      paid: false,
+      isSetAside: { $ne: true },
+      dueDate: { $gte: periodStart, $lt: periodEnd }
+    });
+
     let personalBillsTotal = unpaidPersonalBills.reduce((total, personal) => {
       return total + personal.amount;
-    }, 0); 
+    }, 0);
 
-    //find sum of billshare and personal
     let leftoverAmount = paycheck.amount - (billShareTotal + personalBillsTotal);
     let updatedPaycheck = await Paycheck.findByIdAndUpdate(req.params.id, { leftoverAmount }, { new: true });
-      res.json(updatedPaycheck);
+    res.json(updatedPaycheck);
 
   } catch (error) {
     res.status(500).json({ message: error.message });

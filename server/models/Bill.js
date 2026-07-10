@@ -52,6 +52,17 @@ isRecurring: {
     type: Boolean,
     default: false
   },
+
+  isSetAside: {
+    type: Boolean,
+    default: false
+  },
+
+  recurrenceType: {
+    type: String,
+    enum: ['monthly', '4weeks'],
+    default: 'monthly'
+  },
 });
 
 module.exports = mongoose.model('Bill', billSchema);

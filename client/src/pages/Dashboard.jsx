@@ -85,7 +85,7 @@ function Dashboard() {
   }));
 
   let upcomingBills = bills
-    .filter(bill => !bill.paid && bill.dueDate)
+    .filter(bill => !bill.paid && bill.dueDate && !bill.isSetAside)
     .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
     .slice(0, 6);
 

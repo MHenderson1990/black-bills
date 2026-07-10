@@ -24,6 +24,8 @@ function SharedBills() {
   let [newDueDate, setNewDueDate] = useState('');
   let [newCategory, setNewCategory] = useState('Misc.');
   let [newIsRecurring, setNewIsRecurring] = useState(false);
+  let [newRecurrenceType, setNewRecurrenceType] = useState('monthly');
+  let [newIsSetAside, setNewIsSetAside] = useState(false);
 
   let userId = localStorage.getItem('userId');
   let householdId = localStorage.getItem('householdId');
@@ -80,6 +82,8 @@ function SharedBills() {
     setNewDueDate('');
     setNewCategory('Misc.');
     setNewIsRecurring(false);
+    setNewRecurrenceType('monthly');
+    setNewIsSetAside(false);
     setShowAddForm(false);
     setEditingBillId(null);
   }
@@ -91,6 +95,8 @@ function SharedBills() {
     setNewDueDate(bill.dueDate ? bill.dueDate.slice(0, 10) : '');
     setNewCategory(bill.category || 'Misc.');
     setNewIsRecurring(bill.isRecurring || false);
+    setNewRecurrenceType(bill.recurrenceType || 'monthly');
+    setNewIsSetAside(bill.isSetAside || false);
     setShowAddForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -108,7 +114,9 @@ function SharedBills() {
           amount: Number(newAmount),
           dueDate: newDueDate || undefined,
           category: newCategory,
-          isRecurring: newIsRecurring
+          isRecurring: newIsRecurring,
+          recurrenceType: newRecurrenceType,
+          isSetAside: newIsSetAside
         });
       } else {
         await createBill({
@@ -118,6 +126,8 @@ function SharedBills() {
           category: newCategory,
           isShared: true,
           isRecurring: newIsRecurring,
+          recurrenceType: newRecurrenceType,
+          isSetAside: newIsSetAside,
           householdId
         });
       }
@@ -230,13 +240,33 @@ function SharedBills() {
                 style={{ ...inputStyle, flex: '1 1 120px', colorScheme: 'dark' }}
               />
             </div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <label style={{ color: '#8B949E', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input
+                  type="checkbox"
+                  checked={newIsRecurring}
+                  onChange={e => setNewIsRecurring(e.target.checked)}
+                />
+                🔁 Repeats
+              </label>
+              {newIsRecurring && (
+                <select
+                  value={newRecurrenceType}
+                  onChange={e => setNewRecurrenceType(e.target.value)}
+                  style={{ ...inputStyle, flex: '1 1 160px' }}
+                >
+                  <option value="monthly">Every month</option>
+                  <option value="4weeks">Every 4 weeks (2 paychecks)</option>
+                </select>
+              )}
+            </div>
             <label style={{ color: '#8B949E', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <input
                 type="checkbox"
-                checked={newIsRecurring}
-                onChange={e => setNewIsRecurring(e.target.checked)}
+                checked={newIsSetAside}
+                onChange={e => setNewIsSetAside(e.target.checked)}
               />
-              🔁 Repeats monthly (rolls to next month after it's paid)
+              💰 Set-aside tracker (excluded from totals & Dashboard)
             </label>
             <button
               onClick={handleSaveBill}
@@ -318,8 +348,9 @@ function SharedBills() {
                     <span style={{ color: '#8B949E' }}>Due: {formatDate(bill.dueDate)}</span>
                   )}
                   {bill.isRecurring && (
-                    <span style={{ color: '#FFD700' }}>🔁 Monthly</span>
+                    <span style={{ color: '#FFD700' }}>🔁 {bill.recurrenceType === '4weeks' ? '4 wks' : 'Monthly'}</span>
                   )}
+                  {bill.isSetAside && <span style={{ color: '#8B949E' }}>💰 Set-aside</span>}
                   <span style={{
                     color: bill.paid ? '#1DB954' : '#FFD700',
                     fontWeight: 'bold'
