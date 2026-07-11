@@ -103,8 +103,8 @@ function MyPage() {
         getRecentPayDate(userId)
       ]);
 
-      setSharedBills(sharedRes.data);
-      setPersonalBills(personalRes.data);
+      setSharedBills([...sharedRes.data].sort((a, b) => new Date(b.dueDate || 0) - new Date(a.dueDate || 0)));
+      setPersonalBills([...personalRes.data].sort((a, b) => new Date(b.dueDate || 0) - new Date(a.dueDate || 0)));
       setPaychecks(paychecksRes.data);
 
       if (recentRes.data.recentPayDate && recentRes.data.periodEnd) {
@@ -266,6 +266,15 @@ function MyPage() {
     p.date.slice(0, 7) === `${selectedYear}-${selectedMonthNum}`
   );
 
+  function visibleBills(bills) {
+    if (!showHistory) return bills;
+    return bills.filter(bill =>
+      !bill.isArchived ||
+      !bill.dueDate ||
+      bill.dueDate.slice(0, 7) === `${selectedYear}-${selectedMonthNum}`
+    );
+  }
+
   let pieData = Object.keys(spending).map(category => ({
     name: category,
     value: spending[category]
@@ -299,6 +308,27 @@ function MyPage() {
     fontSize: '12px',
     cursor: 'pointer'
   };
+
+  let historyMonthPicker = (
+    showHistory && (
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+        <select
+          value={selectedMonthNum}
+          onChange={e => setSelectedMonthNum(e.target.value)}
+          style={{ ...inputStyle, flex: 1 }}
+        >
+          {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+        </select>
+        <select
+          value={selectedYear}
+          onChange={e => setSelectedYear(e.target.value)}
+          style={{ ...inputStyle, flex: 1 }}
+        >
+          {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+        </select>
+      </div>
+    )
+  );
 
   if (loading) return <p style={{ padding: '40px', color: '#fff', background: '#0D1117', minHeight: '100vh' }}>Loading...</p>;
 
@@ -478,12 +508,13 @@ function MyPage() {
               {showHistory ? 'Hide History' : 'Show History'}
             </button>
           </div>
+          {historyMonthPicker}
 
-          {sharedBills.length === 0 ? (
+          {visibleBills(sharedBills).length === 0 ? (
             <p style={{ color: '#8B949E' }}>No shared bills</p>
           ) : (
             <div style={cardGrid}>
-              {sharedBills.map((bill, index) => {
+              {visibleBills(sharedBills).map((bill, index) => {
                 let accent = ACCENTS[index % ACCENTS.length];
                 let isExpanded = expandedId === bill._id;
 
@@ -610,6 +641,7 @@ function MyPage() {
               {showAddBill ? '✕ Cancel' : '+ Add Bill'}
             </button>
           </div>
+          {historyMonthPicker}
 
           {showAddBill && (
             <div style={{
@@ -697,11 +729,11 @@ function MyPage() {
             </div>
           )}
 
-          {personalBills.length === 0 ? (
+          {visibleBills(personalBills).length === 0 ? (
             <p style={{ color: '#8B949E' }}>No personal bills</p>
           ) : (
             <div style={cardGrid}>
-              {personalBills.map((bill, index) => {
+              {visibleBills(personalBills).map((bill, index) => {
                 let accent = ACCENTS[index % ACCENTS.length];
                 return (
                   <div key={bill._id} style={{
