@@ -90,7 +90,7 @@ async function computeLeftoverForPaycheck(paycheck) {
   for (let share of allBillShares) {
     let parentBill = await Bill.findById(share.bill);
     if (!parentBill || !parentBill.dueDate) continue;
-    if (!parentBill.isSetAside) continue;
+    if (parentBill.isSetAside) continue;
     if (parentBill.dueDate >= periodStart && parentBill.dueDate < periodEnd) {
       billShareTotal = billShareTotal + share.amount;
     }
