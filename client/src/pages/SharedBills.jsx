@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getSharedBills, getBillShares, markBillSharePaid, createBill, updateBill, deleteBill, getHouseholdMembers } from '../services/api';
+import { getSharedBills, getBillShares, markBillSharePaid, createBill, updateBill, deleteBill, getHouseholdMembers, getSharedBillsWithHistory } from '../services/api';
 import { CATEGORIES, formatDate } from '../constants';
 
 let GOLD_ACCENTS = [
@@ -26,6 +26,7 @@ function SharedBills() {
   let [newIsRecurring, setNewIsRecurring] = useState(false);
   let [newRecurrenceType, setNewRecurrenceType] = useState('monthly');
   let [newIsSetAside, setNewIsSetAside] = useState(false);
+  let [showHistory, setShowHistory] = useState(false);
 
   let userId = localStorage.getItem('userId');
   let householdId = localStorage.getItem('householdId');
@@ -33,11 +34,13 @@ function SharedBills() {
   useEffect(function() {
     fetchBills();
     fetchMembers();
-  }, []);
+  }, [showHistory]);
 
   async function fetchBills() {
     try {
-      let res = await getSharedBills(householdId);
+      let res = showHistory
+        ? await getSharedBillsWithHistory(householdId)
+        : await getSharedBills(householdId);
       setBills(res.data);
     } catch (error) {
       console.error(error);
@@ -174,6 +177,21 @@ function SharedBills() {
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text'
         }}>Shared Bills</h1>
+        <button
+        onClick={() => setShowHistory(!showHistory)}
+        style={{
+          padding: '6px 14px',
+          borderRadius: '20px',
+          border: '1px solid #30363D',
+          background: showHistory ? '#30363D' : 'transparent',
+          color: '#8B949E',
+          fontSize: '12px',
+          cursor: 'pointer',
+          marginBottom: '16px'
+        }}
+      >
+        {showHistory ? 'Hide History' : 'Show History'}
+      </button>
         <button
           onClick={() => {
             if (showAddForm) {
@@ -356,6 +374,8 @@ function SharedBills() {
                     fontWeight: 'bold'
                   }}>
                     {bill.paid ? '✓ Paid' : 'Unpaid'}
+
+                  {bill.isArchived && <span style={{ color: '#8B949E' }}>📁 Archived</span>}
                   </span>
                 </div>
 
