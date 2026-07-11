@@ -329,8 +329,8 @@ function TheirPage() {
 
                 return (
                   <div key={bill._id} style={{
-                    background: '#161B22',
-                    border: `1px solid ${bill.paid ? '#1DB95444' : borderColor}`,
+                    background: bill.paid ? 'rgba(29, 185, 84, 0.12)' : '#161B22',
+                    border: `1px solid ${bill.paid ? '#1DB95488' : borderColor}`,
                     borderRadius: '12px',
                     padding: '16px'
                   }}>
