@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
-import { getSharedBills, getBillShares, markBillSharePaid, getAllDebts, getDebtBalance, getPaychecks, createPaycheck, calculateLeftover, createBill, 
-  updateBill, deleteBill, getPersonalBills, updatePayAnchorDate, recalculateLeftover, getRecentPayDate, getSpendingCashflow } from '../services/api';
+import { getSharedBills, getSharedBillsWithHistory, getBillShares, markBillSharePaid, getAllDebts, getDebtBalance, getPaychecks, createPaycheck, calculateLeftover, createBill, 
+  updateBill, deleteBill, getPersonalBills, getPersonalBillsWithHistory, updatePayAnchorDate, recalculateLeftover, getRecentPayDate, getSpendingCashflow } from '../services/api';
 import { MONTHS, YEARS, CATEGORIES, formatDate } from '../constants';
 
 let BLUE_ACCENTS = [
@@ -52,6 +52,7 @@ function MyPage() {
   let [spending, setSpending] = useState({});
   let [periodStart, setPeriodStart] = useState(null);
   let [periodEnd, setPeriodEnd] = useState(null);
+  let [showHistory, setShowHistory] = useState(false);
   let [loading, setLoading] = useState(true);
   let [expandedId, setExpandedId] = useState(null);
   let [billShares, setBillShares] = useState([]);
@@ -90,13 +91,13 @@ function MyPage() {
 
   useEffect(function() {
     fetchAll();
-  }, []);
+  }, [showHistory]);
 
   async function fetchAll() {
     try {
       let [sharedRes, personalRes, debtsRes, paychecksRes, recentRes] = await Promise.all([
-        getSharedBills(householdId),
-        getPersonalBills(householdId, userId),
+        showHistory ? getSharedBillsWithHistory(householdId) : getSharedBills(householdId),
+        showHistory ? getPersonalBillsWithHistory(householdId, userId) : getPersonalBills(householdId, userId),
         getAllDebts(householdId),
         getPaychecks(userId),
         getRecentPayDate(userId)
@@ -289,6 +290,16 @@ function MyPage() {
     gap: '16px'
   };
 
+  let historyToggleStyle = {
+    padding: '6px 14px',
+    borderRadius: '20px',
+    border: '1px solid #30363D',
+    background: showHistory ? '#30363D' : 'transparent',
+    color: '#8B949E',
+    fontSize: '12px',
+    cursor: 'pointer'
+  };
+
   if (loading) return <p style={{ padding: '40px', color: '#fff', background: '#0D1117', minHeight: '100vh' }}>Loading...</p>;
 
   return (
@@ -452,7 +463,7 @@ function MyPage() {
                   ${periodTotal.toFixed(2)}
                 </p>
                 <p style={{ color: '#8B949E', fontSize: '11px', marginTop: '6px', marginBottom: 0 }}>
-                  Set-aside trackers + personal bills + debt charges due this period
+                  Personal bills + your share of household bills + debt charges due this period
                 </p>
               </div>
             </>
@@ -462,6 +473,12 @@ function MyPage() {
 
       {activeTab === 'shared' && (
         <div>
+          <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '16px' }}>
+            <button onClick={() => setShowHistory(!showHistory)} style={historyToggleStyle}>
+              {showHistory ? 'Hide History' : 'Show History'}
+            </button>
+          </div>
+
           {sharedBills.length === 0 ? (
             <p style={{ color: '#8B949E' }}>No shared bills</p>
           ) : (
@@ -496,6 +513,7 @@ function MyPage() {
                         <span style={{ color: unpaidColor }}>🔁 {bill.recurrenceType === '4weeks' ? '4 wks' : 'Monthly'}</span>
                       )}
                       {bill.isSetAside && <span style={{ color: '#8B949E' }}>💰 Set-aside</span>}
+                      {bill.isArchived && <span style={{ color: '#8B949E' }}>📁 Archived</span>}
                       <span style={{ color: bill.paid ? '#1DB954' : unpaidColor, fontWeight: 'bold' }}>
                         {bill.paid ? '✓ Paid' : 'Unpaid'}
                       </span>
@@ -538,7 +556,7 @@ function MyPage() {
                                 <span style={{ fontSize: '11px', color: share.paid ? '#1DB954' : '#8B949E' }}>
                                   {share.paid ? '✓' : 'Unpaid'}
                                 </span>
-                                {isMyShare && (
+                                {isMyShare && !bill.isArchived && (
                                   <button
                                     onClick={() => handleMarkPaid(share._id, share.paid)}
                                     style={{
@@ -566,7 +584,10 @@ function MyPage() {
 
       {activeTab === 'personal' && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '8px', flexWrap: 'wrap' }}>
+            <button onClick={() => setShowHistory(!showHistory)} style={historyToggleStyle}>
+              {showHistory ? 'Hide History' : 'Show History'}
+            </button>
             <button
               onClick={() => {
                 if (showAddBill) {
@@ -684,8 +705,8 @@ function MyPage() {
                 let accent = ACCENTS[index % ACCENTS.length];
                 return (
                   <div key={bill._id} style={{
-                    background: '#161B22',
-                    border: `1px solid ${bill.paid ? '#1DB95444' : borderColor}`,
+                    background: bill.paid ? 'rgba(29, 185, 84, 0.12)' : '#161B22',
+                    border: `1px solid ${bill.paid ? '#1DB95488' : borderColor}`,
                     borderRadius: '12px',
                     padding: '16px'
                   }}>
@@ -702,12 +723,14 @@ function MyPage() {
                           background: accent, WebkitBackgroundClip: 'text',
                           WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                         }}>${bill.amount}</p>
-                        <button
-                          onClick={() => startEditBill(bill)}
-                          style={{ background: 'none', border: 'none', color: unpaidColor, cursor: 'pointer', fontSize: '14px', padding: '2px' }}
-                        >
-                          ✎
-                        </button>
+                        {!bill.isArchived && (
+                          <button
+                            onClick={() => startEditBill(bill)}
+                            style={{ background: 'none', border: 'none', color: unpaidColor, cursor: 'pointer', fontSize: '14px', padding: '2px' }}
+                          >
+                            ✎
+                          </button>
+                        )}
                         <button
                           onClick={() => handleDeleteBill(bill._id)}
                           style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '15px', padding: '2px' }}
@@ -723,21 +746,24 @@ function MyPage() {
                         <span style={{ color: unpaidColor }}>🔁 {bill.recurrenceType === '4weeks' ? '4 wks' : 'Monthly'}</span>
                       )}
                       {bill.isSetAside && <span style={{ color: '#8B949E' }}>💰 Set-aside</span>}
+                      {bill.isArchived && <span style={{ color: '#8B949E' }}>📁 Archived</span>}
                       <span style={{ color: bill.paid ? '#1DB954' : unpaidColor, fontWeight: 'bold' }}>
                         {bill.paid ? '✓ Paid' : 'Unpaid'}
                       </span>
                     </div>
-                    <button
-                      onClick={() => handleTogglePersonalPaid(bill)}
-                      style={{
-                        width: '100%', padding: '6px', borderRadius: '6px', border: 'none',
-                        background: bill.paid ? '#30363D' : primaryGradient,
-                        color: bill.paid ? '#8B949E' : (isMo ? '#fff' : '#0D1117'),
-                        fontSize: '12px', fontWeight: 'bold', cursor: 'pointer'
-                      }}
-                    >
-                      {bill.paid ? 'Undo Paid' : 'Mark Paid'}
-                    </button>
+                    {!bill.isArchived && (
+                      <button
+                        onClick={() => handleTogglePersonalPaid(bill)}
+                        style={{
+                          width: '100%', padding: '6px', borderRadius: '6px', border: 'none',
+                          background: bill.paid ? '#30363D' : primaryGradient,
+                          color: bill.paid ? '#8B949E' : (isMo ? '#fff' : '#0D1117'),
+                          fontSize: '12px', fontWeight: 'bold', cursor: 'pointer'
+                        }}
+                      >
+                        {bill.paid ? 'Undo Paid' : 'Mark Paid'}
+                      </button>
+                    )}
                   </div>
                 );
               })}

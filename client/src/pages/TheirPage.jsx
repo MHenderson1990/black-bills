@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
-import { getSharedBills, getBillShares, getAllDebts, getDebtBalance, getPaychecks, getHouseholdMembers, getPersonalBills, getRecentPayDate, getSpendingCashflow } from '../services/api';
+import { getSharedBills, getSharedBillsWithHistory, getBillShares, getAllDebts, getDebtBalance, getPaychecks, getHouseholdMembers, getPersonalBills, getPersonalBillsWithHistory, getRecentPayDate, getSpendingCashflow } from '../services/api';
 import { MONTHS, YEARS, formatDate } from '../constants';
 
 let BLUE_ACCENTS = [
@@ -41,6 +41,7 @@ let PINK_PIE = [
   ['#E60073', '#B30059'],
   ['#FF66B2', '#FF3385']
 ];
+
 function TheirPage() {
   let [activeTab, setActiveTab] = useState('overview');
   let [sharedBills, setSharedBills] = useState([]);
@@ -50,6 +51,7 @@ function TheirPage() {
   let [spending, setSpending] = useState({});
   let [periodStart, setPeriodStart] = useState(null);
   let [periodEnd, setPeriodEnd] = useState(null);
+  let [showHistory, setShowHistory] = useState(false);
   let [otherId, setOtherId] = useState(null);
   let [otherName, setOtherName] = useState('');
   let [loading, setLoading] = useState(true);
@@ -76,7 +78,7 @@ function TheirPage() {
 
   useEffect(function() {
     fetchAll();
-  }, []);
+  }, [showHistory]);
 
   async function fetchAll() {
     try {
@@ -90,8 +92,8 @@ function TheirPage() {
       setOtherName(other.name);
 
       let [sharedRes, personalRes, debtsRes, paychecksRes, recentRes] = await Promise.all([
-        getSharedBills(householdId),
-        getPersonalBills(householdId, other._id),
+        showHistory ? getSharedBillsWithHistory(householdId) : getSharedBills(householdId),
+        showHistory ? getPersonalBillsWithHistory(householdId, other._id) : getPersonalBills(householdId, other._id),
         getAllDebts(householdId),
         getPaychecks(other._id),
         getRecentPayDate(other._id)
@@ -168,6 +170,16 @@ function TheirPage() {
     gap: '16px'
   };
 
+  let historyToggleStyle = {
+    padding: '6px 14px',
+    borderRadius: '20px',
+    border: '1px solid #30363D',
+    background: showHistory ? '#30363D' : 'transparent',
+    color: '#8B949E',
+    fontSize: '12px',
+    cursor: 'pointer'
+  };
+
   if (loading) return <p style={{ padding: '40px', color: '#fff', background: '#0D1117', minHeight: '100vh' }}>Loading...</p>;
 
   return (
@@ -241,26 +253,26 @@ function TheirPage() {
                     <ResponsiveContainer width="100%" height={250}>
                       <PieChart>
                         <Pie
-                      data={pieData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={85}
-                      labelLine={false}
-                      label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
-                        if (percent < 0.05) return null;
-                        let RADIAN = Math.PI / 180;
-                        let radius = innerRadius + (outerRadius - innerRadius) * 0.55;
-                        let x = cx + radius * Math.cos(-midAngle * RADIAN);
-                        let y = cy + radius * Math.sin(-midAngle * RADIAN);
-                        return (
-                          <text x={x} y={y} fill="#0D1117" fontSize={13} fontWeight="bold" textAnchor="middle" dominantBaseline="central">
-                            {(percent * 100).toFixed(0)}%
-                          </text>
-                        );
-                      }}
-                    >
+                          data={pieData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={85}
+                          labelLine={false}
+                          label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                            if (percent < 0.05) return null;
+                            let RADIAN = Math.PI / 180;
+                            let radius = innerRadius + (outerRadius - innerRadius) * 0.55;
+                            let x = cx + radius * Math.cos(-midAngle * RADIAN);
+                            let y = cy + radius * Math.sin(-midAngle * RADIAN);
+                            return (
+                              <text x={x} y={y} fill="#0D1117" fontSize={13} fontWeight="bold" textAnchor="middle" dominantBaseline="central">
+                                {(percent * 100).toFixed(0)}%
+                              </text>
+                            );
+                          }}
+                        >
                           {pieData.map((entry, index) => (
                             <Cell key={index} fill={`url(#theirPieGrad${index})`} />
                           ))}
@@ -309,7 +321,7 @@ function TheirPage() {
                   ${periodTotal.toFixed(2)}
                 </p>
                 <p style={{ color: '#8B949E', fontSize: '11px', marginTop: '6px', marginBottom: 0 }}>
-                  Set-aside trackers + personal bills + debt charges due this period
+                  Personal bills + their share of household bills + debt charges due this period
                 </p>
               </div>
             </>
@@ -319,6 +331,12 @@ function TheirPage() {
 
       {activeTab === 'shared' && (
         <div>
+          <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '16px' }}>
+            <button onClick={() => setShowHistory(!showHistory)} style={historyToggleStyle}>
+              {showHistory ? 'Hide History' : 'Show History'}
+            </button>
+          </div>
+
           {sharedBills.length === 0 ? (
             <p style={{ color: '#8B949E' }}>No shared bills</p>
           ) : (
@@ -353,6 +371,7 @@ function TheirPage() {
                         <span style={{ color: unpaidColor }}>🔁 {bill.recurrenceType === '4weeks' ? '4 wks' : 'Monthly'}</span>
                       )}
                       {bill.isSetAside && <span style={{ color: '#8B949E' }}>💰 Set-aside</span>}
+                      {bill.isArchived && <span style={{ color: '#8B949E' }}>📁 Archived</span>}
                       <span style={{ color: bill.paid ? '#1DB954' : unpaidColor, fontWeight: 'bold' }}>
                         {bill.paid ? '✓ Paid' : 'Unpaid'}
                       </span>
@@ -411,6 +430,12 @@ function TheirPage() {
 
       {activeTab === 'personal' && (
         <div>
+          <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '16px' }}>
+            <button onClick={() => setShowHistory(!showHistory)} style={historyToggleStyle}>
+              {showHistory ? 'Hide History' : 'Show History'}
+            </button>
+          </div>
+
           {personalBills.length === 0 ? (
             <p style={{ color: '#8B949E' }}>No personal bills</p>
           ) : (
@@ -419,8 +444,8 @@ function TheirPage() {
                 let accent = ACCENTS[index % ACCENTS.length];
                 return (
                   <div key={bill._id} style={{
-                    background: '#161B22',
-                    border: `1px solid ${bill.paid ? '#1DB95444' : borderColor}`,
+                    background: bill.paid ? 'rgba(29, 185, 84, 0.12)' : '#161B22',
+                    border: `1px solid ${bill.paid ? '#1DB95488' : borderColor}`,
                     borderRadius: '12px',
                     padding: '16px'
                   }}>
@@ -444,6 +469,7 @@ function TheirPage() {
                         <span style={{ color: unpaidColor }}>🔁 {bill.recurrenceType === '4weeks' ? '4 wks' : 'Monthly'}</span>
                       )}
                       {bill.isSetAside && <span style={{ color: '#8B949E' }}>💰 Set-aside</span>}
+                      {bill.isArchived && <span style={{ color: '#8B949E' }}>📁 Archived</span>}
                       <span style={{ color: bill.paid ? '#1DB954' : unpaidColor, fontWeight: 'bold' }}>
                         {bill.paid ? '✓ Paid' : 'Unpaid'}
                       </span>
