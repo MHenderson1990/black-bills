@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { getSharedBills, getBillShares, markBillSharePaid, getAllDebts, getDebtBalance, getPaychecks, createPaycheck, calculateLeftover, createBill, 
   updateBill, deleteBill, getPersonalBills, updatePayAnchorDate, recalculateLeftover, getRecentPayDate, getSpendingCashflow } from '../services/api';
 import { MONTHS, YEARS, CATEGORIES, formatDate } from '../constants';
@@ -22,8 +22,26 @@ let PINK_ACCENTS = [
   'linear-gradient(135deg, #FFB3D9, #FF66B2)',
 ];
 
-let BLUE_PIE = [['#4DA3FF', '#0080FF'], ['#60B0FF', '#1A8CFF'], ['#80C4FF', '#3399FF'], ['#1A8CFF', '#0066CC'], ['#99CCFF', '#4DA3FF'], ['#3399FF', '#0055BB'], ['#B3D9FF', '#66B2FF'], ['#0080FF', '#004C99']];
-let PINK_PIE = [['#FF8FC7', '#FF4DA6'], ['#FF69B4', '#FF1493'], ['#FFB6C1', '#FF69B4'], ['#FF4DA6', '#CC0066'], ['#FF82AB', '#FF3385'], ['#FFB3D9', '#FF66B2'], ['#FFC7DE', '#FF8FC7'], ['#FF1493', '#B30059']];
+let BLUE_PIE = [
+  ['#CCE5FF', '#99CCFF'],
+  ['#4DA3FF', '#1A8CFF'],
+  ['#0059B3', '#003D80'],
+  ['#80C4FF', '#4DA3FF'],
+  ['#0080FF', '#0066CC'],
+  ['#B3D9FF', '#80C4FF'],
+  ['#1A8CFF', '#0059B3'],
+  ['#66B2FF', '#3399FF']
+];
+let PINK_PIE = [
+  ['#FFD6E8', '#FFB3D9'],
+  ['#FF4DA6', '#FF1493'],
+  ['#B30059', '#800040'],
+  ['#FF8FC7', '#FF66B2'],
+  ['#FF1493', '#CC0066'],
+  ['#FFC7DE', '#FF8FC7'],
+  ['#E60073', '#B30059'],
+  ['#FF66B2', '#FF3385']
+];
 
 function MyPage() {
   let [activeTab, setActiveTab] = useState('overview');
@@ -366,26 +384,26 @@ function MyPage() {
                     <ResponsiveContainer width="100%" height={250}>
                       <PieChart>
                         <Pie
-                      data={pieData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={85}
-                      labelLine={false}
-                      label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
-                        if (percent < 0.05) return null;
-                        let RADIAN = Math.PI / 180;
-                        let radius = innerRadius + (outerRadius - innerRadius) * 0.55;
-                        let x = cx + radius * Math.cos(-midAngle * RADIAN);
-                        let y = cy + radius * Math.sin(-midAngle * RADIAN);
-                        return (
-                          <text x={x} y={y} fill="#0D1117" fontSize={13} fontWeight="bold" textAnchor="middle" dominantBaseline="central">
-                            {(percent * 100).toFixed(0)}%
-                          </text>
-                        );
-                      }}
-                    >
+                          data={pieData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={85}
+                          labelLine={false}
+                          label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                            if (percent < 0.05) return null;
+                            let RADIAN = Math.PI / 180;
+                            let radius = innerRadius + (outerRadius - innerRadius) * 0.55;
+                            let x = cx + radius * Math.cos(-midAngle * RADIAN);
+                            let y = cy + radius * Math.sin(-midAngle * RADIAN);
+                            return (
+                              <text x={x} y={y} fill="#0D1117" fontSize={13} fontWeight="bold" textAnchor="middle" dominantBaseline="central">
+                                {(percent * 100).toFixed(0)}%
+                              </text>
+                            );
+                          }}
+                        >
                           {pieData.map((entry, index) => (
                             <Cell key={index} fill={`url(#myPieGrad${index})`} />
                           ))}
@@ -394,9 +412,22 @@ function MyPage() {
                           formatter={(value) => `$${Number(value).toFixed(2)}`}
                           contentStyle={{ background: '#161B22', border: '1px solid #30363D', color: '#fff' }}
                         />
-                        <Legend wrapperStyle={{ color: '#E8F5E9', fontSize: '12px' }} />
                       </PieChart>
                     </ResponsiveContainer>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '12px' }}>
+                      {pieData.map((entry, index) => {
+                        let [swatchColor] = PIE_GRADIENTS[index % PIE_GRADIENTS.length];
+                        let pct = periodTotal > 0 ? ((entry.value / periodTotal) * 100).toFixed(0) : 0;
+                        return (
+                          <div key={entry.name} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+                            <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: swatchColor, flexShrink: 0 }} />
+                            <span style={{ color: '#E8F5E9', flex: 1 }}>{entry.name}</span>
+                            <span style={{ color: '#8B949E' }}>{pct}%</span>
+                            <span style={{ color: '#E8F5E9', fontWeight: 'bold', minWidth: '70px', textAlign: 'right' }}>${entry.value.toFixed(2)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </>
                 )}
               </div>
