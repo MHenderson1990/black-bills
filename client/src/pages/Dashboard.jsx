@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { getNextPayDate, getRecentPayDate, getSpendingByCategory, getAllBills, updatePayAnchorDate, getHouseholdMembers } from '../services/api';
+import { getNextPayDate, getRecentPayDate, getAllBills, updatePayAnchorDate, getHouseholdMembers, getSpendingHousehold } from '../services/api';
 import { formatDate } from '../constants';
 
 let CATEGORY_GRADIENTS = [
@@ -43,14 +43,13 @@ function Dashboard() {
       setPeriodStart(recentRes.data.recentPayDate);
       setPeriodEnd(recentRes.data.periodEnd);
 
-      if (recentRes.data.recentPayDate && recentRes.data.periodEnd) {
-        let spendingRes = await getSpendingByCategory(
-          userId,
-          recentRes.data.recentPayDate,
-          recentRes.data.periodEnd
-        );
-        setSpending(spendingRes.data);
-      }
+      let monthStart = new Date();
+      monthStart.setDate(1);
+      let monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
+      let fmt = (d) => d.toISOString().split('T')[0];
+
+      let spendingRes = await getSpendingHousehold(householdId, fmt(monthStart), fmt(monthEnd));
+      setSpending(spendingRes.data);
 
       let billsRes = await getAllBills(householdId);
       setBills(billsRes.data);

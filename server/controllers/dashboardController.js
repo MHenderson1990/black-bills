@@ -1,13 +1,48 @@
 const Bill = require('../models/Bill');
 const BillShare = require('../models/BillShare');
 const DebtTransaction = require('../models/DebtTransaction');
+const User = require('../models/User');
 
 const getSpendingByCategory = async (req, res) => {
   try {
-    let { owner, start, end, mode } = req.query;
+    let { owner, start, end, mode, householdId } = req.query;
     let cashflow = mode === 'cashflow';
 
-    // personal bills (set-asides excluded in both modes)
+    // HOUSEHOLD MODE: everyone's spending, shared bills counted once at full amount
+    if (mode === 'household') {
+      let bills = await Bill.find({
+        householdId,
+        isSetAside: { $ne: true },
+        dueDate: { $gte: start, $lte: end }
+      });
+
+      let grouped = bills.reduce((totals, bill) => {
+        if (!totals[bill.category]) {
+          totals[bill.category] = 0;
+        }
+        totals[bill.category] = totals[bill.category] + bill.amount;
+        return totals;
+      }, {});
+
+      let members = await User.find({ householdId }).select('_id');
+      let memberIds = members.map(m => m._id);
+
+      let debtTransactions = await DebtTransaction.find({
+        madeBy: { $in: memberIds },
+        date: { $gte: start, $lte: end }
+      });
+
+      for (let transaction of debtTransactions) {
+        if (!grouped[transaction.category]) {
+          grouped[transaction.category] = 0;
+        }
+        grouped[transaction.category] = grouped[transaction.category] + transaction.amount;
+      }
+
+      return res.json(grouped);
+    }
+
+    // PERSONAL MODES (default + cashflow) — unchanged
     let personalBills = await Bill.find({
       owner,
       isShared: false,
@@ -23,9 +58,6 @@ const getSpendingByCategory = async (req, res) => {
       return totals;
     }, {});
 
-    // shared bill splits
-    // default mode: count non-set-aside splits (household expense view)
-    // cashflow mode: count ONLY set-aside splits (per-check cash flow view)
     let billShares = await BillShare.find({ owner });
 
     for (let share of billShares) {
@@ -42,7 +74,6 @@ const getSpendingByCategory = async (req, res) => {
       }
     }
 
-    // debt transactions count in both modes
     let debtTransactions = await DebtTransaction.find({
       madeBy: owner,
       date: { $gte: start, $lte: end }
