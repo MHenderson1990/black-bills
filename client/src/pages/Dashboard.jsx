@@ -374,9 +374,20 @@ function Dashboard() {
                       nameKey="name"
                       cx="50%"
                       cy="50%"
-                      outerRadius={80}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      labelLine={{ stroke: '#8B949E' }}
+                      outerRadius={85}
+                      labelLine={false}
+                      label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                        if (percent < 0.05) return null;
+                        let RADIAN = Math.PI / 180;
+                        let radius = innerRadius + (outerRadius - innerRadius) * 0.55;
+                        let x = cx + radius * Math.cos(-midAngle * RADIAN);
+                        let y = cy + radius * Math.sin(-midAngle * RADIAN);
+                        return (
+                          <text x={x} y={y} fill="#0D1117" fontSize={13} fontWeight="bold" textAnchor="middle" dominantBaseline="central">
+                            {(percent * 100).toFixed(0)}%
+                          </text>
+                        );
+                      }}
                     >
                       {pieData.map((entry, index) => (
                         <Cell key={index} fill={`url(#pieGrad${index})`} />
