@@ -157,7 +157,8 @@ function DebtPage() {
 
   function getDebtAccent(debt) {
     if (debt.isShared) return 'linear-gradient(135deg, #B8334D, #8B1E3F)';
-    if (debt.owner === userId) return 'linear-gradient(135deg, #4DA3FF, #0080FF)';
+    let ownerName = members.find(m => m._id === debt.owner)?.name;
+    if (ownerName === 'Mo') return 'linear-gradient(135deg, #4DA3FF, #0080FF)';
     return 'linear-gradient(135deg, #FF8FC7, #FF4DA6)';
   }
 
