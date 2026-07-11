@@ -56,3 +56,4 @@ export let updateDebtTransaction = (id, data) => api.put(`/debt-transactions/${i
 export let deleteDebtTransaction = (id) => api.delete(`/debt-transactions/${id}`);
 export let updateDebtPayment = (id, data) => api.put(`/debt-payments/${id}`, data);
 export let deleteDebtPayment = (id) => api.delete(`/debt-payments/${id}`);
+export let getSharedBillsWithHistory = (householdId) => api.get(`/bills?householdId=${householdId}&isShared=true&includeArchived=true`);
