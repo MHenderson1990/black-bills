@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getAllDebts, getDebtBalance, deleteDebt, getDebtTransactions, createDebtTransaction, getHouseholdMembers, createDebt, getDebtPayoff, createDebtPayment, getDebtPayments } from '../services/api';
+import { getAllDebts, getDebtBalance, deleteDebt, getDebtTransactions, createDebtTransaction, updateDebtTransaction, deleteDebtTransaction, getHouseholdMembers, createDebt, getDebtPayoff, createDebtPayment, updateDebtPayment, deleteDebtPayment, getDebtPayments } from '../services/api';
 import { CATEGORIES, MONTHS, YEARS, formatDate } from '../constants';
 
 function payoffDateLabel(months) {
@@ -27,6 +27,8 @@ function DebtPage() {
   let [newPaymentAmount, setNewPaymentAmount] = useState('');
   let [newPaymentDate, setNewPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   let [newPaymentMadeBy, setNewPaymentMadeBy] = useState('');
+  let [editingTransactionId, setEditingTransactionId] = useState(null);
+  let [editingPaymentId, setEditingPaymentId] = useState(null);
   let [showAddDebt, setShowAddDebt] = useState(false);
   let [newDebtName, setNewDebtName] = useState('');
   let [newStartingBalance, setNewStartingBalance] = useState('');
@@ -89,6 +91,8 @@ function DebtPage() {
     }
     setExpandedId(debtId);
     setExpandedView('transactions');
+    setEditingTransactionId(null);
+    setEditingPaymentId(null);
     let [tRes, pRes] = await Promise.all([
       getDebtTransactions(debtId),
       getDebtPayments(debtId)
@@ -97,42 +101,91 @@ function DebtPage() {
     setPayments(pRes.data);
   }
 
-  async function handleAddTransaction(debtId) {
+  async function handleSaveTransaction(debtId) {
     if (!newItem || !newAmount || !newMadeBy) return;
-    await createDebtTransaction({
-      debt: debtId,
+    let data = {
       item: newItem,
       madeBy: newMadeBy,
       date: newDate,
       amount: Number(newAmount),
       category: newCategory
-    });
-    setNewItem('');
-    setNewAmount('');
-    setNewCategory('Misc.');
-    setNewDate(new Date().toISOString().split('T')[0]);
-    let res = await getDebtTransactions(debtId);
-    setTransactions(res.data);
-    fetchDebts();
+    };
+    try {
+      if (editingTransactionId) {
+        await updateDebtTransaction(editingTransactionId, data);
+      } else {
+        await createDebtTransaction({ ...data, debt: debtId });
+      }
+      setNewItem('');
+      setNewAmount('');
+      setNewCategory('Misc.');
+      setNewDate(new Date().toISOString().split('T')[0]);
+      setEditingTransactionId(null);
+      let res = await getDebtTransactions(debtId);
+      setTransactions(res.data);
+      fetchDebts();
+    } catch (error) {
+      console.error(error);
+      alert('Failed to save charge');
+    }
   }
 
-  async function handleAddPayment(debtId) {
+  async function handleSavePayment(debtId) {
     if (!newPaymentAmount || !newPaymentMadeBy) return;
+    let data = {
+      madeBy: newPaymentMadeBy,
+      date: newPaymentDate,
+      amount: Number(newPaymentAmount)
+    };
     try {
-      await createDebtPayment({
-        debt: debtId,
-        madeBy: newPaymentMadeBy,
-        date: newPaymentDate,
-        amount: Number(newPaymentAmount)
-      });
+      if (editingPaymentId) {
+        await updateDebtPayment(editingPaymentId, data);
+      } else {
+        await createDebtPayment({ ...data, debt: debtId });
+      }
       setNewPaymentAmount('');
       setNewPaymentDate(new Date().toISOString().split('T')[0]);
+      setEditingPaymentId(null);
       let res = await getDebtPayments(debtId);
       setPayments(res.data);
       fetchDebts();
     } catch (error) {
       console.error(error);
       alert('Failed to save payment');
+    }
+  }
+
+  function startEditTransaction(t) {
+    setEditingTransactionId(t._id);
+    setNewItem(t.item);
+    setNewAmount(String(t.amount));
+    setNewCategory(t.category || 'Misc.');
+    setNewDate(t.date ? t.date.slice(0, 10) : new Date().toISOString().split('T')[0]);
+    setNewMadeBy(t.madeBy);
+  }
+
+  function startEditPayment(p) {
+    setEditingPaymentId(p._id);
+    setNewPaymentAmount(String(p.amount));
+    setNewPaymentDate(p.date ? p.date.slice(0, 10) : new Date().toISOString().split('T')[0]);
+    setNewPaymentMadeBy(p.madeBy);
+  }
+
+  async function handleDeleteTransaction(transactionId, debtId) {
+    if (window.confirm('Delete this charge?')) {
+      await deleteDebtTransaction(transactionId);
+      let res = await getDebtTransactions(debtId);
+      setTransactions(res.data);
+      fetchDebts();
+    }
+  }
+
+  async function handleDeletePayment(paymentId, debtId) {
+    if (window.confirm('Delete this payment?')) {
+      await deleteDebtPayment(paymentId);
+      let res = await getDebtPayments(debtId);
+      setPayments(res.data);
+      fetchDebts();
     }
   }
 
@@ -434,12 +487,21 @@ function DebtPage() {
                             {filteredTransactions.map(t => (
                               <div key={t._id} style={{
                                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                padding: '8px 12px', background: '#0D1117', borderRadius: '6px', fontSize: '12px', gap: '8px', flexWrap: 'wrap'
+                                padding: '8px 12px', background: '#0D1117', borderRadius: '6px', fontSize: '12px', gap: '8px', flexWrap: 'wrap',
+                                border: editingTransactionId === t._id ? '1px solid #4DA3FF' : '1px solid transparent'
                               }}>
                                 <span style={{ color: '#E8F5E9', flex: 1, minWidth: '80px' }}>{t.item}</span>
                                 <span style={{ color: '#8B949E', flex: 1, textAlign: 'center' }}>{t.category}</span>
                                 <span style={{ color: '#cfcfcf', flex: 1, textAlign: 'center' }}>{formatDate(t.date)}</span>
                                 <span style={{ fontWeight: 'bold', color: '#E8F5E9' }}>${t.amount}</span>
+                                <button
+                                  onClick={() => startEditTransaction(t)}
+                                  style={{ background: 'none', border: 'none', color: '#8B949E', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
+                                >✎</button>
+                                <button
+                                  onClick={() => handleDeleteTransaction(t._id, debt._id)}
+                                  style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
+                                >✕</button>
                               </div>
                             ))}
                           </div>
@@ -484,14 +546,31 @@ function DebtPage() {
                             </select>
                           </div>
                           <button
-                            onClick={() => handleAddTransaction(debt._id)}
+                            onClick={() => handleSaveTransaction(debt._id)}
                             style={{
                               padding: '10px', borderRadius: '6px', border: 'none',
                               background: accent, color: 'white', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'
                             }}
                           >
-                            Add Charge
+                            {editingTransactionId ? 'Save Changes' : 'Add Charge'}
                           </button>
+                          {editingTransactionId && (
+                            <button
+                              onClick={() => {
+                                setEditingTransactionId(null);
+                                setNewItem('');
+                                setNewAmount('');
+                                setNewCategory('Misc.');
+                                setNewDate(new Date().toISOString().split('T')[0]);
+                              }}
+                              style={{
+                                padding: '8px', borderRadius: '6px', border: '1px solid #30363D',
+                                background: 'transparent', color: '#8B949E', fontSize: '12px', cursor: 'pointer'
+                              }}
+                            >
+                              Cancel Edit
+                            </button>
+                          )}
                         </div>
                       </>
                     )}
@@ -505,13 +584,22 @@ function DebtPage() {
                             {filteredPayments.map(p => (
                               <div key={p._id} style={{
                                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                padding: '8px 12px', background: '#0D1117', borderRadius: '6px', fontSize: '12px', gap: '8px'
+                                padding: '8px 12px', background: '#0D1117', borderRadius: '6px', fontSize: '12px', gap: '8px',
+                                border: editingPaymentId === p._id ? '1px solid #1DB954' : '1px solid transparent'
                               }}>
                                 <span style={{ color: '#E8F5E9', flex: 1 }}>
                                   {members.find(m => m._id === p.madeBy)?.name || 'Payment'}
                                 </span>
                                 <span style={{ color: '#cfcfcf', flex: 1, textAlign: 'center' }}>{formatDate(p.date)}</span>
                                 <span style={{ fontWeight: 'bold', color: '#1DB954' }}>-${p.amount}</span>
+                                <button
+                                  onClick={() => startEditPayment(p)}
+                                  style={{ background: 'none', border: 'none', color: '#8B949E', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
+                                >✎</button>
+                                <button
+                                  onClick={() => handleDeletePayment(p._id, debt._id)}
+                                  style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
+                                >✕</button>
                               </div>
                             ))}
                           </div>
@@ -541,15 +629,30 @@ function DebtPage() {
                             </select>
                           </div>
                           <button
-                            onClick={() => handleAddPayment(debt._id)}
+                            onClick={() => handleSavePayment(debt._id)}
                             style={{
                               padding: '10px', borderRadius: '6px', border: 'none',
                               background: 'linear-gradient(135deg, #1DB954, #107C41)',
                               color: 'white', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'
                             }}
                           >
-                            Add Payment
+                            {editingPaymentId ? 'Save Changes' : 'Add Payment'}
                           </button>
+                          {editingPaymentId && (
+                            <button
+                              onClick={() => {
+                                setEditingPaymentId(null);
+                                setNewPaymentAmount('');
+                                setNewPaymentDate(new Date().toISOString().split('T')[0]);
+                              }}
+                              style={{
+                                padding: '8px', borderRadius: '6px', border: '1px solid #30363D',
+                                background: 'transparent', color: '#8B949E', fontSize: '12px', cursor: 'pointer'
+                              }}
+                            >
+                              Cancel Edit
+                            </button>
+                          )}
                         </div>
                       </>
                     )}
