@@ -297,11 +297,11 @@ function SharedBills() {
 
             return (
               <div key={bill._id} style={{
-                    background: bill.paid ? 'rgba(29, 185, 84, 0.12)' : '#161B22',
-                    border: `1px solid ${bill.paid ? '#1DB95488' : borderColor}`,
-                    borderRadius: '12px',
-                    padding: '16px'
-                  }}>
+                background: bill.paid ? 'rgba(29, 185, 84, 0.12)' : '#161B22',
+                border: `1px solid ${bill.paid ? '#1DB95488' : '#FFD70044'}`,
+                borderRadius: '12px',
+                padding: '20px'
+              }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '10px' }}>
                   <p style={{
                     fontWeight: 'bold',
