@@ -63,6 +63,11 @@ isRecurring: {
     enum: ['monthly', '4weeks'],
     default: 'monthly'
   },
+
+  isArchived: {
+    type: Boolean,
+    default: false
+  },
 });
 
 module.exports = mongoose.model('Bill', billSchema);

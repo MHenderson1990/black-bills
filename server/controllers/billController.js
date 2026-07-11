@@ -63,10 +63,39 @@ const getAllBills = async (req, res) => {
     });
 
     for (let bill of dueForRollover) {
-      bill.dueDate = nextMonth(bill.dueDate);
-      bill.paid = false;
+      // create next occurrence as a NEW bill
+      let nextDueDate = bill.recurrenceType === '4weeks' ? nextFourWeeks(bill.dueDate) : nextMonth(bill.dueDate);
+
+      let newBill = await Bill.create({
+        householdId: bill.householdId,
+        name: bill.name,
+        amount: bill.amount,
+        dueDate: nextDueDate,
+        category: bill.category,
+        isShared: bill.isShared,
+        owner: bill.owner,
+        paymentMethod: bill.paymentMethod,
+        isRecurring: true,
+        recurrenceType: bill.recurrenceType,
+        isSetAside: bill.isSetAside
+      });
+
+      // fresh splits for the new occurrence, copying the old split amounts
+      if (bill.isShared) {
+        let oldShares = await BillShare.find({ bill: bill._id });
+        for (let share of oldShares) {
+          await BillShare.create({
+            bill: newBill._id,
+            owner: share.owner,
+            amount: share.amount
+          });
+        }
+      }
+
+      // retire the old occurrence as a permanent record
+      bill.isRecurring = false;
+      bill.isArchived = true;
       await bill.save();
-      await BillShare.updateMany({ bill: bill._id }, { paid: false });
     }
 
     let filter = { householdId: req.query.householdId };
@@ -83,6 +112,10 @@ const getAllBills = async (req, res) => {
       filter.owner = req.query.owner;
     }
 
+    if (req.query.includeArchived !== 'true') {
+      filter.isArchived = { $ne: true };
+    }
+    
     const bills = await Bill.find(filter);
     res.json(bills);
   } catch (error) {
