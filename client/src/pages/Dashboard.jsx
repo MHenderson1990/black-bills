@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { getNextPayDate, getRecentPayDate, getSpendingByCategory, getAllBills, updatePayAnchorDate } from '../services/api';
+import { getNextPayDate, getRecentPayDate, getSpendingByCategory, getAllBills, updatePayAnchorDate, getHouseholdMembers } from '../services/api';
 import { formatDate } from '../constants';
 
 let CATEGORY_GRADIENTS = [
@@ -30,11 +30,14 @@ function Dashboard() {
 
   let userId = localStorage.getItem('userId');
   let householdId = localStorage.getItem('householdId');
+  let [members, setMembers] = useState([]);
 
   async function fetchData() {
     try {
       let nextRes = await getNextPayDate(userId);
       let recentRes = await getRecentPayDate(userId);
+      let membersRes = await getHouseholdMembers(householdId);
+      setMembers(membersRes.data);
 
       setNextPayDate(nextRes.data.nextPayDate);
       setPeriodStart(recentRes.data.recentPayDate);
@@ -96,7 +99,8 @@ function Dashboard() {
         accent: 'linear-gradient(135deg, #FFD700, #E6C200)'
       };
     }
-    if (bill.owner === userId) {
+    let ownerName = members.find(m => m._id === bill.owner)?.name;
+    if (ownerName === 'Mo') {
       return {
         background: 'linear-gradient(135deg, #0d3a6b, #082849)',
         accent: 'linear-gradient(135deg, #4DA3FF, #0080FF)'
