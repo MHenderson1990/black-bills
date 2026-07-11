@@ -64,7 +64,7 @@ const getSpendingByCategory = async (req, res) => {
       let parentBill = await Bill.findById(share.bill);
 
       if (!parentBill || !parentBill.dueDate) continue;
-      if (cashflow ? !parentBill.isSetAside : parentBill.isSetAside) continue;
+      if (parentBill.isSetAside) continue;
 
       if (parentBill.dueDate >= new Date(start) && parentBill.dueDate <= new Date(end)) {
         if (!grouped[parentBill.category]) {
