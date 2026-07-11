@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getSharedBills, getBillShares, markBillSharePaid, createBill, updateBill, deleteBill, getHouseholdMembers, getSharedBillsWithHistory } from '../services/api';
-import { CATEGORIES, formatDate } from '../constants';
+import { getSharedBills, getBillShares, markBillSharePaid, createBill, updateBill, deleteBill, getHouseholdMembers, getSharedBillsWithHistory, getRecentPayDate } from '../services/api';
+import { CATEGORIES, MONTHS, YEARS, formatDate } from '../constants';
 
 let GOLD_ACCENTS = [
   'linear-gradient(135deg, #FFD700, #E6C200)',
@@ -17,6 +17,8 @@ function SharedBills() {
   let [expandedId, setExpandedId] = useState(null);
   let [billShares, setBillShares] = useState([]);
   let [members, setMembers] = useState({});
+  let [periodStart, setPeriodStart] = useState(null);
+  let [periodEnd, setPeriodEnd] = useState(null);
   let [showAddForm, setShowAddForm] = useState(false);
   let [editingBillId, setEditingBillId] = useState(null);
   let [newName, setNewName] = useState('');
@@ -27,6 +29,9 @@ function SharedBills() {
   let [newRecurrenceType, setNewRecurrenceType] = useState('monthly');
   let [newIsSetAside, setNewIsSetAside] = useState(false);
   let [showHistory, setShowHistory] = useState(false);
+  let now = new Date();
+  let [selectedYear, setSelectedYear] = useState(String(now.getFullYear()));
+  let [selectedMonthNum, setSelectedMonthNum] = useState(String(now.getMonth() + 1).padStart(2, '0'));
 
   let userId = localStorage.getItem('userId');
   let householdId = localStorage.getItem('householdId');
@@ -41,7 +46,13 @@ function SharedBills() {
       let res = showHistory
         ? await getSharedBillsWithHistory(householdId)
         : await getSharedBills(householdId);
-      setBills(res.data);
+      setBills([...res.data].sort((a, b) => new Date(b.dueDate || 0) - new Date(a.dueDate || 0)));
+
+      let recentRes = await getRecentPayDate(userId);
+      if (recentRes.data.recentPayDate && recentRes.data.periodEnd) {
+        setPeriodStart(recentRes.data.recentPayDate);
+        setPeriodEnd(recentRes.data.periodEnd);
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -153,6 +164,21 @@ function SharedBills() {
     }
   }
 
+  function visibleBills(list) {
+    if (showHistory) {
+      return list.filter(bill =>
+        !bill.isArchived ||
+        !bill.dueDate ||
+        bill.dueDate.slice(0, 7) === `${selectedYear}-${selectedMonthNum}`
+      );
+    }
+    if (!periodStart || !periodEnd) return list;
+    return list.filter(bill =>
+      !bill.dueDate ||
+      (bill.dueDate >= periodStart && bill.dueDate <= periodEnd)
+    );
+  }
+
   let inputStyle = {
     padding: '10px',
     borderRadius: '6px',
@@ -192,6 +218,29 @@ function SharedBills() {
       >
         {showHistory ? 'Hide History' : 'Show History'}
       </button>
+      {showHistory && (
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          <select
+            value={selectedMonthNum}
+            onChange={e => setSelectedMonthNum(e.target.value)}
+            style={{ ...inputStyle, flex: 1 }}
+          >
+            {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+          </select>
+          <select
+            value={selectedYear}
+            onChange={e => setSelectedYear(e.target.value)}
+            style={{ ...inputStyle, flex: 1 }}
+          >
+            {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+        </div>
+      )}
+      {!showHistory && periodStart && (
+        <p style={{ color: '#8B949E', fontSize: '12px', marginTop: 0, marginBottom: '16px' }}>
+          Showing bills due this pay period ({formatDate(periodStart)} – {formatDate(periodEnd)})
+        </p>
+      )}
         <button
           onClick={() => {
             if (showAddForm) {
@@ -305,11 +354,11 @@ function SharedBills() {
         </div>
       )}
 
-      {bills.length === 0 ? (
+      {visibleBills(bills).length === 0 ? (
         <p style={{ color: '#8B949E' }}>No shared bills yet</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {bills.map((bill, index) => {
+          {visibleBills(bills).map((bill, index) => {
             let isExpanded = expandedId === bill._id;
             let accent = GOLD_ACCENTS[index % GOLD_ACCENTS.length];
 

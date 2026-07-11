@@ -267,11 +267,19 @@ function MyPage() {
   );
 
   function visibleBills(bills) {
-    if (!showHistory) return bills;
+    if (showHistory) {
+      // history mode: current bills + archived bills from the selected month
+      return bills.filter(bill =>
+        !bill.isArchived ||
+        !bill.dueDate ||
+        bill.dueDate.slice(0, 7) === `${selectedYear}-${selectedMonthNum}`
+      );
+    }
+    // default mode: only bills due within the current pay period (undated always shown)
+    if (!periodStart || !periodEnd) return bills;
     return bills.filter(bill =>
-      !bill.isArchived ||
       !bill.dueDate ||
-      bill.dueDate.slice(0, 7) === `${selectedYear}-${selectedMonthNum}`
+      (bill.dueDate >= periodStart && bill.dueDate <= periodEnd)
     );
   }
 
@@ -508,6 +516,11 @@ function MyPage() {
               {showHistory ? 'Hide History' : 'Show History'}
             </button>
           </div>
+          {!showHistory && periodStart && (
+            <p style={{ color: '#8B949E', fontSize: '12px', marginTop: 0, marginBottom: '16px' }}>
+              Showing bills due this pay period ({formatDate(periodStart)} – {formatDate(periodEnd)})
+            </p>
+          )}
           {historyMonthPicker}
 
           {visibleBills(sharedBills).length === 0 ? (
@@ -641,6 +654,11 @@ function MyPage() {
               {showAddBill ? '✕ Cancel' : '+ Add Bill'}
             </button>
           </div>
+          {!showHistory && periodStart && (
+            <p style={{ color: '#8B949E', fontSize: '12px', marginTop: 0, marginBottom: '16px' }}>
+              Showing bills due this pay period ({formatDate(periodStart)} – {formatDate(periodEnd)})
+            </p>
+          )}
           {historyMonthPicker}
 
           {showAddBill && (
