@@ -124,7 +124,16 @@ const getAllBills = async (req, res) => {
       filter.isArchived = { $ne: true };
     }
 
-    const bills = await Bill.find(filter);
+    const bills = await Bill.find(filter).lean();
+
+    // attach payment summaries so the frontend can show progress and window-relevance
+    const BillPayment = require('../models/BillPayment');
+    for (let bill of bills) {
+      let payments = await BillPayment.find({ bill: bill._id });
+      bill.paidSoFar = payments.reduce((total, p) => total + p.amount, 0);
+      bill.paymentDates = payments.map(p => p.date);
+    }
+
     res.json(bills);
   } catch (error) {
     res.status(500).json({ message: error.message });

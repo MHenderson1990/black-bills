@@ -112,6 +112,18 @@ async function computeLeftoverForPaycheck(paycheck) {
     personalBillsTotal = personalBillsTotal + remaining;
   }
 
+  // payments made THIS window count as money already gone from this check,
+  // even when the bill itself is due in a different window
+  let windowPayments = await BillPayment.find({
+    date: { $gte: periodStart, $lt: periodEnd }
+  });
+  for (let payment of windowPayments) {
+    let parentBill = await Bill.findById(payment.bill);
+    if (!parentBill || String(parentBill.owner) !== String(paycheck.earnedBy)) continue;
+    if (parentBill.isShared || parentBill.isSetAside) continue;
+    personalBillsTotal = personalBillsTotal + payment.amount;
+  }
+
   let leftoverAmount = paycheck.amount - (billShareTotal + personalBillsTotal);
   return await Paycheck.findByIdAndUpdate(paycheck._id, { leftoverAmount }, { new: true });
 }

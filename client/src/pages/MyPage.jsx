@@ -362,7 +362,8 @@ function MyPage() {
     if (!periodStart || !periodEnd) return list;
     return list.filter(bill =>
       !bill.dueDate ||
-      (bill.dueDate >= periodStart && bill.dueDate <= periodEnd)
+      (bill.dueDate >= periodStart && bill.dueDate <= periodEnd) ||
+      (bill.paymentDates || []).some(d => d >= periodStart && d <= periodEnd)
     );
   }
 
