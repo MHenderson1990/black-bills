@@ -1,6 +1,7 @@
 const Bill = require('../models/Bill');
 const BillShare = require('../models/BillShare');
 const DebtTransaction = require('../models/DebtTransaction');
+const BillPayment = require('../models/BillPayment');
 const User = require('../models/User');
 
 const getSpendingByCategory = async (req, res) => {
@@ -42,7 +43,22 @@ const getSpendingByCategory = async (req, res) => {
       return res.json(grouped);
     }
 
-    // PERSONAL MODES (default + cashflow) — unchanged
+    
+    // bills WITH payments: count each payment at its payment date
+    let windowPayments = await BillPayment.find({
+      date: { $gte: new Date(start), $lte: new Date(end) }
+    });
+
+    let grouped = {};
+
+    for (let payment of windowPayments) {
+      let bill = await Bill.findById(payment.bill);
+      if (!bill || String(bill.owner) !== owner || bill.isShared || bill.isSetAside) continue;
+      if (!grouped[bill.category]) grouped[bill.category] = 0;
+      grouped[bill.category] = grouped[bill.category] + payment.amount;
+    }
+
+    // bills WITHOUT any payments: count full amount at due date (the old rule)
     let personalBills = await Bill.find({
       owner,
       isShared: false,
@@ -50,13 +66,12 @@ const getSpendingByCategory = async (req, res) => {
       dueDate: { $gte: start, $lte: end }
     });
 
-    let grouped = personalBills.reduce((totals, bill) => {
-      if (!totals[bill.category]) {
-        totals[bill.category] = 0;
-      }
-      totals[bill.category] = totals[bill.category] + bill.amount;
-      return totals;
-    }, {});
+    for (let bill of personalBills) {
+      let anyPayments = await BillPayment.countDocuments({ bill: bill._id });
+      if (anyPayments > 0) continue; // counted via payments instead
+      if (!grouped[bill.category]) grouped[bill.category] = 0;
+      grouped[bill.category] = grouped[bill.category] + bill.amount;
+    }
 
     let billShares = await BillShare.find({ owner });
 

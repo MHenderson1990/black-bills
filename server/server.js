@@ -14,6 +14,8 @@ const savingsGoalRoutes = require('./routes/savingsGoalRoutes');
 const contributionRoutes = require('./routes/contributionRoutes');
 const paycheckRoutes = require('./routes/paycheckRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const billPaymentRoutes = require('./routes/billPaymentRoutes');
+
 
 //connect to database 
 connectDB();
@@ -32,6 +34,7 @@ app.use('/api/debts', debtRoutes);
 app.use('/api/bill-shares', billShareRoutes);
 app.use('/api/debt-transactions', debtTransactionRoutes);
 app.use('/api/debt-payments', debtPaymentRoutes);
+app.use('/api/bill-payments', billPaymentRoutes);
 app.use('/api/savings-goals', savingsGoalRoutes); 
 app.use('/api/contributions', contributionRoutes);
 app.use('/api/paychecks', paycheckRoutes);

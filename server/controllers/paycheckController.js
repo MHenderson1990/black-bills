@@ -2,6 +2,7 @@ const Paycheck = require('../models/Paycheck');
 const Bill = require('../models/Bill');
 const BillShare = require('../models/BillShare'); 
 const User = require('../models/User'); 
+const BillPayment = require('../models/BillPayment');
 
 // CREATE PAYCHECK
 const createPaycheck = async (req, res) => {
@@ -103,9 +104,13 @@ async function computeLeftoverForPaycheck(paycheck) {
     dueDate: { $gte: periodStart, $lt: periodEnd }
   });
 
-  let personalBillsTotal = personalBills.reduce((total, personal) => {
-    return total + personal.amount;
-  }, 0);
+  let personalBillsTotal = 0;
+  for (let personal of personalBills) {
+    let billPayments = await BillPayment.find({ bill: personal._id });
+    let paidSoFar = billPayments.reduce((total, p) => total + p.amount, 0);
+    let remaining = Math.max(0, personal.amount - paidSoFar);
+    personalBillsTotal = personalBillsTotal + remaining;
+  }
 
   let leftoverAmount = paycheck.amount - (billShareTotal + personalBillsTotal);
   return await Paycheck.findByIdAndUpdate(paycheck._id, { leftoverAmount }, { new: true });
