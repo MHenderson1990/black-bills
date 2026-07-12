@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { getSharedBills, getSharedBillsWithHistory, getBillShares, markBillSharePaid, getAllDebts, getDebtBalance, getPaychecks, createPaycheck, calculateLeftover, createBill, 
   updateBill, deleteBill, getPersonalBills, getPersonalBillsWithHistory, updatePayAnchorDate, recalculateLeftover, getRecentPayDate, getSpendingCashflow, getBillPayments, 
-  createBillPayment, updateBillPayment, deleteBillPayment, updatePaycheck, deletePaycheck } from '../services/api';
+  createBillPayment, updateBillPayment, deleteBillPayment, updatePaycheck, deletePaycheck, getMySharedCharges, markTransactionPaid } from '../services/api';
 import { MONTHS, YEARS, CATEGORIES, formatDate } from '../constants';
 
 let BLUE_ACCENTS = [
@@ -49,6 +49,7 @@ function MyPage() {
   let [sharedBills, setSharedBills] = useState([]);
   let [personalBills, setPersonalBills] = useState([]);
   let [debts, setDebts] = useState([]);
+  let [mySharedCharges, setMySharedCharges] = useState([]);
   let [paychecks, setPaychecks] = useState([]);
   let [spending, setSpending] = useState({});
   let [periodStart, setPeriodStart] = useState(null);
@@ -101,17 +102,19 @@ function MyPage() {
 
   async function fetchAll() {
     try {
-      let [sharedRes, personalRes, debtsRes, paychecksRes, recentRes] = await Promise.all([
+      let [sharedRes, personalRes, debtsRes, paychecksRes, recentRes, chargesRes] = await Promise.all([
         getSharedBillsWithHistory(householdId),
         getPersonalBillsWithHistory(householdId, userId),
         getAllDebts(householdId),
         getPaychecks(userId),
-        getRecentPayDate(userId)
+        getRecentPayDate(userId),
+        getMySharedCharges(householdId, userId)
       ]);
 
       setSharedBills([...sharedRes.data].sort((a, b) => new Date(b.dueDate || 0) - new Date(a.dueDate || 0)));
       setPersonalBills([...personalRes.data].sort((a, b) => new Date(b.dueDate || 0) - new Date(a.dueDate || 0)));
       setPaychecks(paychecksRes.data);
+      setMySharedCharges(chargesRes.data);
 
       if (recentRes.data.recentPayDate && recentRes.data.periodEnd) {
         setPeriodStart(recentRes.data.recentPayDate);
@@ -351,6 +354,13 @@ function MyPage() {
 
   function billPaidSoFar() {
     return expandedBillPayments.reduce((total, p) => total + p.amount, 0);
+  }
+
+  async function handleMarkChargePaid(charge) {
+    if (window.confirm(`Log a $${charge.amount} payment on ${charge.debtName} for "${charge.item}"?`)) {
+      await markTransactionPaid(charge._id);
+      fetchAll();
+    }
   }
 
   async function handleDeleteBill(billId) {
@@ -1032,6 +1042,43 @@ function MyPage() {
 
       {activeTab === 'debt' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {mySharedCharges.length > 0 && (
+            <div style={{
+              background: '#161B22',
+              border: `1px solid ${borderColor}`,
+              borderRadius: '12px',
+              padding: '16px'
+            }}>
+              <h2 style={{ fontSize: '15px', marginTop: 0, marginBottom: '12px', color: '#E8F5E9' }}>
+                My Charges on Shared Cards
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {mySharedCharges.map(charge => (
+                  <div key={charge._id} style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '8px 12px', background: '#0D1117', borderRadius: '6px',
+                    fontSize: '12px', gap: '8px', flexWrap: 'wrap'
+                  }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <p style={{ color: '#E8F5E9', margin: 0, fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{charge.item}</p>
+                      <p style={{ color: '#8B949E', margin: 0, fontSize: '11px' }}>{charge.debtName} · {formatDate(charge.date)}</p>
+                    </div>
+                    <span style={{ fontWeight: 'bold', color: '#E8F5E9' }}>${charge.amount}</span>
+                    <button
+                      onClick={() => handleMarkChargePaid(charge)}
+                      style={{
+                        padding: '6px 12px', borderRadius: '6px', border: 'none',
+                        background: 'linear-gradient(135deg, #1DB954, #107C41)',
+                        color: 'white', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer'
+                      }}
+                    >
+                      Mark Paid
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {debts.length === 0 ? (
             <p style={{ color: '#8B949E' }}>No personal debt</p>
           ) : (

@@ -24,6 +24,7 @@ function DebtPage() {
   let [newCategory, setNewCategory] = useState('Misc.');
   let [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0]);
   let [newMadeBy, setNewMadeBy] = useState('');
+  let [chargeFilter, setChargeFilter] = useState('everyone');
   let [newPaymentAmount, setNewPaymentAmount] = useState('');
   let [newPaymentDate, setNewPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   let [newPaymentMadeBy, setNewPaymentMadeBy] = useState('');
@@ -103,9 +104,11 @@ function DebtPage() {
 
   async function handleSaveTransaction(debtId) {
     if (!newItem || !newAmount || !newMadeBy) return;
+    let isBoth = newMadeBy === 'both';
     let data = {
       item: newItem,
-      madeBy: newMadeBy,
+      madeBy: isBoth ? userId : newMadeBy,
+      madeByBoth: isBoth,
       date: newDate,
       amount: Number(newAmount),
       category: newCategory
@@ -377,7 +380,13 @@ function DebtPage() {
             let percentPaid = Math.max(0, Math.min(100, (paidSoFar / debt.startingBalance) * 100));
             let accent = getDebtAccent(debt);
             let isExpanded = expandedId === debt._id;
-            let filteredTransactions = transactions.filter(t => t.date.slice(0, 7) === `${selectedYear}-${selectedMonthNum}`);
+            let filteredTransactions = transactions
+              .filter(t => t.date.slice(0, 7) === `${selectedYear}-${selectedMonthNum}`)
+              .filter(t => {
+                if (chargeFilter === 'everyone') return true;
+                if (chargeFilter === 'both') return t.madeByBoth;
+                return !t.madeByBoth && t.madeBy === chargeFilter;
+              });
             let filteredPayments = payments.filter(p => p.date.slice(0, 7) === `${selectedYear}-${selectedMonthNum}`);
 
             return (
@@ -480,6 +489,15 @@ function DebtPage() {
 
                     {expandedView === 'transactions' && (
                       <>
+                      <select
+                          value={chargeFilter}
+                          onChange={e => setChargeFilter(e.target.value)}
+                          style={{ ...inputStyle, marginBottom: '12px', width: '100%' }}
+                        >
+                          <option value="everyone">Everyone</option>
+                          {members.map(m => <option key={m._id} value={m._id}>{m.name} only</option>)}
+                          <option value="both">Both (joint) only</option>
+                        </select>
                         {filteredTransactions.length === 0 ? (
                           <p style={{ color: '#8B949E', fontSize: '13px', marginBottom: '12px' }}>No charges this month</p>
                         ) : (
@@ -543,6 +561,7 @@ function DebtPage() {
                               style={{ ...inputStyle, flex: '1 1 100px' }}
                             >
                               {members.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
+                              <option value="both">Both</option>
                             </select>
                           </div>
                           <button

@@ -65,3 +65,5 @@ export let updateBillPayment = (id, data) => api.put(`/bill-payments/${id}`, dat
 export let deleteBillPayment = (id) => api.delete(`/bill-payments/${id}`);
 export let updatePaycheck = (id, data) => api.put(`/paychecks/${id}`, data);
 export let deletePaycheck = (id) => api.delete(`/paychecks/${id}`);
+export let markTransactionPaid = (id) => api.put(`/debt-transactions/${id}/mark-paid`);
+export let getMySharedCharges = (householdId, userId) => api.get(`/debt-transactions/my-shared-charges?householdId=${householdId}&userId=${userId}`);
