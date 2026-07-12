@@ -59,3 +59,7 @@ export let deleteDebtPayment = (id) => api.delete(`/debt-payments/${id}`);
 export let getSharedBillsWithHistory = (householdId) => api.get(`/bills?householdId=${householdId}&isShared=true&includeArchived=true`);
 export let getPersonalBillsWithHistory = (householdId, owner) =>
   api.get(`/bills?householdId=${householdId}&isShared=false&owner=${owner}&includeArchived=true`);
+export let getBillPayments = (billId) => api.get(`/bill-payments?bill=${billId}`);
+export let createBillPayment = (data) => api.post('/bill-payments', data);
+export let updateBillPayment = (id, data) => api.put(`/bill-payments/${id}`, data);
+export let deleteBillPayment = (id) => api.delete(`/bill-payments/${id}`);

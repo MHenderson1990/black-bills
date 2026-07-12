@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { getSharedBills, getSharedBillsWithHistory, getBillShares, markBillSharePaid, getAllDebts, getDebtBalance, getPaychecks, createPaycheck, calculateLeftover, createBill, 
-  updateBill, deleteBill, getPersonalBills, getPersonalBillsWithHistory, updatePayAnchorDate, recalculateLeftover, getRecentPayDate, getSpendingCashflow } from '../services/api';
+  updateBill, deleteBill, getPersonalBills, getPersonalBillsWithHistory, updatePayAnchorDate, recalculateLeftover, getRecentPayDate, getSpendingCashflow, getBillPayments, createBillPayment, updateBillPayment, deleteBillPayment, } from '../services/api';
 import { MONTHS, YEARS, CATEGORIES, formatDate } from '../constants';
 
 let BLUE_ACCENTS = [
@@ -55,6 +55,10 @@ function MyPage() {
   let [showHistory, setShowHistory] = useState(false);
   let [loading, setLoading] = useState(true);
   let [expandedId, setExpandedId] = useState(null);
+  let [expandedBillPayments, setExpandedBillPayments] = useState([]);
+  let [newPaymentAmount2, setNewPaymentAmount2] = useState('');
+  let [newPaymentDate2, setNewPaymentDate2] = useState(new Date().toISOString().split('T')[0]);
+  let [editingPaymentId2, setEditingPaymentId2] = useState(null);
   let [billShares, setBillShares] = useState([]);
   let [showPaycheckHistory, setShowPaycheckHistory] = useState(false);
   let [showAddPaycheck, setShowAddPaycheck] = useState(false);
@@ -153,8 +157,27 @@ function MyPage() {
   }
 
   async function handleTogglePersonalPaid(bill) {
-    await updateBill(bill._id, { paid: !bill.paid });
+    // if the bill has payments, "Mark Paid" logs a payment for the remaining amount
+    let res = await getBillPayments(bill._id);
+    let paidSoFar = res.data.reduce((total, p) => total + p.amount, 0);
+    if (res.data.length > 0 && !bill.paid) {
+      let remaining = Math.max(0, bill.amount - paidSoFar);
+      if (remaining > 0) {
+        await createBillPayment({
+          bill: bill._id,
+          amount: remaining,
+          date: new Date().toISOString().split('T')[0]
+        });
+      }
+    } else if (res.data.length === 0) {
+      // no payments: plain toggle, as before
+      await updateBill(bill._id, { paid: !bill.paid });
+    }
     await recalculateLeftover(userId);
+    if (expandedId === bill._id) {
+      let refreshed = await getBillPayments(bill._id);
+      setExpandedBillPayments(refreshed.data);
+    }
     fetchAll();
   }
 
@@ -235,6 +258,67 @@ function MyPage() {
       console.error(error);
       alert('Failed to save bill');
     }
+  }
+
+  async function togglePersonalExpand(billId) {
+    if (expandedId === billId) {
+      setExpandedId(null);
+      return;
+    }
+    setExpandedId(billId);
+    setEditingPaymentId2(null);
+    setNewPaymentAmount2('');
+    let res = await getBillPayments(billId);
+    setExpandedBillPayments(res.data);
+  }
+
+  async function refreshBillPayments(billId) {
+    let res = await getBillPayments(billId);
+    setExpandedBillPayments(res.data);
+    await recalculateLeftover(userId);
+    fetchAll();
+  }
+
+  async function handleSaveBillPayment(billId) {
+    if (!newPaymentAmount2) return;
+    try {
+      if (editingPaymentId2) {
+        await updateBillPayment(editingPaymentId2, {
+          amount: Number(newPaymentAmount2),
+          date: newPaymentDate2
+        });
+      } else {
+        await createBillPayment({
+          bill: billId,
+          amount: Number(newPaymentAmount2),
+          date: newPaymentDate2
+        });
+      }
+      setNewPaymentAmount2('');
+      setNewPaymentDate2(new Date().toISOString().split('T')[0]);
+      setEditingPaymentId2(null);
+      await refreshBillPayments(billId);
+    } catch (error) {
+      console.error(error);
+      alert('Failed to save payment');
+    }
+  }
+
+  function startEditBillPayment(p) {
+    setEditingPaymentId2(p._id);
+    setNewPaymentAmount2(String(p.amount));
+    setNewPaymentDate2(p.date ? p.date.slice(0, 10) : new Date().toISOString().split('T')[0]);
+  }
+
+  async function handleDeleteBillPayment(paymentId, billId) {
+    if (window.confirm('Delete this payment?')) {
+      await deleteBillPayment(paymentId);
+      await refreshBillPayments(billId);
+    }
+  }
+
+  function billPaidSoFar() {
+    return expandedBillPayments.reduce((total, p) => total + p.amount, 0);
   }
 
   async function handleDeleteBill(billId) {
@@ -812,6 +896,98 @@ function MyPage() {
                       >
                         {bill.paid ? 'Undo Paid' : 'Mark Paid'}
                       </button>
+                    )}
+                    <button
+                      onClick={() => togglePersonalExpand(bill._id)}
+                      style={{
+                        width: '100%', padding: '6px', marginTop: '8px',
+                        background: '#0D1117', border: '1px solid #30363D',
+                        borderRadius: '6px', color: '#8B949E', fontSize: '11px', cursor: 'pointer'
+                      }}
+                    >
+                      {expandedId === bill._id ? '▲ Hide Payments' : '▼ Payments'}
+                    </button>
+
+                    {expandedId === bill._id && (
+                      <div style={{ marginTop: '10px', borderTop: '1px solid #30363D', paddingTop: '10px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '8px' }}>
+                          <span style={{ color: '#8B949E' }}>Paid so far</span>
+                          <span style={{ color: '#1DB954', fontWeight: 'bold' }}>
+                            ${billPaidSoFar().toFixed(2)} of ${bill.amount} — ${Math.max(0, bill.amount - billPaidSoFar()).toFixed(2)} left
+                          </span>
+                        </div>
+                        <div style={{ background: '#0D1117', borderRadius: '6px', height: '8px', overflow: 'hidden', marginBottom: '10px' }}>
+                          <div style={{
+                            background: 'linear-gradient(135deg, #1DB954, #107C41)',
+                            height: '100%',
+                            width: `${Math.min(100, (billPaidSoFar() / bill.amount) * 100)}%`,
+                            borderRadius: '6px'
+                          }} />
+                        </div>
+
+                        {expandedBillPayments.map(p => (
+                          <div key={p._id} style={{
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            padding: '6px 10px', background: '#0D1117', borderRadius: '6px',
+                            fontSize: '12px', gap: '8px', marginBottom: '6px',
+                            border: editingPaymentId2 === p._id ? '1px solid #1DB954' : '1px solid transparent'
+                          }}>
+                            <span style={{ color: '#cfcfcf', flex: 1 }}>{formatDate(p.date)}</span>
+                            <span style={{ fontWeight: 'bold', color: '#1DB954' }}>-${p.amount}</span>
+                            {!bill.isArchived && (
+                              <>
+                                <button
+                                  onClick={() => startEditBillPayment(p)}
+                                  style={{ background: 'none', border: 'none', color: '#8B949E', cursor: 'pointer', fontSize: '12px', padding: '2px' }}
+                                >✎</button>
+                                <button
+                                  onClick={() => handleDeleteBillPayment(p._id, bill._id)}
+                                  style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '12px', padding: '2px' }}
+                                >✕</button>
+                              </>
+                            )}
+                          </div>
+                        ))}
+
+                        {!bill.isArchived && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                              <input
+                                placeholder="Amount"
+                                type="number"
+                                value={newPaymentAmount2}
+                                onChange={e => setNewPaymentAmount2(e.target.value)}
+                                style={{ ...inputStyle, flex: '1 1 80px', padding: '8px' }}
+                              />
+                              <input
+                                type="date"
+                                value={newPaymentDate2}
+                                onChange={e => setNewPaymentDate2(e.target.value)}
+                                style={{ ...inputStyle, flex: '1 1 110px', padding: '8px', colorScheme: 'dark' }}
+                              />
+                              <button
+                                onClick={() => setNewPaymentAmount2(String((bill.amount / 2).toFixed(2)))}
+                                style={{
+                                  padding: '8px 10px', borderRadius: '6px', border: '1px solid #30363D',
+                                  background: 'transparent', color: '#8B949E', fontSize: '11px', cursor: 'pointer'
+                                }}
+                              >
+                                ½ Half
+                              </button>
+                            </div>
+                            <button
+                              onClick={() => handleSaveBillPayment(bill._id)}
+                              style={{
+                                padding: '8px', borderRadius: '6px', border: 'none',
+                                background: 'linear-gradient(135deg, #1DB954, #107C41)',
+                                color: 'white', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer'
+                              }}
+                            >
+                              {editingPaymentId2 ? 'Save Changes' : 'Log Payment'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 );
