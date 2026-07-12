@@ -28,6 +28,17 @@ const debtTransactionSchema = new mongoose.Schema({
     type: String,
     default: 'Misc.'
   },
+
+  madeByBoth: {
+    type: Boolean,
+    default: false
+  },
+  
+  paid: {
+    type: Boolean,
+    default: false
+  },
+
 });
 
 module.exports = mongoose.model('DebtTransaction', debtTransactionSchema);
