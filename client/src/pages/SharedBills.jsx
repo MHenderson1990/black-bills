@@ -43,9 +43,7 @@ function SharedBills() {
 
   async function fetchBills() {
     try {
-      let res = showHistory
-        ? await getSharedBillsWithHistory(householdId)
-        : await getSharedBills(householdId);
+      let res = await getSharedBillsWithHistory(householdId);
       setBills([...res.data].sort((a, b) => new Date(b.dueDate || 0) - new Date(a.dueDate || 0)));
 
       let recentRes = await getRecentPayDate(userId);
@@ -166,12 +164,13 @@ function SharedBills() {
 
   function visibleBills(list) {
     if (showHistory) {
+      // history mode: everything due in the selected month, archived or not
       return list.filter(bill =>
-        !bill.isArchived ||
         !bill.dueDate ||
         bill.dueDate.slice(0, 7) === `${selectedYear}-${selectedMonthNum}`
       );
     }
+    // default mode: everything due in the current pay period, archived included
     if (!periodStart || !periodEnd) return list;
     return list.filter(bill =>
       !bill.dueDate ||

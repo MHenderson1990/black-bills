@@ -96,8 +96,8 @@ function MyPage() {
   async function fetchAll() {
     try {
       let [sharedRes, personalRes, debtsRes, paychecksRes, recentRes] = await Promise.all([
-        showHistory ? getSharedBillsWithHistory(householdId) : getSharedBills(householdId),
-        showHistory ? getPersonalBillsWithHistory(householdId, userId) : getPersonalBills(householdId, userId),
+        getSharedBillsWithHistory(householdId),
+        getPersonalBillsWithHistory(householdId, userId),
         getAllDebts(householdId),
         getPaychecks(userId),
         getRecentPayDate(userId)
@@ -266,18 +266,17 @@ function MyPage() {
     p.date.slice(0, 7) === `${selectedYear}-${selectedMonthNum}`
   );
 
-  function visibleBills(bills) {
+  function visibleBills(list) {
     if (showHistory) {
-      // history mode: current bills + archived bills from the selected month
-      return bills.filter(bill =>
-        !bill.isArchived ||
+      // history mode: everything due in the selected month, archived or not
+      return list.filter(bill =>
         !bill.dueDate ||
         bill.dueDate.slice(0, 7) === `${selectedYear}-${selectedMonthNum}`
       );
     }
-    // default mode: only bills due within the current pay period (undated always shown)
-    if (!periodStart || !periodEnd) return bills;
-    return bills.filter(bill =>
+    // default mode: everything due in the current pay period, archived included
+    if (!periodStart || !periodEnd) return list;
+    return list.filter(bill =>
       !bill.dueDate ||
       (bill.dueDate >= periodStart && bill.dueDate <= periodEnd)
     );
