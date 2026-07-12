@@ -63,3 +63,5 @@ export let getBillPayments = (billId) => api.get(`/bill-payments?bill=${billId}`
 export let createBillPayment = (data) => api.post('/bill-payments', data);
 export let updateBillPayment = (id, data) => api.put(`/bill-payments/${id}`, data);
 export let deleteBillPayment = (id) => api.delete(`/bill-payments/${id}`);
+export let updatePaycheck = (id, data) => api.put(`/paychecks/${id}`, data);
+export let deletePaycheck = (id) => api.delete(`/paychecks/${id}`);

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { getSharedBills, getSharedBillsWithHistory, getBillShares, markBillSharePaid, getAllDebts, getDebtBalance, getPaychecks, createPaycheck, calculateLeftover, createBill, 
-  updateBill, deleteBill, getPersonalBills, getPersonalBillsWithHistory, updatePayAnchorDate, recalculateLeftover, getRecentPayDate, getSpendingCashflow, getBillPayments, createBillPayment, updateBillPayment, deleteBillPayment, } from '../services/api';
+  updateBill, deleteBill, getPersonalBills, getPersonalBillsWithHistory, updatePayAnchorDate, recalculateLeftover, getRecentPayDate, getSpendingCashflow, getBillPayments, 
+  createBillPayment, updateBillPayment, deleteBillPayment, updatePaycheck, deletePaycheck } from '../services/api';
 import { MONTHS, YEARS, CATEGORIES, formatDate } from '../constants';
 
 let BLUE_ACCENTS = [
@@ -69,6 +70,7 @@ function MyPage() {
   let [payScheduleSaved, setPayScheduleSaved] = useState(false);
   let [newPaycheckAmount, setNewPaycheckAmount] = useState('');
   let [newPaycheckDate, setNewPaycheckDate] = useState(new Date().toISOString().split('T')[0]);
+  let [editingPaycheckId, setEditingPaycheckId] = useState(null);
   let [newBillName, setNewBillName] = useState('');
   let [newBillAmount, setNewBillAmount] = useState('');
   let [newBillDueDate, setNewBillDueDate] = useState('');
@@ -181,18 +183,48 @@ function MyPage() {
     fetchAll();
   }
 
-  async function handleAddPaycheck() {
+  async function handleSavePaycheck() {
     if (!newPaycheckAmount) return;
-    let res = await createPaycheck({
-      earnedBy: userId,
-      amount: Number(newPaycheckAmount),
-      date: newPaycheckDate
-    });
-    await calculateLeftover(res.data._id);
-    setNewPaycheckAmount('');
-    setNewPaycheckDate(new Date().toISOString().split('T')[0]);
-    setShowAddPaycheck(false);
-    fetchAll();
+    try {
+      if (editingPaycheckId) {
+        await updatePaycheck(editingPaycheckId, {
+          amount: Number(newPaycheckAmount),
+          date: newPaycheckDate
+        });
+      } else {
+        let res = await createPaycheck({
+          earnedBy: userId,
+          amount: Number(newPaycheckAmount),
+          date: newPaycheckDate
+        });
+        await calculateLeftover(res.data._id);
+      }
+      await recalculateLeftover(userId);
+      setNewPaycheckAmount('');
+      setNewPaycheckDate(new Date().toISOString().split('T')[0]);
+      setEditingPaycheckId(null);
+      setShowAddPaycheck(false);
+      fetchAll();
+    } catch (error) {
+      console.error(error);
+      alert('Failed to save paycheck');
+    }
+  }
+
+  function startEditPaycheck(p) {
+    setEditingPaycheckId(p._id);
+    setNewPaycheckAmount(String(p.amount));
+    setNewPaycheckDate(p.date ? p.date.slice(0, 10) : new Date().toISOString().split('T')[0]);
+    setShowAddPaycheck(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function handleDeletePaycheck(paycheckId) {
+    if (window.confirm('Delete this paycheck? This cannot be undone.')) {
+      await deletePaycheck(paycheckId);
+      await recalculateLeftover(userId);
+      fetchAll();
+    }
   }
 
   function resetBillForm() {
@@ -1143,7 +1175,14 @@ function MyPage() {
           </div>
 
           <button
-            onClick={() => setShowAddPaycheck(!showAddPaycheck)}
+            onClick={() => {
+                if (showAddPaycheck) {
+                  setEditingPaycheckId(null);
+                  setNewPaycheckAmount('');
+                  setNewPaycheckDate(new Date().toISOString().split('T')[0]);
+                }
+                setShowAddPaycheck(!showAddPaycheck);
+              }}
             style={{
               width: '100%', padding: '12px', borderRadius: '8px', border: 'none',
               background: primaryGradient,
@@ -1175,14 +1214,14 @@ function MyPage() {
                 />
               </div>
               <button
-                onClick={handleAddPaycheck}
+                onClick={handleSavePaycheck}
                 style={{
                   width: '100%', padding: '10px', borderRadius: '6px', border: 'none',
                   background: primaryGradient,
                   color: isMo ? '#fff' : '#0D1117', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'
                 }}
               >
-                Save Paycheck
+                {editingPaycheckId ? 'Save Changes' : 'Save Paycheck'}
               </button>
             </div>
           )}
@@ -1237,13 +1276,23 @@ function MyPage() {
                             WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                           }}>${p.amount.toFixed(2)}</p>
                         </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <p style={{ color: '#8B949E', fontSize: '11px', margin: 0 }}>Leftover</p>
-                          <p style={{
-                            fontSize: '15px', fontWeight: 'bold', margin: 0,
-                            background: accent, WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent', backgroundClip: 'text'
-                          }}>${p.leftoverAmount?.toFixed(2) ?? '—'}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div style={{ textAlign: 'right' }}>
+                            <p style={{ color: '#8B949E', fontSize: '11px', margin: 0 }}>Leftover</p>
+                            <p style={{
+                              fontSize: '15px', fontWeight: 'bold', margin: 0,
+                              background: accent, WebkitBackgroundClip: 'text',
+                              WebkitTextFillColor: 'transparent', backgroundClip: 'text'
+                            }}>${p.leftoverAmount?.toFixed(2) ?? '—'}</p>
+                          </div>
+                          <button
+                            onClick={() => startEditPaycheck(p)}
+                            style={{ background: 'none', border: 'none', color: unpaidColor, cursor: 'pointer', fontSize: '14px', padding: '2px' }}
+                          >✎</button>
+                          <button
+                            onClick={() => handleDeletePaycheck(p._id)}
+                            style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '14px', padding: '2px' }}
+                          >✕</button>
                         </div>
                       </div>
                     );
