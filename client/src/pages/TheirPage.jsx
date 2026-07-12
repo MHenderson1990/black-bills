@@ -92,15 +92,15 @@ function TheirPage() {
       setOtherName(other.name);
 
       let [sharedRes, personalRes, debtsRes, paychecksRes, recentRes] = await Promise.all([
-        showHistory ? getSharedBillsWithHistory(householdId) : getSharedBills(householdId),
-        showHistory ? getPersonalBillsWithHistory(householdId, other._id) : getPersonalBills(householdId, other._id),
+        getSharedBillsWithHistory(householdId),
+        getPersonalBillsWithHistory(householdId, other._id),
         getAllDebts(householdId),
         getPaychecks(other._id),
         getRecentPayDate(other._id)
       ]);
 
-      setSharedBills(sharedRes.data);
-      setPersonalBills(personalRes.data);
+      setSharedBills([...sharedRes.data].sort((a, b) => new Date(b.dueDate || 0) - new Date(a.dueDate || 0)));
+      setPersonalBills([...personalRes.data].sort((a, b) => new Date(b.dueDate || 0) - new Date(a.dueDate || 0)));
       setPaychecks(paychecksRes.data);
 
       if (recentRes.data.recentPayDate && recentRes.data.periodEnd) {
@@ -152,6 +152,22 @@ function TheirPage() {
   }));
 
   let periodTotal = pieData.reduce((total, slice) => total + slice.value, 0);
+
+  function visibleBills(list) {
+    if (showHistory) {
+      // history mode: everything due in the selected month, archived or not
+      return list.filter(bill =>
+        !bill.dueDate ||
+        bill.dueDate.slice(0, 7) === `${selectedYear}-${selectedMonthNum}`
+      );
+    }
+    // default mode: everything due in the current pay period, archived included
+    if (!periodStart || !periodEnd) return list;
+    return list.filter(bill =>
+      !bill.dueDate ||
+      (bill.dueDate >= periodStart && bill.dueDate <= periodEnd)
+    );
+  }
 
   let inputStyle = {
     padding: '10px',
@@ -337,11 +353,35 @@ function TheirPage() {
             </button>
           </div>
 
-          {sharedBills.length === 0 ? (
+        {showHistory && (
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              <select
+                value={selectedMonthNum}
+                onChange={e => setSelectedMonthNum(e.target.value)}
+                style={{ ...inputStyle, flex: 1 }}
+              >
+                {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+              </select>
+              <select
+                value={selectedYear}
+                onChange={e => setSelectedYear(e.target.value)}
+                style={{ ...inputStyle, flex: 1 }}
+              >
+                {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+          )}
+          {!showHistory && periodStart && (
+            <p style={{ color: '#8B949E', fontSize: '12px', marginTop: 0, marginBottom: '16px' }}>
+              Showing bills due this pay period ({formatDate(periodStart)} – {formatDate(periodEnd)})
+            </p>
+          )}
+
+          {visibleBills(sharedBills).length === 0 ? (
             <p style={{ color: '#8B949E' }}>No shared bills</p>
           ) : (
             <div style={cardGrid}>
-              {sharedBills.map((bill, index) => {
+              {visibleBills(sharedBills).map((bill, index) => {
                 let accent = ACCENTS[index % ACCENTS.length];
                 let isExpanded = expandedId === bill._id;
 
@@ -436,11 +476,35 @@ function TheirPage() {
             </button>
           </div>
 
-          {personalBills.length === 0 ? (
+        {showHistory && (
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              <select
+                value={selectedMonthNum}
+                onChange={e => setSelectedMonthNum(e.target.value)}
+                style={{ ...inputStyle, flex: 1 }}
+              >
+                {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+              </select>
+              <select
+                value={selectedYear}
+                onChange={e => setSelectedYear(e.target.value)}
+                style={{ ...inputStyle, flex: 1 }}
+              >
+                {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+          )}
+          {!showHistory && periodStart && (
+            <p style={{ color: '#8B949E', fontSize: '12px', marginTop: 0, marginBottom: '16px' }}>
+              Showing bills due this pay period ({formatDate(periodStart)} – {formatDate(periodEnd)})
+            </p>
+          )}
+
+          {visibleBills(personalBills).length === 0 ? (
             <p style={{ color: '#8B949E' }}>No personal bills</p>
           ) : (
             <div style={cardGrid}>
-              {personalBills.map((bill, index) => {
+              {visibleBills(personalBills).map((bill, index) => {
                 let accent = ACCENTS[index % ACCENTS.length];
                 return (
                   <div key={bill._id} style={{
