@@ -509,6 +509,9 @@ function DebtPage() {
                                 border: editingTransactionId === t._id ? '1px solid #4DA3FF' : '1px solid transparent'
                               }}>
                                 <span style={{ color: '#E8F5E9', flex: 1, minWidth: '80px' }}>{t.item}</span>
+                                <span style={{ color: '#8B949E', flex: 1, textAlign: 'center' }}>
+                                  {t.madeByBoth ? 'Both' : (members.find(m => m._id === t.madeBy)?.name || '')}
+                                </span>
                                 <span style={{ color: '#8B949E', flex: 1, textAlign: 'center' }}>{t.category}</span>
                                 <span style={{ color: '#cfcfcf', flex: 1, textAlign: 'center' }}>{formatDate(t.date)}</span>
                                 <span style={{ fontWeight: 'bold', color: '#E8F5E9' }}>${t.amount}</span>
