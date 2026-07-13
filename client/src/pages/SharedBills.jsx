@@ -24,7 +24,7 @@ function SharedBills() {
   let [editingBillId, setEditingBillId] = useState(null);
   let [newName, setNewName] = useState('');
   let [newAmount, setNewAmount] = useState('');
-  let [newDueDate, setNewDueDate] = useState('');
+  let [newDueDate, setNewDueDate] = useState(new Date().toISOString().split('T')[0]);
   let [newCategory, setNewCategory] = useState('Misc.');
   let [newIsRecurring, setNewIsRecurring] = useState(false);
   let [newRecurrenceType, setNewRecurrenceType] = useState('monthly');
@@ -93,7 +93,7 @@ function SharedBills() {
   function resetForm() {
     setNewName('');
     setNewAmount('');
-    setNewDueDate('');
+    setNewDueDate(new Date().toISOString().split('T')[0]);
     setNewCategory('Misc.');
     setNewIsRecurring(false);
     setNewRecurrenceType('monthly');
@@ -106,7 +106,7 @@ function SharedBills() {
     setEditingBillId(bill._id);
     setNewName(bill.name);
     setNewAmount(String(bill.amount));
-    setNewDueDate(bill.dueDate ? bill.dueDate.slice(0, 10) : '');
+    setNewDueDate(bill.dueDate ? bill.dueDate.slice(0, 10) : new Date().toISOString().split('T')[0]);
     setNewCategory(bill.category || 'Misc.');
     setNewIsRecurring(bill.isRecurring || false);
     setNewRecurrenceType(bill.recurrenceType || 'monthly');

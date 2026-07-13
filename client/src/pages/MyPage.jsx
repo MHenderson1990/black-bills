@@ -74,7 +74,7 @@ function MyPage() {
   let [editingPaycheckId, setEditingPaycheckId] = useState(null);
   let [newBillName, setNewBillName] = useState('');
   let [newBillAmount, setNewBillAmount] = useState('');
-  let [newBillDueDate, setNewBillDueDate] = useState('');
+  let [newBillDueDate, setNewBillDueDate] = useState(new Date().toISOString().split('T')[0]);
   let [newBillCategory, setNewBillCategory] = useState('Misc.');
   let [newBillIsRecurring, setNewBillIsRecurring] = useState(false);
   let [newIsSetAside, setNewIsSetAside] = useState(false);
@@ -233,7 +233,7 @@ function MyPage() {
   function resetBillForm() {
     setNewBillName('');
     setNewBillAmount('');
-    setNewBillDueDate('');
+    setNewBillDueDate(new Date().toISOString().split('T')[0]);
     setNewBillCategory('Misc.');
     setNewBillIsRecurring(false);
     setNewRecurrenceType('monthly');
@@ -246,7 +246,7 @@ function MyPage() {
     setEditingBillId(bill._id);
     setNewBillName(bill.name);
     setNewBillAmount(String(bill.amount));
-    setNewBillDueDate(bill.dueDate ? bill.dueDate.slice(0, 10) : '');
+    setNewBillDueDate(bill.dueDate ? bill.dueDate.slice(0, 10) : new Date().toISOString().split('T')[0]);
     setNewBillCategory(bill.category || 'Misc.');
     setNewBillIsRecurring(bill.isRecurring || false);
     setNewRecurrenceType(bill.recurrenceType || 'monthly');
