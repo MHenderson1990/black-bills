@@ -219,4 +219,5 @@ const getRecentPayDate = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-module.exports = { createPaycheck, getAllPaychecks, getPaycheckById, updatePaycheck, deletePaycheck, calculatePaycheckLeftover, getNextPayDate, getRecentPayDate, recalculateLeftover };
+module.exports = { createPaycheck, getAllPaychecks, getPaycheckById, updatePaycheck, deletePaycheck, 
+  calculatePaycheckLeftover, getNextPayDate, getRecentPayDate, recalculateLeftover, computeLeftoverForPaycheck };
