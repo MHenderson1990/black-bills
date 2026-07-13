@@ -219,5 +219,89 @@ const getRecentPayDate = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// GET BREAKDOWN: itemized list of what a paycheck's window counted
+const getPaycheckBreakdown = async (req, res) => {
+  try {
+    let paycheck = await Paycheck.findById(req.params.id);
+    if (!paycheck) {
+      return res.status(404).json({ message: 'Paycheck not found' });
+    }
+
+    let periodStart = new Date(paycheck.date);
+    let periodEnd = new Date(periodStart.getTime() + 14 * 24 * 60 * 60 * 1000);
+
+    let items = [];
+
+    // shared bill splits due in window
+    let allBillShares = await BillShare.find({ owner: paycheck.earnedBy });
+    for (let share of allBillShares) {
+      let parentBill = await Bill.findById(share.bill);
+      if (!parentBill || !parentBill.dueDate) continue;
+      if (parentBill.isSetAside) continue;
+      if (parentBill.dueDate >= periodStart && parentBill.dueDate < periodEnd) {
+        items.push({
+          type: 'Shared split',
+          name: parentBill.name,
+          date: parentBill.dueDate,
+          amount: share.amount
+        });
+      }
+    }
+
+    // personal bills due in window: remaining after payments
+    let personalBills = await Bill.find({
+      owner: paycheck.earnedBy,
+      isShared: false,
+      isSetAside: { $ne: true },
+      dueDate: { $gte: periodStart, $lt: periodEnd }
+    });
+    for (let personal of personalBills) {
+      let billPayments = await BillPayment.find({ bill: personal._id });
+      let paidSoFar = billPayments.reduce((total, p) => total + p.amount, 0);
+      let remaining = Math.max(0, personal.amount - paidSoFar);
+      if (remaining > 0) {
+        items.push({
+          type: 'Personal bill (remaining)',
+          name: personal.name,
+          date: personal.dueDate,
+          amount: remaining
+        });
+      }
+    }
+
+    // payments dated in window
+    let windowPayments = await BillPayment.find({
+      date: { $gte: periodStart, $lt: periodEnd }
+    });
+    for (let payment of windowPayments) {
+      let parentBill = await Bill.findById(payment.bill);
+      if (!parentBill || String(parentBill.owner) !== String(paycheck.earnedBy)) continue;
+      if (parentBill.isShared || parentBill.isSetAside) continue;
+      items.push({
+        type: 'Payment made',
+        name: parentBill.name,
+        date: payment.date,
+        amount: payment.amount
+      });
+    }
+
+    let totalDeductions = items.reduce((total, item) => total + item.amount, 0);
+
+    res.json({
+      paycheckAmount: paycheck.amount,
+      storedLeftover: paycheck.leftoverAmount,
+      computedLeftover: paycheck.amount - totalDeductions,
+      totalDeductions,
+      periodStart,
+      periodEnd,
+      items
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = { createPaycheck, getAllPaychecks, getPaycheckById, updatePaycheck, deletePaycheck, 
-  calculatePaycheckLeftover, getNextPayDate, getRecentPayDate, recalculateLeftover, computeLeftoverForPaycheck };
+  calculatePaycheckLeftover, getNextPayDate, getRecentPayDate, recalculateLeftover, computeLeftoverForPaycheck, 
+  getPaycheckBreakdown };

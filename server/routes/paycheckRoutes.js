@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { createPaycheck, getAllPaychecks, getPaycheckById, updatePaycheck, deletePaycheck, calculatePaycheckLeftover, getNextPayDate, getRecentPayDate, recalculateLeftover } = require('../controllers/paycheckController');
+const { createPaycheck, getAllPaychecks, getPaycheckById, updatePaycheck, deletePaycheck, calculatePaycheckLeftover, getNextPayDate, getRecentPayDate, 
+    recalculateLeftover, getPaycheckBreakdown } = require('../controllers/paycheckController');
 const { protect } = require('../middlewares/authMiddleware');
 
 router.post('/', protect, createPaycheck);
@@ -12,6 +13,7 @@ router.get('/:id', protect, getPaycheckById);
 router.put('/:id', protect, updatePaycheck);
 router.delete('/:id', protect, deletePaycheck);
 router.put('/:id/leftover', protect, calculatePaycheckLeftover); 
+router.get('/:id/breakdown', protect, getPaycheckBreakdown);
 
 
 module.exports = router;

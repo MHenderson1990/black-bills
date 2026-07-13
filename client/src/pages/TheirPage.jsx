@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
-import { getSharedBills, getSharedBillsWithHistory, getBillShares, getAllDebts, getDebtBalance, getPaychecks, getHouseholdMembers, getPersonalBills, getPersonalBillsWithHistory, getRecentPayDate, getSpendingCashflow } from '../services/api';
+import { getSharedBills, getSharedBillsWithHistory, getBillShares, getAllDebts, getDebtBalance, getPaychecks, getHouseholdMembers, getPersonalBills, getPersonalBillsWithHistory, 
+  getRecentPayDate, getSpendingCashflow, getPaycheckBreakdown } from '../services/api';
 import { MONTHS, YEARS, formatDate } from '../constants';
 
 let BLUE_ACCENTS = [
@@ -58,9 +59,12 @@ function TheirPage() {
   let [expandedId, setExpandedId] = useState(null);
   let [billShares, setBillShares] = useState([]);
   let [showPaycheckHistory, setShowPaycheckHistory] = useState(false);
+  let [expandedPaycheckId, setExpandedPaycheckId] = useState(null);
+  let [paycheckBreakdown, setPaycheckBreakdown] = useState(null);
   let now = new Date();
   let [selectedYear, setSelectedYear] = useState(String(now.getFullYear()));
   let [selectedMonthNum, setSelectedMonthNum] = useState(String(now.getMonth() + 1).padStart(2, '0'));
+  
 
   let userId = localStorage.getItem('userId');
   let userName = localStorage.getItem('userName');
@@ -128,6 +132,18 @@ function TheirPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function togglePaycheckBreakdown(paycheckId) {
+    if (expandedPaycheckId === paycheckId) {
+      setExpandedPaycheckId(null);
+      setPaycheckBreakdown(null);
+      return;
+    }
+    setExpandedPaycheckId(paycheckId);
+    setPaycheckBreakdown(null);
+    let res = await getPaycheckBreakdown(paycheckId);
+    setPaycheckBreakdown(res.data);
   }
 
   async function toggleExpand(billId) {
@@ -665,11 +681,15 @@ function TheirPage() {
                   {filteredPaychecks.map((p, index) => {
                     let accent = ACCENTS[index % ACCENTS.length];
                     return (
-                      <div key={p._id} style={{
-                        background: '#161B22', border: '1px solid #30363D',
-                        borderRadius: '10px', padding: '14px',
-                        display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                      }}>
+                      <div
+                        key={p._id}
+                        onClick={() => togglePaycheckBreakdown(p._id)}
+                        style={{
+                          background: '#161B22', border: '1px solid #30363D',
+                          borderRadius: '10px', padding: '14px',
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          cursor: 'pointer', flexWrap: 'wrap'
+                        }}>
                         <div>
                           <p style={{ color: '#8B949E', fontSize: '12px', margin: 0 }}>{formatDate(p.date)}</p>
                           <p style={{
@@ -686,6 +706,39 @@ function TheirPage() {
                             WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                           }}>${p.leftoverAmount?.toFixed(2) ?? '—'}</p>
                         </div>
+                        {expandedPaycheckId === p._id && (
+                          <div style={{ flexBasis: '100%', borderTop: '1px solid #30363D', marginTop: '10px', paddingTop: '10px' }} onClick={e => e.stopPropagation()}>
+                            {!paycheckBreakdown ? (
+                              <p style={{ color: '#8B949E', fontSize: '12px', margin: 0 }}>Loading...</p>
+                            ) : (
+                              <>
+                                <p style={{ color: '#8B949E', fontSize: '11px', margin: '0 0 8px 0' }}>
+                                  Window: {formatDate(paycheckBreakdown.periodStart)} – {formatDate(paycheckBreakdown.periodEnd)}
+                                </p>
+                                {paycheckBreakdown.items.length === 0 ? (
+                                  <p style={{ color: '#8B949E', fontSize: '12px', margin: 0 }}>Nothing counted in this window</p>
+                                ) : (
+                                  paycheckBreakdown.items.map((item, i) => (
+                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', fontSize: '12px', marginBottom: '4px' }}>
+                                      <span style={{ color: '#E8F5E9', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
+                                      <span style={{ color: '#8B949E', fontSize: '11px' }}>{item.type}</span>
+                                      <span style={{ color: '#E8F5E9', fontWeight: 'bold' }}>-${item.amount.toFixed(2)}</span>
+                                    </div>
+                                  ))
+                                )}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #30363D', marginTop: '8px', paddingTop: '8px', fontSize: '12px' }}>
+                                  <span style={{ color: '#8B949E' }}>Computed leftover</span>
+                                  <span style={{ color: '#1DB954', fontWeight: 'bold' }}>${paycheckBreakdown.computedLeftover.toFixed(2)}</span>
+                                </div>
+                                {Math.abs(paycheckBreakdown.computedLeftover - (paycheckBreakdown.storedLeftover ?? paycheckBreakdown.computedLeftover)) > 0.01 && (
+                                  <p style={{ color: '#FFD700', fontSize: '11px', margin: '6px 0 0 0' }}>
+                                    ⚠️ Stored leftover (${paycheckBreakdown.storedLeftover?.toFixed(2)}) differs — data changed since this was calculated
+                                  </p>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}

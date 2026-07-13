@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { getSharedBills, getSharedBillsWithHistory, getBillShares, markBillSharePaid, getAllDebts, getDebtBalance, getPaychecks, createPaycheck, calculateLeftover, createBill, 
   updateBill, deleteBill, getPersonalBills, getPersonalBillsWithHistory, updatePayAnchorDate, recalculateLeftover, getRecentPayDate, getSpendingCashflow, getBillPayments, 
-  createBillPayment, updateBillPayment, deleteBillPayment, updatePaycheck, deletePaycheck, getMySharedCharges, markTransactionPaid } from '../services/api';
+  createBillPayment, updateBillPayment, deleteBillPayment, updatePaycheck, deletePaycheck, getMySharedCharges, markTransactionPaid, getPaycheckBreakdown } from '../services/api';
 import { MONTHS, YEARS, CATEGORIES, formatDate } from '../constants';
 
 let BLUE_ACCENTS = [
@@ -72,6 +72,8 @@ function MyPage() {
   let [newPaycheckAmount, setNewPaycheckAmount] = useState('');
   let [newPaycheckDate, setNewPaycheckDate] = useState(new Date().toISOString().split('T')[0]);
   let [editingPaycheckId, setEditingPaycheckId] = useState(null);
+  let [expandedPaycheckId, setExpandedPaycheckId] = useState(null);
+  let [paycheckBreakdown, setPaycheckBreakdown] = useState(null);
   let [newBillName, setNewBillName] = useState('');
   let [newBillAmount, setNewBillAmount] = useState('');
   let [newBillDueDate, setNewBillDueDate] = useState(new Date().toISOString().split('T')[0]);
@@ -220,6 +222,18 @@ function MyPage() {
     setNewPaycheckDate(p.date ? p.date.slice(0, 10) : new Date().toISOString().split('T')[0]);
     setShowAddPaycheck(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function togglePaycheckBreakdown(paycheckId) {
+    if (expandedPaycheckId === paycheckId) {
+      setExpandedPaycheckId(null);
+      setPaycheckBreakdown(null);
+      return;
+    }
+    setExpandedPaycheckId(paycheckId);
+    setPaycheckBreakdown(null);
+    let res = await getPaycheckBreakdown(paycheckId);
+    setPaycheckBreakdown(res.data);
   }
 
   async function handleDeletePaycheck(paycheckId) {
@@ -1310,11 +1324,15 @@ function MyPage() {
                   {filteredPaychecks.map((p, index) => {
                     let accent = ACCENTS[index % ACCENTS.length];
                     return (
-                      <div key={p._id} style={{
-                        background: '#161B22', border: '1px solid #30363D',
-                        borderRadius: '10px', padding: '14px',
-                        display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                      }}>
+                      <div
+                        key={p._id}
+                        onClick={() => togglePaycheckBreakdown(p._id)}
+                        style={{
+                          background: '#161B22', border: '1px solid #30363D',
+                          borderRadius: '10px', padding: '14px',
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          cursor: 'pointer', flexWrap: 'wrap'
+                        }}>
                         <div>
                           <p style={{ color: '#8B949E', fontSize: '12px', margin: 0 }}>{formatDate(p.date)}</p>
                           <p style={{
@@ -1333,14 +1351,47 @@ function MyPage() {
                             }}>${p.leftoverAmount?.toFixed(2) ?? '—'}</p>
                           </div>
                           <button
-                            onClick={() => startEditPaycheck(p)}
+                            onClick={(e) => { e.stopPropagation(); startEditPaycheck(p); }}
                             style={{ background: 'none', border: 'none', color: unpaidColor, cursor: 'pointer', fontSize: '14px', padding: '2px' }}
                           >✎</button>
                           <button
-                            onClick={() => handleDeletePaycheck(p._id)}
+                            onClick={(e) => { e.stopPropagation(); handleDeletePaycheck(p._id); }}
                             style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '14px', padding: '2px' }}
                           >✕</button>
                         </div>
+                        {expandedPaycheckId === p._id && (
+                          <div style={{ flexBasis: '100%', borderTop: '1px solid #30363D', marginTop: '10px', paddingTop: '10px' }} onClick={e => e.stopPropagation()}>
+                            {!paycheckBreakdown ? (
+                              <p style={{ color: '#8B949E', fontSize: '12px', margin: 0 }}>Loading...</p>
+                            ) : (
+                              <>
+                                <p style={{ color: '#8B949E', fontSize: '11px', margin: '0 0 8px 0' }}>
+                                  Window: {formatDate(paycheckBreakdown.periodStart)} – {formatDate(paycheckBreakdown.periodEnd)}
+                                </p>
+                                {paycheckBreakdown.items.length === 0 ? (
+                                  <p style={{ color: '#8B949E', fontSize: '12px', margin: 0 }}>Nothing counted in this window</p>
+                                ) : (
+                                  paycheckBreakdown.items.map((item, i) => (
+                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', fontSize: '12px', marginBottom: '4px' }}>
+                                      <span style={{ color: '#E8F5E9', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
+                                      <span style={{ color: '#8B949E', fontSize: '11px' }}>{item.type}</span>
+                                      <span style={{ color: '#E8F5E9', fontWeight: 'bold' }}>-${item.amount.toFixed(2)}</span>
+                                    </div>
+                                  ))
+                                )}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #30363D', marginTop: '8px', paddingTop: '8px', fontSize: '12px' }}>
+                                  <span style={{ color: '#8B949E' }}>Computed leftover</span>
+                                  <span style={{ color: '#1DB954', fontWeight: 'bold' }}>${paycheckBreakdown.computedLeftover.toFixed(2)}</span>
+                                </div>
+                                {Math.abs(paycheckBreakdown.computedLeftover - (paycheckBreakdown.storedLeftover ?? paycheckBreakdown.computedLeftover)) > 0.01 && (
+                                  <p style={{ color: '#FFD700', fontSize: '11px', margin: '6px 0 0 0' }}>
+                                    ⚠️ Stored leftover (${paycheckBreakdown.storedLeftover?.toFixed(2)}) differs — data changed since this was calculated
+                                  </p>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
