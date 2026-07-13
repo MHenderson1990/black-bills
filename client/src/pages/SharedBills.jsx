@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getSharedBills, getBillShares, markBillSharePaid, createBill, updateBill, deleteBill, getHouseholdMembers, getSharedBillsWithHistory, getRecentPayDate } from '../services/api';
+import { getSharedBills, getBillShares, markBillSharePaid, createBill, updateBill, deleteBill, getHouseholdMembers, 
+  getSharedBillsWithHistory, getRecentPayDate, recalculateLeftover } from '../services/api';
 import { CATEGORIES, MONTHS, YEARS, formatDate } from '../constants';
 
 let GOLD_ACCENTS = [
@@ -83,6 +84,7 @@ function SharedBills() {
 
   async function handleMarkPaid(shareId, currentPaidStatus) {
     await markBillSharePaid(shareId, { paid: !currentPaidStatus });
+    await recalculateLeftover(userId);
     let res = await getBillShares(expandedId);
     setBillShares(res.data);
     fetchBills();
@@ -143,6 +145,7 @@ function SharedBills() {
           householdId
         });
       }
+      await recalculateLeftover(userId);
       resetForm();
       fetchBills();
       if (expandedId) {
@@ -158,6 +161,7 @@ function SharedBills() {
   async function handleDelete(billId) {
     if (window.confirm('Delete this bill? This cannot be undone.')) {
       await deleteBill(billId);
+      await recalculateLeftover(userId);
       setBills(bills.filter(b => b._id !== billId));
     }
   }

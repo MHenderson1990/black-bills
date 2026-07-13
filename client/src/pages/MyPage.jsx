@@ -155,7 +155,7 @@ function MyPage() {
 
   async function handleMarkPaid(shareId, currentPaidStatus) {
     await markBillSharePaid(shareId, { paid: !currentPaidStatus });
-    await recalculateLeftover(userId);
+    
     let res = await getBillShares(expandedId);
     setBillShares(res.data);
     fetchAll();
@@ -178,7 +178,7 @@ function MyPage() {
       // no payments: plain toggle, as before
       await updateBill(bill._id, { paid: !bill.paid });
     }
-    await recalculateLeftover(userId);
+  
     if (expandedId === bill._id) {
       let refreshed = await getBillPayments(bill._id);
       setExpandedBillPayments(refreshed.data);
@@ -285,7 +285,7 @@ function MyPage() {
           householdId
         });
       }
-      await recalculateLeftover(userId);
+   
 
       resetBillForm();
       fetchAll();
@@ -366,7 +366,7 @@ function MyPage() {
   async function handleDeleteBill(billId) {
     if (window.confirm('Delete this bill? This cannot be undone.')) {
       await deleteBill(billId);
-      await recalculateLeftover(userId);
+      
       fetchAll();
     }
   }
