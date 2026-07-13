@@ -1,5 +1,6 @@
 const Bill = require('../models/Bill');
 const BillShare = require('../models/BillShare');
+const { recalcHouseholdLeftovers } = require('../utils/recalcHousehold');
 const User = require('../models/User');
 
 // CREATE BILL
@@ -33,7 +34,7 @@ const createBill = async (req, res) => {
         });
       }
     }
-
+    await recalcHouseholdLeftovers(householdId);
     res.status(201).json(bill);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -173,7 +174,7 @@ const updateBill = async (req, res) => {
         await BillShare.findByIdAndUpdate(share._id, { amount: splitAmount });
       }
     }
-
+    await recalcHouseholdLeftovers(bill.householdId);
     res.json(bill);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -190,7 +191,7 @@ const deleteBill = async (req, res) => {
     }
 
     await BillShare.deleteMany({ bill: req.params.id });
-
+    await recalcHouseholdLeftovers(bill.householdId);
     res.json({ message: 'Bill deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });

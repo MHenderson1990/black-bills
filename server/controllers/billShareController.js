@@ -1,5 +1,6 @@
 const BillShare = require('../models/BillShare');
 const Bill = require('../models/Bill');
+const { recalcHouseholdLeftovers } = require('../utils/recalcHousehold');
 
 const markBillSharePaid = async (req, res) => {
   try {
@@ -17,7 +18,10 @@ const markBillSharePaid = async (req, res) => {
     let allPaid = allShares.every(s => s.paid === true);
 
     await Bill.findByIdAndUpdate(share.bill, { paid: allPaid });
-
+    let parentBill = await Bill.findById(share.bill);
+    if (parentBill) {
+      await recalcHouseholdLeftovers(parentBill.householdId);
+    }
     res.json(share);
   } catch (error) {
     res.status(500).json({ message: error.message });
