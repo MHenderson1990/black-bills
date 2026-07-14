@@ -523,77 +523,130 @@ function DebtPage() {
                                   onClick={() => handleDeleteTransaction(t._id, debt._id)}
                                   style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
                                 >✕</button>
+                                {editingTransactionId === t._id && (
+                                  <div style={{ flexBasis: '100%', borderTop: '1px solid #30363D', marginTop: '8px', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }} onClick={e => e.stopPropagation()}>
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                      <input
+                                        placeholder="Item"
+                                        value={newItem}
+                                        onChange={e => setNewItem(e.target.value)}
+                                        style={{ ...inputStyle, flex: '2 1 120px', padding: '8px' }}
+                                      />
+                                      <input
+                                        placeholder="Amount"
+                                        type="number"
+                                        value={newAmount}
+                                        onChange={e => setNewAmount(e.target.value)}
+                                        style={{ ...inputStyle, flex: '1 1 80px', padding: '8px' }}
+                                      />
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                      <select
+                                        value={newCategory}
+                                        onChange={e => setNewCategory(e.target.value)}
+                                        style={{ ...inputStyle, flex: '1 1 90px', padding: '8px' }}
+                                      >
+                                        {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                      </select>
+                                      <input
+                                        type="date"
+                                        value={newDate}
+                                        onChange={e => setNewDate(e.target.value)}
+                                        style={{ ...inputStyle, flex: '1 1 110px', padding: '8px', colorScheme: 'dark' }}
+                                      />
+                                      <select
+                                        value={newMadeBy}
+                                        onChange={e => setNewMadeBy(e.target.value)}
+                                        style={{ ...inputStyle, flex: '1 1 90px', padding: '8px' }}
+                                      >
+                                        {members.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
+                                        <option value="both">Both</option>
+                                      </select>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                      <button
+                                        onClick={() => handleSaveTransaction(debt._id)}
+                                        style={{
+                                          flex: 1, padding: '8px', borderRadius: '6px', border: 'none',
+                                          background: accent, color: 'white', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer'
+                                        }}
+                                      >
+                                        Save Changes
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          setEditingTransactionId(null);
+                                          setNewItem('');
+                                          setNewAmount('');
+                                          setNewCategory('Misc.');
+                                          setNewDate(new Date().toISOString().split('T')[0]);
+                                        }}
+                                        style={{
+                                          flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #30363D',
+                                          background: 'transparent', color: '#8B949E', fontSize: '12px', cursor: 'pointer'
+                                        }}
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>
                         )}
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            <input
-                              placeholder="Item"
-                              value={newItem}
-                              onChange={e => setNewItem(e.target.value)}
-                              style={{ ...inputStyle, flex: '2 1 140px' }}
-                            />
-                            <input
-                              placeholder="Amount"
-                              type="number"
-                              value={newAmount}
-                              onChange={e => setNewAmount(e.target.value)}
-                              style={{ ...inputStyle, flex: '1 1 90px' }}
-                            />
-                          </div>
-                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            <select
-                              value={newCategory}
-                              onChange={e => setNewCategory(e.target.value)}
-                              style={{ ...inputStyle, flex: '1 1 100px' }}
-                            >
-                              {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                            </select>
-                            <input
-                              type="date"
-                              value={newDate}
-                              onChange={e => setNewDate(e.target.value)}
-                              style={{ ...inputStyle, flex: '1 1 120px', colorScheme: 'dark' }}
-                            />
-                            <select
-                              value={newMadeBy}
-                              onChange={e => setNewMadeBy(e.target.value)}
-                              style={{ ...inputStyle, flex: '1 1 100px' }}
-                            >
-                              {members.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
-                              <option value="both">Both</option>
-                            </select>
-                          </div>
-                          <button
-                            onClick={() => handleSaveTransaction(debt._id)}
-                            style={{
-                              padding: '10px', borderRadius: '6px', border: 'none',
-                              background: accent, color: 'white', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'
-                            }}
-                          >
-                            {editingTransactionId ? 'Save Changes' : 'Add Charge'}
-                          </button>
-                          {editingTransactionId && (
+                        {!editingTransactionId && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                              <input
+                                placeholder="Item"
+                                value={newItem}
+                                onChange={e => setNewItem(e.target.value)}
+                                style={{ ...inputStyle, flex: '2 1 140px' }}
+                              />
+                              <input
+                                placeholder="Amount"
+                                type="number"
+                                value={newAmount}
+                                onChange={e => setNewAmount(e.target.value)}
+                                style={{ ...inputStyle, flex: '1 1 90px' }}
+                              />
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                              <select
+                                value={newCategory}
+                                onChange={e => setNewCategory(e.target.value)}
+                                style={{ ...inputStyle, flex: '1 1 100px' }}
+                              >
+                                {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                              </select>
+                              <input
+                                type="date"
+                                value={newDate}
+                                onChange={e => setNewDate(e.target.value)}
+                                style={{ ...inputStyle, flex: '1 1 120px', colorScheme: 'dark' }}
+                              />
+                              <select
+                                value={newMadeBy}
+                                onChange={e => setNewMadeBy(e.target.value)}
+                                style={{ ...inputStyle, flex: '1 1 100px' }}
+                              >
+                                {members.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
+                                <option value="both">Both</option>
+                              </select>
+                            </div>
                             <button
-                              onClick={() => {
-                                setEditingTransactionId(null);
-                                setNewItem('');
-                                setNewAmount('');
-                                setNewCategory('Misc.');
-                                setNewDate(new Date().toISOString().split('T')[0]);
-                              }}
+                              onClick={() => handleSaveTransaction(debt._id)}
                               style={{
-                                padding: '8px', borderRadius: '6px', border: '1px solid #30363D',
-                                background: 'transparent', color: '#8B949E', fontSize: '12px', cursor: 'pointer'
+                                padding: '10px', borderRadius: '6px', border: 'none',
+                                background: accent, color: 'white', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'
                               }}
                             >
-                              Cancel Edit
+                              Add Charge
                             </button>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </>
                     )}
 
