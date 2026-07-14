@@ -1,5 +1,5 @@
 const DebtTransaction = require('../models/DebtTransaction');
-const DebtPayment = require('../models/DebtPayment');
+
 
 //CREATE 
 const createDebtTransaction = async (req,res) => {
