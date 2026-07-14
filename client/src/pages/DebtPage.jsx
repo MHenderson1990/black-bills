@@ -578,13 +578,13 @@ function DebtPage() {
                                 padding: '8px 12px', background: '#0D1117', borderRadius: '6px', fontSize: '12px', gap: '8px', flexWrap: 'wrap',
                                 border: editingTransactionId === t._id ? '1px solid #4DA3FF' : '1px solid transparent'
                               }}>
-                                <span style={{ color: '#E8F5E9', flex: 1, minWidth: '80px' }}>{t.item}</span>
-                                <span style={{ color: '#8B949E', flex: 1, textAlign: 'center' }}>
+                                <span style={{ color: '#E8F5E9', width: '140px', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.item}</span>
+                                <span style={{ color: '#8B949E', width: '60px', flexShrink: 0, textAlign: 'center' }}>
                                   {t.madeByBoth ? 'Both' : (members.find(m => m._id === t.madeBy)?.name || '')}
                                 </span>
-                                <span style={{ color: '#8B949E', flex: 1, textAlign: 'center' }}>{t.category}</span>
-                                <span style={{ color: '#cfcfcf', flex: 1, textAlign: 'center' }}>{formatDate(t.date)}</span>
-                                <span style={{ fontWeight: 'bold', color: '#E8F5E9' }}>${t.amount}</span>
+                                <span style={{ color: '#8B949E', width: '90px', flexShrink: 0, textAlign: 'center' }}>{t.category}</span>
+                                <span style={{ color: '#cfcfcf', width: '80px', flexShrink: 0, textAlign: 'center' }}>{formatDate(t.date)}</span>
+                                <span style={{ fontWeight: 'bold', color: '#E8F5E9', width: '65px', flexShrink: 0, textAlign: 'right' }}>${t.amount}</span>
                                 <button
                                   onClick={() => startEditTransaction(t)}
                                   style={{ background: 'none', border: 'none', color: '#8B949E', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
