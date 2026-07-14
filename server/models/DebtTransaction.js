@@ -44,6 +44,10 @@ const debtTransactionSchema = new mongoose.Schema({
     default: false
   },
 
+  paidDate: {
+    type: Date
+  },
+
 });
 
 module.exports = mongoose.model('DebtTransaction', debtTransactionSchema);

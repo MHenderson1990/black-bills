@@ -55,6 +55,7 @@ function MyPage() {
   let [periodStart, setPeriodStart] = useState(null);
   let [periodEnd, setPeriodEnd] = useState(null);
   let [showHistory, setShowHistory] = useState(false);
+  let [showSettled, setShowSettled] = useState(false);
   let [loading, setLoading] = useState(true);
   let [expandedId, setExpandedId] = useState(null);
   let [expandedBillPayments, setExpandedBillPayments] = useState([]);
@@ -404,6 +405,13 @@ function MyPage() {
 
   let filteredPaychecks = paychecks.filter(p =>
     p.date.slice(0, 7) === `${selectedYear}-${selectedMonthNum}`
+  );
+
+  let unpaidSharedCharges = mySharedCharges.filter(c => !c.paid);
+
+  let settledSharedCharges = mySharedCharges.filter(c =>
+    c.paid &&
+    (c.paidDate || c.date).slice(0, 7) === `${selectedYear}-${selectedMonthNum}`
   );
 
   function visibleBills(list) {
@@ -1056,7 +1064,7 @@ function MyPage() {
 
       {activeTab === 'debt' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {mySharedCharges.length > 0 && (
+          {unpaidSharedCharges.length > 0 && (
             <div style={{
               background: '#161B22',
               border: `1px solid ${borderColor}`,
@@ -1067,7 +1075,7 @@ function MyPage() {
                 My Charges on Shared Cards
               </h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {mySharedCharges.map(charge => (
+                {unpaidSharedCharges.map(charge => (
                   <div key={charge._id} style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     padding: '8px 12px', background: '#0D1117', borderRadius: '6px',
@@ -1093,6 +1101,62 @@ function MyPage() {
               </div>
             </div>
           )}
+
+          <button
+            onClick={() => setShowSettled(!showSettled)}
+            style={{
+              width: '100%', padding: '8px', background: '#0D1117',
+              border: '1px solid #30363D', borderRadius: '8px',
+              color: '#8B949E', fontSize: '13px', cursor: 'pointer'
+            }}
+          >
+            {showSettled ? '▲ Hide Settled Charges' : '▼ View Settled Charges'}
+          </button>
+
+          {showSettled && (
+            <div style={{ background: '#161B22', border: '1px solid #30363D', borderRadius: '12px', padding: '16px' }}>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                <select
+                  value={selectedMonthNum}
+                  onChange={e => setSelectedMonthNum(e.target.value)}
+                  style={{ ...inputStyle, flex: 1 }}
+                >
+                  {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                </select>
+                <select
+                  value={selectedYear}
+                  onChange={e => setSelectedYear(e.target.value)}
+                  style={{ ...inputStyle, flex: 1 }}
+                >
+                  {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+              {settledSharedCharges.length === 0 ? (
+                <p style={{ color: '#8B949E', fontSize: '13px', margin: 0 }}>Nothing settled this month</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {settledSharedCharges.map(charge => (
+                    <div key={charge._id} style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '8px 12px', background: '#0D1117', borderRadius: '6px',
+                      fontSize: '12px', gap: '8px'
+                    }}>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <p style={{ color: '#E8F5E9', margin: 0, fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {charge.item} <span style={{ color: '#1DB954' }}>✓</span>
+                        </p>
+                        <p style={{ color: '#8B949E', margin: 0, fontSize: '11px' }}>
+                          {charge.debtName} · {charge.paidDate ? `paid ${formatDate(charge.paidDate)}` : formatDate(charge.date)}
+                        </p>
+                      </div>
+                      <span style={{ fontWeight: 'bold', color: '#1DB954' }}>${charge.amount}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {debts.length === 0 ? (
             <p style={{ color: '#8B949E' }}>No personal debt</p>
           ) : (

@@ -120,6 +120,7 @@ const markTransactionPaid = async (req, res) => {
     });
 
     transaction.paid = true;
+    transaction.paidDate = new Date();
     await transaction.save();
 
     res.json(transaction);
@@ -142,7 +143,6 @@ const getMySharedCharges = async (req, res) => {
       debt: { $in: sharedDebtIds },
       madeBy: userId,
       madeByBoth: { $ne: true },
-      paid: { $ne: true }
     });
 
     // attach the debt name so the frontend can label each row
