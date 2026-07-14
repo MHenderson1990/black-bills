@@ -498,6 +498,59 @@ function DebtPage() {
                           {members.map(m => <option key={m._id} value={m._id}>{m.name} only</option>)}
                           <option value="both">Both (joint) only</option>
                         </select>
+
+                        {!editingTransactionId && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                              <input
+                                placeholder="Item"
+                                value={newItem}
+                                onChange={e => setNewItem(e.target.value)}
+                                style={{ ...inputStyle, flex: '2 1 140px' }}
+                              />
+                              <input
+                                placeholder="Amount"
+                                type="number"
+                                value={newAmount}
+                                onChange={e => setNewAmount(e.target.value)}
+                                style={{ ...inputStyle, flex: '1 1 90px' }}
+                              />
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                              <select
+                                value={newCategory}
+                                onChange={e => setNewCategory(e.target.value)}
+                                style={{ ...inputStyle, flex: '1 1 100px' }}
+                              >
+                                {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                              </select>
+                              <input
+                                type="date"
+                                value={newDate}
+                                onChange={e => setNewDate(e.target.value)}
+                                style={{ ...inputStyle, flex: '1 1 120px', colorScheme: 'dark' }}
+                              />
+                              <select
+                                value={newMadeBy}
+                                onChange={e => setNewMadeBy(e.target.value)}
+                                style={{ ...inputStyle, flex: '1 1 100px' }}
+                              >
+                                {members.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
+                                <option value="both">Both</option>
+                              </select>
+                            </div>
+                            <button
+                              onClick={() => handleSaveTransaction(debt._id)}
+                              style={{
+                                padding: '10px', borderRadius: '6px', border: 'none',
+                                background: accent, color: 'white', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'
+                              }}
+                            >
+                              Add Charge
+                            </button>
+                          </div>
+                        )}
+
                         {filteredTransactions.length === 0 ? (
                           <p style={{ color: '#8B949E', fontSize: '13px', marginBottom: '12px' }}>No charges this month</p>
                         ) : (
@@ -596,91 +649,14 @@ function DebtPage() {
                           </div>
                         )}
 
-                        {!editingTransactionId && (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                              <input
-                                placeholder="Item"
-                                value={newItem}
-                                onChange={e => setNewItem(e.target.value)}
-                                style={{ ...inputStyle, flex: '2 1 140px' }}
-                              />
-                              <input
-                                placeholder="Amount"
-                                type="number"
-                                value={newAmount}
-                                onChange={e => setNewAmount(e.target.value)}
-                                style={{ ...inputStyle, flex: '1 1 90px' }}
-                              />
-                            </div>
-                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                              <select
-                                value={newCategory}
-                                onChange={e => setNewCategory(e.target.value)}
-                                style={{ ...inputStyle, flex: '1 1 100px' }}
-                              >
-                                {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                              </select>
-                              <input
-                                type="date"
-                                value={newDate}
-                                onChange={e => setNewDate(e.target.value)}
-                                style={{ ...inputStyle, flex: '1 1 120px', colorScheme: 'dark' }}
-                              />
-                              <select
-                                value={newMadeBy}
-                                onChange={e => setNewMadeBy(e.target.value)}
-                                style={{ ...inputStyle, flex: '1 1 100px' }}
-                              >
-                                {members.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
-                                <option value="both">Both</option>
-                              </select>
-                            </div>
-                            <button
-                              onClick={() => handleSaveTransaction(debt._id)}
-                              style={{
-                                padding: '10px', borderRadius: '6px', border: 'none',
-                                background: accent, color: 'white', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'
-                              }}
-                            >
-                              Add Charge
-                            </button>
-                          </div>
-                        )}
+                        
                       </>
                     )}
 
                     {expandedView === 'payments' && (
                       <>
-                        {filteredPayments.length === 0 ? (
-                          <p style={{ color: '#8B949E', fontSize: '13px', marginBottom: '12px' }}>No payments this month</p>
-                        ) : (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
-                            {filteredPayments.map(p => (
-                              <div key={p._id} style={{
-                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                padding: '8px 12px', background: '#0D1117', borderRadius: '6px', fontSize: '12px', gap: '8px',
-                                border: editingPaymentId === p._id ? '1px solid #1DB954' : '1px solid transparent'
-                              }}>
-                                <span style={{ color: '#E8F5E9', flex: 1 }}>
-                                  {members.find(m => m._id === p.madeBy)?.name || 'Payment'}
-                                </span>
-                                <span style={{ color: '#cfcfcf', flex: 1, textAlign: 'center' }}>{formatDate(p.date)}</span>
-                                <span style={{ fontWeight: 'bold', color: '#1DB954' }}>-${p.amount}</span>
-                                <button
-                                  onClick={() => startEditPayment(p)}
-                                  style={{ background: 'none', border: 'none', color: '#8B949E', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
-                                >✎</button>
-                                <button
-                                  onClick={() => handleDeletePayment(p._id, debt._id)}
-                                  style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
-                                >✕</button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                             <input
                               placeholder="Payment amount"
@@ -729,6 +705,36 @@ function DebtPage() {
                             </button>
                           )}
                         </div>
+
+                        {filteredPayments.length === 0 ? (
+                          <p style={{ color: '#8B949E', fontSize: '13px', marginBottom: '12px' }}>No payments this month</p>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+                            {filteredPayments.map(p => (
+                              <div key={p._id} style={{
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                padding: '8px 12px', background: '#0D1117', borderRadius: '6px', fontSize: '12px', gap: '8px',
+                                border: editingPaymentId === p._id ? '1px solid #1DB954' : '1px solid transparent'
+                              }}>
+                                <span style={{ color: '#E8F5E9', flex: 1 }}>
+                                  {members.find(m => m._id === p.madeBy)?.name || 'Payment'}
+                                </span>
+                                <span style={{ color: '#cfcfcf', flex: 1, textAlign: 'center' }}>{formatDate(p.date)}</span>
+                                <span style={{ fontWeight: 'bold', color: '#1DB954' }}>-${p.amount}</span>
+                                <button
+                                  onClick={() => startEditPayment(p)}
+                                  style={{ background: 'none', border: 'none', color: '#8B949E', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
+                                >✎</button>
+                                <button
+                                  onClick={() => handleDeletePayment(p._id, debt._id)}
+                                  style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
+                                >✕</button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        
                       </>
                     )}
                   </div>
