@@ -1,4 +1,5 @@
 const DebtTransaction = require('../models/DebtTransaction');
+const DebtPayment = require('../models/DebtPayment');
 
 //CREATE 
 const createDebtTransaction = async (req,res) => {
@@ -42,9 +43,14 @@ const getAllDebtTransactions = async (req, res) => {
             filter.date = { $gte: new Date(req.query.start), $lt: new Date(req.query.end) };
         }
 
-        const debtTransaction = await DebtTransaction.find(filter);
-
-        res.json(debtTransaction);
+        const debtTransactions = await DebtTransaction.find(filter);
+        let enriched = [];
+        for (let t of debtTransactions) {
+            let payments = await DebtPayment.find({ transaction: t._id });
+            let paidSoFar = payments.reduce((total, p) => total + p.amount, 0);
+            enriched.push({ ...t.toObject(), paidSoFar });
+        }
+        res.json(enriched);
 
     } catch (error) {
         res.status(500).json({message: error.message});
