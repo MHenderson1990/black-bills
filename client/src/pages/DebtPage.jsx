@@ -420,9 +420,7 @@ function DebtPage() {
                   </div>
                 </div>
 
-                <div style={{ background: '#0D1117', borderRadius: '8px', height: '12px', overflow: 'hidden', marginBottom: '10px' }}>
-                  <div style={{ background: accent, height: '100%', width: `${percentPaid}%`, borderRadius: '8px', transition: 'width 0.3s' }} />
-                </div>
+                
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px', marginBottom: '10px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
