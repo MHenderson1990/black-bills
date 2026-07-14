@@ -8,6 +8,7 @@ import MyPage from './pages/MyPage';
 import DebtPage from './pages/DebtPage';
 import Goals from './pages/Goals';
 import BottomNav from './components/BottomNav';
+import CardBudget from './pages/CardBudget';
 
 function App() {
   let [token, setToken] = useState(localStorage.getItem('token'));
@@ -34,6 +35,7 @@ function App() {
         <Route path="/shared" element={<SharedBills />} />
         <Route path="/me" element={<MyPage />} />
         <Route path="/them" element={<TheirPage />} />
+        <Route path="/card-budget" element={<CardBudget />} />
         <Route path="/debt" element={<DebtPage />} />
         <Route path="/goals" element={<Goals />} />
       </Routes>

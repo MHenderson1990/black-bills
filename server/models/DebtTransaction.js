@@ -34,6 +34,11 @@ const debtTransactionSchema = new mongoose.Schema({
     default: false
   },
   
+  fromBudget: {
+    type: Boolean,
+    default: false
+  },
+
   paid: {
     type: Boolean,
     default: false

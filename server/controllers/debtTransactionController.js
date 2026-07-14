@@ -3,7 +3,7 @@ const DebtTransaction = require('../models/DebtTransaction');
 //CREATE 
 const createDebtTransaction = async (req,res) => {
     try { 
-        let { debt, item, madeBy, date, amount, category, madeByBoth } = req.body;
+        let { debt, item, madeBy, date, amount, category, madeByBoth, fromBudget } = req.body;
 
         const debtTransaction = await DebtTransaction.create({
             debt, 
@@ -12,7 +12,8 @@ const createDebtTransaction = async (req,res) => {
             date, 
             amount,
             category,
-            madeByBoth
+            madeByBoth,
+            fromBudget
 
         });
 
@@ -32,6 +33,14 @@ const getAllDebtTransactions = async (req, res) => {
         if (req.query.madeBy) {
             filter.madeBy = req.query.madeBy; 
             }
+
+        if (req.query.fromBudget === 'true') {
+            filter.fromBudget = true;
+        }
+        
+        if (req.query.start && req.query.end) {
+            filter.date = { $gte: new Date(req.query.start), $lt: new Date(req.query.end) };
+        }
 
         const debtTransaction = await DebtTransaction.find(filter);
 

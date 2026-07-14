@@ -11,6 +11,7 @@ function BottomNav() {
     { path: '/me', label: isMo ? 'Mo' : 'Kirah', icon: isMo ? '💪🏾' : '💗' },
     { path: '/them', label: isMo ? 'Kirah' : 'Mo', icon: isMo ? '💗' : '💪🏾' },
     { path: '/debt', label: 'Debt', icon: '💳' },
+    { path: '/card-budget', label: 'Budget', icon: '💰' },
     { path: '/goals', label: 'Goals', icon: '🎯' }
   ];
 

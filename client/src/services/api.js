@@ -68,3 +68,10 @@ export let deletePaycheck = (id) => api.delete(`/paychecks/${id}`);
 export let getPaycheckBreakdown = (id) => api.get(`/paychecks/${id}/breakdown`);
 export let markTransactionPaid = (id) => api.put(`/debt-transactions/${id}/mark-paid`);
 export let getMySharedCharges = (householdId, userId) => api.get(`/debt-transactions/my-shared-charges?householdId=${householdId}&userId=${userId}`);
+export let setCardBudget = (data) => api.post('/card-budgets', data);
+export let getCardBudgetSummary = (householdId, debt, periodStart, periodEnd) =>
+  api.get(`/card-budgets/summary?householdId=${householdId}&debt=${debt}&periodStart=${periodStart}&periodEnd=${periodEnd}`);
+export let getCardBudgetHistory = (householdId, debt) =>
+  api.get(`/card-budgets/history?householdId=${householdId}&debt=${debt}`);
+export let getBudgetPurchases = (debt, start, end) =>
+  api.get(`/debt-transactions?debt=${debt}&fromBudget=true&start=${start}&end=${end}`);
