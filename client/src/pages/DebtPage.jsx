@@ -196,6 +196,8 @@ function DebtPage() {
       await deleteDebtPayment(paymentId);
       let res = await getDebtPayments(debtId);
       setPayments(res.data);
+      let tRes = await getDebtTransactions(debtId);
+      setTransactions(tRes.data);
       fetchDebts();
     }
   }
