@@ -116,8 +116,12 @@ const deleteDebt = async (req, res) => {
           }, 0);
 
       let balance = debt.startingBalance + transactionTotal - paymentTotal;
-          res.json({balance});
-
+        res.json({
+        balance,
+        startingBalance: debt.startingBalance,
+        totalCharged: transactionTotal,
+        totalPaid: paymentTotal
+      });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -170,6 +174,8 @@ const getDebtPayoffProjection = async (req, res) => {
           }, 0);
 
       let balance = debt.startingBalance + transactionTotal - paymentTotal;
+
+      
 
     // you need the AVERAGE PAYMENT here — same logic as
     // getAveragePayment (find recent payments, sum, divide)

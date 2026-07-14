@@ -56,6 +56,9 @@ function DebtPage() {
           return {
             ...debt,
             currentBalance: balanceRes.data.balance,
+            startingBalance: balanceRes.data.startingBalance,
+            totalCharged: balanceRes.data.totalCharged,
+            totalPaid: balanceRes.data.totalPaid,
             payoff: payoffRes.data
           };
         })
@@ -381,8 +384,6 @@ function DebtPage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {debts.map(debt => {
-            let paidSoFar = debt.startingBalance - debt.currentBalance;
-            let percentPaid = Math.max(0, Math.min(100, (paidSoFar / debt.startingBalance) * 100));
             let accent = getDebtAccent(debt);
             let isExpanded = expandedId === debt._id;
             let filteredTransactions = transactions
@@ -423,16 +424,27 @@ function DebtPage() {
                   <div style={{ background: accent, height: '100%', width: `${percentPaid}%`, borderRadius: '8px', transition: 'width 0.3s' }} />
                 </div>
 
-                <p style={{
-                  fontSize: '13px', fontWeight: 'bold', marginBottom: '4px', marginTop: 0,
-                  background: accent, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text'
-                }}>
-                  {percentPaid.toFixed(0)}% paid off
-                </p>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '10px', flexWrap: 'wrap', gap: '4px' }}>
-                  <span style={{ color: '#cfcfcf' }}>${paidSoFar.toFixed(2)} paid of ${debt.startingBalance.toFixed(2)}</span>
-                  <span style={{ color: '#cfcfcf' }}>${debt.currentBalance.toFixed(2)} remaining</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#8B949E' }}>Starting balance</span>
+                    <span style={{ color: '#cfcfcf' }}>${debt.startingBalance.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#8B949E' }}>Total charged</span>
+                    <span style={{ color: '#FF8FC7' }}>+${debt.totalCharged.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#8B949E' }}>Total paid</span>
+                    <span style={{ color: '#1DB954' }}>-${debt.totalPaid.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #30363D', marginTop: '4px', paddingTop: '6px' }}>
+                    <span style={{ color: '#E8F5E9', fontWeight: 'bold' }}>Remaining Balance</span>
+                    <span style={{
+                      fontWeight: 'bold',
+                      background: accent, WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent', backgroundClip: 'text'
+                    }}>${debt.currentBalance.toFixed(2)}</span>
+                  </div>
                 </div>
 
                 {renderPayoff(debt)}
