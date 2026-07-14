@@ -102,8 +102,8 @@ function DebtPage() {
       getDebtTransactions(debtId),
       getDebtPayments(debtId)
     ]);
-    setTransactions(tRes.data);
-    setPayments(pRes.data);
+    setTransactions([...tRes.data].sort((a, b) => new Date(b.date) - new Date(a.date)));
+    setPayments([...pRes.data].sort((a, b) => new Date(b.date) - new Date(a.date)));
   }
 
   async function handleSaveTransaction(debtId) {
@@ -129,7 +129,7 @@ function DebtPage() {
       setNewDate(new Date().toISOString().split('T')[0]);
       setEditingTransactionId(null);
       let res = await getDebtTransactions(debtId);
-      setTransactions(res.data);
+      setTransactions([...res.data].sort((a, b) => new Date(b.date) - new Date(a.date)));
       fetchDebts();
     } catch (error) {
       console.error(error);
@@ -156,7 +156,7 @@ function DebtPage() {
       setNewPaymentTransactionId('');
       setEditingPaymentId(null);
       let res = await getDebtPayments(debtId);
-      setPayments(res.data);
+      setPayments([...pRes.data].sort((a, b) => new Date(b.date) - new Date(a.date)));
       let tRes = await getDebtTransactions(debtId);
       setTransactions(tRes.data);
       fetchDebts();
@@ -186,7 +186,7 @@ function DebtPage() {
     if (window.confirm('Delete this charge?')) {
       await deleteDebtTransaction(transactionId);
       let res = await getDebtTransactions(debtId);
-      setTransactions(res.data);
+      setTransactions([...res.data].sort((a, b) => new Date(b.date) - new Date(a.date)));
       fetchDebts();
     }
   }
@@ -195,7 +195,7 @@ function DebtPage() {
     if (window.confirm('Delete this payment?')) {
       await deleteDebtPayment(paymentId);
       let res = await getDebtPayments(debtId);
-      setPayments(res.data);
+      setPayments([...pRes.data].sort((a, b) => new Date(b.date) - new Date(a.date)));
       let tRes = await getDebtTransactions(debtId);
       setTransactions(tRes.data);
       fetchDebts();
