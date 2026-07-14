@@ -14,6 +14,11 @@ const createDebtPayment = async (req,res) => {
 
         });
 
+        if (debtPayment.transaction) {
+            let { syncTransactionPaidStatus } = require('./debtTransactionController');
+            await syncTransactionPaidStatus(debtPayment.transaction);
+        }
+
         res.status(201).json(debtPayment);
     
     }  catch (error) {
