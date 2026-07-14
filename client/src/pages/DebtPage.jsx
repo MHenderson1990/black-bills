@@ -154,6 +154,8 @@ function DebtPage() {
       setEditingPaymentId(null);
       let res = await getDebtPayments(debtId);
       setPayments(res.data);
+      let tRes = await getDebtTransactions(debtId);
+      setTransactions(tRes.data);
       fetchDebts();
     } catch (error) {
       console.error(error);
