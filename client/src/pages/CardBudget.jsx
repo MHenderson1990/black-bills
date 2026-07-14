@@ -132,7 +132,6 @@ function CardBudget() {
     setNewCategory(p.category || 'Misc.');
     setNewDate(p.date ? p.date.slice(0, 10) : new Date().toISOString().split('T')[0]);
     setNewMadeBy(p.madeByBoth ? 'both' : p.madeBy);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   async function handleDeletePurchase(purchaseId) {
@@ -296,6 +295,7 @@ function CardBudget() {
             )}
           </div>
 
+            {!editingPurchaseId && (
           <div style={{
             background: '#161B22',
             border: '1px solid #30363D',
@@ -304,7 +304,7 @@ function CardBudget() {
             marginBottom: '16px'
           }}>
             <h2 style={{ color: '#E8F5E9', fontSize: '15px', marginTop: 0, marginBottom: '12px' }}>
-              {editingPurchaseId ? 'Edit Purchase' : 'Quick Log Purchase'}
+              Quick Log Purchase
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -352,27 +352,12 @@ function CardBudget() {
                   background: GOLD, color: '#0D1117', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer'
                 }}
               >
-                {editingPurchaseId ? 'Save Changes' : 'Log Purchase'}
+                Log Purchase
               </button>
-              {editingPurchaseId && (
-                <button
-                  onClick={() => {
-                    setEditingPurchaseId(null);
-                    setNewItem('');
-                    setNewAmount('');
-                    setNewCategory('Misc.');
-                    setNewDate(new Date().toISOString().split('T')[0]);
-                  }}
-                  style={{
-                    padding: '8px', borderRadius: '6px', border: '1px solid #30363D',
-                    background: 'transparent', color: '#8B949E', fontSize: '12px', cursor: 'pointer'
-                  }}
-                >
-                  Cancel Edit
-                </button>
-              )}
+              
             </div>
           </div>
+            )}
 
           {summary && summary.purchases.length > 0 && (
             <div style={{
@@ -420,6 +405,74 @@ function CardBudget() {
                       onClick={() => handleDeletePurchase(p._id)}
                       style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
                     >✕</button>
+                    {editingPurchaseId === p._id && (
+                      <div style={{ flexBasis: '100%', borderTop: '1px solid #30363D', marginTop: '8px', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }} onClick={e => e.stopPropagation()}>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          <input
+                            placeholder="What was it?"
+                            value={newItem}
+                            onChange={e => setNewItem(e.target.value)}
+                            style={{ ...inputStyle, flex: '2 1 120px', padding: '8px' }}
+                          />
+                          <input
+                            placeholder="Amount"
+                            type="number"
+                            value={newAmount}
+                            onChange={e => setNewAmount(e.target.value)}
+                            style={{ ...inputStyle, flex: '1 1 80px', padding: '8px' }}
+                          />
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          <select
+                            value={newCategory}
+                            onChange={e => setNewCategory(e.target.value)}
+                            style={{ ...inputStyle, flex: '1 1 90px', padding: '8px' }}
+                          >
+                            {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                          </select>
+                          <input
+                            type="date"
+                            value={newDate}
+                            onChange={e => setNewDate(e.target.value)}
+                            style={{ ...inputStyle, flex: '1 1 110px', padding: '8px', colorScheme: 'dark' }}
+                          />
+                          <select
+                            value={newMadeBy}
+                            onChange={e => setNewMadeBy(e.target.value)}
+                            style={{ ...inputStyle, flex: '1 1 90px', padding: '8px' }}
+                          >
+                            {members.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
+                            <option value="both">Both</option>
+                          </select>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            onClick={handleSavePurchase}
+                            style={{
+                              flex: 1, padding: '8px', borderRadius: '6px', border: 'none',
+                              background: GOLD, color: '#0D1117', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer'
+                            }}
+                          >
+                            Save Changes
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditingPurchaseId(null);
+                              setNewItem('');
+                              setNewAmount('');
+                              setNewCategory('Misc.');
+                              setNewDate(new Date().toISOString().split('T')[0]);
+                            }}
+                            style={{
+                              flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #30363D',
+                              background: 'transparent', color: '#8B949E', fontSize: '12px', cursor: 'pointer'
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
