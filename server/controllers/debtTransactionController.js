@@ -116,7 +116,8 @@ const markTransactionPaid = async (req, res) => {
       debt: transaction.debt,
       madeBy: transaction.madeBy,
       date: new Date(),
-      amount: transaction.amount
+      amount: transaction.amount - (await DebtPayment.find({ transaction: transaction._id })).reduce((t, p) => t + p.amount, 0),
+      transaction: transaction._id
     });
 
     transaction.paid = true;
@@ -136,7 +137,10 @@ const getMySharedCharges = async (req, res) => {
   try {
     let { householdId, userId } = req.query;
 
-    let sharedDebts = await Debt.find({ householdId, isShared: true });
+    let sharedDebts = await Debt.find({
+      householdId,
+      $or: [{ isShared: true }, { owner: userId }]
+    });
     let sharedDebtIds = sharedDebts.map(d => d._id);
 
     let transactions = await DebtTransaction.find({
@@ -150,10 +154,16 @@ const getMySharedCharges = async (req, res) => {
     for (let d of sharedDebts) {
       debtNameById[String(d._id)] = d.name;
     }
-    let result = transactions.map(t => ({
-      ...t.toObject(),
-      debtName: debtNameById[String(t.debt)]
-    }));
+    let result = [];
+    for (let t of transactions) {
+      let linkedPayments = await DebtPayment.find({ transaction: t._id });
+      let paidSoFar = linkedPayments.reduce((total, p) => total + p.amount, 0);
+      result.push({
+        ...t.toObject(),
+        debtName: debtNameById[String(t.debt)],
+        paidSoFar
+      });
+    }
 
     res.json(result);
   } catch (error) {
@@ -161,6 +171,55 @@ const getMySharedCharges = async (req, res) => {
   }
 };
 
+  // derive a transaction's paid status from its linked payments
+const syncTransactionPaidStatus = async (transactionId) => {
+  let payments = await DebtPayment.find({ transaction: transactionId });
+  let totalPaid = payments.reduce((total, p) => total + p.amount, 0);
+  let transaction = await DebtTransaction.findById(transactionId);
+  if (!transaction) return;
+  let shouldBePaid = totalPaid >= transaction.amount;
+  if (transaction.paid !== shouldBePaid) {
+    transaction.paid = shouldBePaid;
+    transaction.paidDate = shouldBePaid ? new Date() : undefined;
+    await transaction.save();
+  }
+};
+
+// LOG PARTIAL PAYMENT against a transaction
+const payTransactionPartial = async (req, res) => {
+  try {
+    let { amount, date } = req.body;
+    let transaction = await DebtTransaction.findById(req.params.id);
+    if (!transaction) {
+      return res.status(404).json({ message: 'Debt Transaction not found' });
+    }
+
+    await DebtPayment.create({
+      debt: transaction.debt,
+      transaction: transaction._id,
+      madeBy: transaction.madeBy,
+      date: date || new Date(),
+      amount: Number(amount)
+    });
+
+    await syncTransactionPaidStatus(transaction._id);
+    let updated = await DebtTransaction.findById(transaction._id);
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// GET payments linked to a transaction
+const getTransactionPayments = async (req, res) => {
+  try {
+    let payments = await DebtPayment.find({ transaction: req.params.id });
+    res.json(payments);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = { createDebtTransaction, getAllDebtTransactions, getDebtTransactionById, updateDebtTransaction, 
-    deleteDebtTransaction, markTransactionPaid, getMySharedCharges };
+    deleteDebtTransaction, markTransactionPaid, getMySharedCharges, syncTransactionPaidStatus, payTransactionPartial, getTransactionPayments };
 

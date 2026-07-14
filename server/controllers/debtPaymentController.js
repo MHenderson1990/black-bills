@@ -30,9 +30,8 @@ const getAllDebtPayments = async (req, res) => {
             filter.madeBy = req.query.madeBy; 
             }
 
-        const debtPayment = await DebtPayment.find(filter);
-
-        res.json(debtPayment);
+        const debtPayments = await DebtPayment.find(filter).populate('transaction', 'item');
+        res.json(debtPayments);
 
     } catch (error) {
         res.status(500).json({message: error.message});
@@ -65,6 +64,11 @@ const updateDebtPayment = async (req, res) => {
         if (!debtPayment) {
             return res.status(404).json({message: 'Debt Payment not found'});
         }
+
+        if (debtPayment.transaction) {
+            let { syncTransactionPaidStatus } = require('./debtTransactionController');
+            await syncTransactionPaidStatus(debtPayment.transaction);
+        }
         res.json(debtPayment);
     } catch (error) {
         res.status(500).json({message: error.message});
@@ -80,7 +84,10 @@ const deleteDebtPayment = async (req, res) => {
     if (!debtPayment) {
       return res.status(404).json({ message: 'Debt Payment not found' });
     }
-
+    if (debtPayment.transaction) {
+            let { syncTransactionPaidStatus } = require('./debtTransactionController');
+            await syncTransactionPaidStatus(debtPayment.transaction);
+        }
     res.json({ message: 'Debt Payment deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
