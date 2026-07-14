@@ -21,6 +21,11 @@ const debtPaymentSchema = new mongoose.Schema({
    required: true,
   },
 
+  transaction: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'DebtTransaction'
+  },
+
 });
 
 module.exports = mongoose.model('DebtPayment', debtPaymentSchema);
