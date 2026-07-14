@@ -718,7 +718,9 @@ function DebtPage() {
                               }}>
                                 <span style={{ color: '#E8F5E9', flex: 1 }}>
                                   {members.find(m => m._id === p.madeBy)?.name || 'Payment'}
+                                  {p.transaction?.item && <span style={{ color: '#8B949E' }}> · {p.transaction.item}</span>}
                                 </span>
+                                
                                 <span style={{ color: '#cfcfcf', flex: 1, textAlign: 'center' }}>{formatDate(p.date)}</span>
                                 <span style={{ fontWeight: 'bold', color: '#1DB954' }}>-${p.amount}</span>
                                 <button

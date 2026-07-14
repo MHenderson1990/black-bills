@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { getSharedBills, getSharedBillsWithHistory, getBillShares, markBillSharePaid, getAllDebts, getDebtBalance, getPaychecks, createPaycheck, calculateLeftover, createBill, 
   updateBill, deleteBill, getPersonalBills, getPersonalBillsWithHistory, updatePayAnchorDate, recalculateLeftover, getRecentPayDate, getSpendingCashflow, getBillPayments, 
-  createBillPayment, updateBillPayment, deleteBillPayment, updatePaycheck, deletePaycheck, getMySharedCharges, markTransactionPaid, getPaycheckBreakdown } from '../services/api';
+  createBillPayment, updateBillPayment, deleteBillPayment, updatePaycheck, deletePaycheck, getMySharedCharges, markTransactionPaid, getPaycheckBreakdown, payTransactionPartial,
+getTransactionPayments } from '../services/api';
 import { MONTHS, YEARS, CATEGORIES, formatDate } from '../constants';
 
 let BLUE_ACCENTS = [
@@ -56,6 +57,10 @@ function MyPage() {
   let [periodEnd, setPeriodEnd] = useState(null);
   let [showHistory, setShowHistory] = useState(false);
   let [showSettled, setShowSettled] = useState(false);
+  let [expandedChargeId, setExpandedChargeId] = useState(null);
+  let [chargePayments, setChargePayments] = useState([]);
+  let [newChargePaymentAmount, setNewChargePaymentAmount] = useState('');
+  let [newChargePaymentDate, setNewChargePaymentDate] = useState(new Date().toISOString().split('T')[0]);
   let [loading, setLoading] = useState(true);
   let [expandedId, setExpandedId] = useState(null);
   let [expandedBillPayments, setExpandedBillPayments] = useState([]);
@@ -369,6 +374,30 @@ function MyPage() {
 
   function billPaidSoFar() {
     return expandedBillPayments.reduce((total, p) => total + p.amount, 0);
+  }
+
+async function toggleChargeExpand(chargeId) {
+    if (expandedChargeId === chargeId) {
+      setExpandedChargeId(null);
+      return;
+    }
+    setExpandedChargeId(chargeId);
+    setNewChargePaymentAmount('');
+    let res = await getTransactionPayments(chargeId);
+    setChargePayments(res.data);
+  }
+
+  async function handleLogPartial(chargeId) {
+    if (!newChargePaymentAmount) return;
+    await payTransactionPartial(chargeId, {
+      amount: Number(newChargePaymentAmount),
+      date: newChargePaymentDate
+    });
+    setNewChargePaymentAmount('');
+    setNewChargePaymentDate(new Date().toISOString().split('T')[0]);
+    let res = await getTransactionPayments(chargeId);
+    setChargePayments(res.data);
+    fetchAll();
   }
 
   async function handleMarkChargePaid(charge) {
@@ -1086,6 +1115,9 @@ function MyPage() {
                       <p style={{ color: '#8B949E', margin: 0, fontSize: '11px' }}>{charge.debtName} · {formatDate(charge.date)}</p>
                     </div>
                     <span style={{ fontWeight: 'bold', color: '#E8F5E9' }}>${charge.amount}</span>
+                    {charge.paidSoFar > 0 && (
+                      <span style={{ color: '#1DB954', fontSize: '10px' }}>${charge.paidSoFar} paid</span>
+                    )}
                     <button
                       onClick={() => handleMarkChargePaid(charge)}
                       style={{
@@ -1096,6 +1128,55 @@ function MyPage() {
                     >
                       Mark Paid
                     </button>
+                    <button
+                      onClick={() => toggleChargeExpand(charge._id)}
+                      style={{ background: 'none', border: 'none', color: '#8B949E', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
+                    >
+                      {expandedChargeId === charge._id ? '▲' : '▼'}
+                    </button>
+
+                    {expandedChargeId === charge._id && (
+                      <div style={{ flexBasis: '100%', borderTop: '1px solid #30363D', marginTop: '8px', paddingTop: '8px' }}>
+                        <div style={{ background: '#161B22', borderRadius: '6px', height: '8px', overflow: 'hidden', marginBottom: '8px' }}>
+                          <div style={{
+                            background: 'linear-gradient(135deg, #1DB954, #107C41)',
+                            height: '100%',
+                            width: `${Math.min(100, ((charge.paidSoFar || 0) / charge.amount) * 100)}%`,
+                            borderRadius: '6px'
+                          }} />
+                        </div>
+                        <p style={{ color: '#8B949E', fontSize: '11px', margin: '0 0 8px 0' }}>
+                          ${(charge.paidSoFar || 0).toFixed(2)} of ${charge.amount} — ${Math.max(0, charge.amount - (charge.paidSoFar || 0)).toFixed(2)} left
+                        </p>
+                        {chargePayments.map(p => (
+                          <div key={p._id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
+                            <span style={{ color: '#cfcfcf' }}>{formatDate(p.date)}</span>
+                            <span style={{ color: '#1DB954', fontWeight: 'bold' }}>-${p.amount}</span>
+                          </div>
+                        ))}
+                        <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+                          <input
+                            placeholder="Amount"
+                            type="number"
+                            value={newChargePaymentAmount}
+                            onChange={e => setNewChargePaymentAmount(e.target.value)}
+                            style={{ ...inputStyle, flex: '1 1 70px', padding: '6px', fontSize: '12px' }}
+                          />
+                          <button
+                            onClick={() => setNewChargePaymentAmount(String(((charge.amount - (charge.paidSoFar || 0)) / 2).toFixed(2)))}
+                            style={{ padding: '6px 8px', borderRadius: '6px', border: '1px solid #30363D', background: 'transparent', color: '#8B949E', fontSize: '10px', cursor: 'pointer' }}
+                          >
+                            ½
+                          </button>
+                          <button
+                            onClick={() => handleLogPartial(charge._id)}
+                            style={{ padding: '6px 10px', borderRadius: '6px', border: 'none', background: 'linear-gradient(135deg, #1DB954, #107C41)', color: 'white', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
+                          >
+                            Log
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
