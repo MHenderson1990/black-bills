@@ -26,6 +26,7 @@ function DebtPage() {
   let [newMadeBy, setNewMadeBy] = useState('');
   let [chargeFilter, setChargeFilter] = useState('everyone');
   let [newPaymentAmount, setNewPaymentAmount] = useState('');
+  let [newPaymentTransactionId, setNewPaymentTransactionId] = useState('');
   let [newPaymentDate, setNewPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   let [newPaymentMadeBy, setNewPaymentMadeBy] = useState('');
   let [editingTransactionId, setEditingTransactionId] = useState(null);
@@ -138,7 +139,8 @@ function DebtPage() {
     let data = {
       madeBy: newPaymentMadeBy,
       date: newPaymentDate,
-      amount: Number(newPaymentAmount)
+      amount: Number(newPaymentAmount),
+      transaction: newPaymentTransactionId || undefined
     };
     try {
       if (editingPaymentId) {
@@ -148,6 +150,7 @@ function DebtPage() {
       }
       setNewPaymentAmount('');
       setNewPaymentDate(new Date().toISOString().split('T')[0]);
+      setNewPaymentTransactionId('');
       setEditingPaymentId(null);
       let res = await getDebtPayments(debtId);
       setPayments(res.data);
@@ -655,7 +658,18 @@ function DebtPage() {
 
                     {expandedView === 'payments' && (
                       <>
-
+                    <select
+                            value={newPaymentTransactionId}
+                            onChange={e => setNewPaymentTransactionId(e.target.value)}
+                            style={{ ...inputStyle, width: '100%', marginBottom: '8px' }}
+                          >
+                            <option value="">No specific charge (lump payment)</option>
+                            {transactions.filter(t => !t.paid).map(t => (
+                              <option key={t._id} value={t._id}>
+                                {t.item} — ${t.amount} (${(t.amount - (t.paidSoFar || 0)).toFixed(2)} left)
+                              </option>
+                            ))}
+                          </select>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                             <input
