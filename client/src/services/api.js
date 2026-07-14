@@ -75,3 +75,5 @@ export let getCardBudgetHistory = (householdId, debt) =>
   api.get(`/card-budgets/history?householdId=${householdId}&debt=${debt}`);
 export let getBudgetPurchases = (debt, start, end) =>
   api.get(`/debt-transactions?debt=${debt}&fromBudget=true&start=${start}&end=${end}`);
+export let deleteCardBudget = (householdId, debt, periodStart) =>
+  api.delete(`/card-budgets?householdId=${householdId}&debt=${debt}&periodStart=${periodStart}`);

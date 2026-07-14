@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getAllDebts, getHouseholdMembers, getRecentPayDate, setCardBudget, getCardBudgetSummary, getCardBudgetHistory, getBudgetPurchases, createDebtTransaction, updateDebtTransaction, deleteDebtTransaction, markTransactionPaid } from '../services/api';
+import { getAllDebts, getHouseholdMembers, getRecentPayDate, setCardBudget, getCardBudgetSummary, getCardBudgetHistory, getBudgetPurchases, createDebtTransaction, 
+    updateDebtTransaction, deleteDebtTransaction, markTransactionPaid, deleteCardBudget } from '../services/api';
 import { CATEGORIES, formatDate } from '../constants';
 
 let GOLD = 'linear-gradient(135deg, #FFD700, #E6C200)';
@@ -84,6 +85,14 @@ function CardBudget() {
     setNewBudgetAmount('');
     setShowSetBudget(false);
     fetchSummary();
+  }
+
+  async function handleDeleteBudget() {
+    if (window.confirm('Delete this period\'s budget? Logged purchases stay on the debt.')) {
+      await deleteCardBudget(householdId, selectedCard, periodStart);
+      setShowSetBudget(false);
+      fetchSummary();
+    }
   }
 
   async function handleSavePurchase() {
@@ -251,6 +260,19 @@ function CardBudget() {
             >
               {showSetBudget ? '✕ Cancel' : (summary && summary.budgetAmount > 0 ? 'Change Budget' : 'Set Budget')}
             </button>
+
+             {summary && summary.budgetAmount > 0 && (
+              <button
+                onClick={handleDeleteBudget}
+                style={{
+                  marginTop: '14px', marginLeft: '8px', padding: '8px 16px', borderRadius: '20px',
+                  border: '1px solid #FF6B6B', background: 'transparent',
+                  color: '#FF6B6B', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'
+                }}
+              >
+                Delete Budget
+              </button>
+            )} 
 
             {showSetBudget && (
               <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>

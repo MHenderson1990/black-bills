@@ -59,4 +59,24 @@ const getCardBudgetHistory = async (req, res) => {
   }
 };
 
-module.exports = { setCardBudget, getCardBudgetSummary, getCardBudgetHistory };
+// DELETE the budget for a card + period
+const deleteCardBudget = async (req, res) => {
+  try {
+    let { householdId, debt, periodStart } = req.query;
+
+    let deleted = await CardBudget.findOneAndDelete({
+      householdId,
+      debt,
+      periodStart: new Date(periodStart)
+    });
+
+    if (!deleted) {
+      return res.status(404).json({ message: 'No budget found for this period' });
+    }
+    res.json({ message: 'Budget deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { setCardBudget, getCardBudgetSummary, getCardBudgetHistory, deleteCardBudget };
