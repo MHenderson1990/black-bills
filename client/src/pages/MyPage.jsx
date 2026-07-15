@@ -991,14 +991,14 @@ async function toggleChargeExpand(chargeId) {
                           background: accent, WebkitBackgroundClip: 'text',
                           WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                         }}>${bill.amount}</p>
-                        {!bill.isArchived && (
+                       
                           <button
                             onClick={() => startEditBill(bill)}
                             style={{ background: 'none', border: 'none', color: unpaidColor, cursor: 'pointer', fontSize: '14px', padding: '2px' }}
                           >
                             ✎
                           </button>
-                        )}
+                        
                         <button
                           onClick={() => handleDeleteBill(bill._id)}
                           style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '15px', padding: '2px' }}
@@ -1019,7 +1019,7 @@ async function toggleChargeExpand(chargeId) {
                         {bill.paid ? '✓ Paid' : 'Unpaid'}
                       </span>
                     </div>
-                    {!bill.isArchived && (
+                    
                       <button
                         onClick={() => handleTogglePersonalPaid(bill)}
                         style={{
@@ -1031,7 +1031,7 @@ async function toggleChargeExpand(chargeId) {
                       >
                         {bill.paid ? 'Undo Paid' : 'Mark Paid'}
                       </button>
-                    )}
+                    
                     <button
                       onClick={() => togglePersonalExpand(bill._id)}
                       style={{
@@ -1069,7 +1069,7 @@ async function toggleChargeExpand(chargeId) {
                           }}>
                             <span style={{ color: '#cfcfcf', flex: 1 }}>{formatDate(p.date)}</span>
                             <span style={{ fontWeight: 'bold', color: '#1DB954' }}>-${p.amount}</span>
-                            {!bill.isArchived && (
+                            
                               <>
                                 <button
                                   onClick={() => startEditBillPayment(p)}
@@ -1080,7 +1080,7 @@ async function toggleChargeExpand(chargeId) {
                                   style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '12px', padding: '2px' }}
                                 >✕</button>
                               </>
-                            )}
+                            
                           </div>
                         ))}
 
