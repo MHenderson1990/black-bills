@@ -96,4 +96,4 @@ const deleteBillPayment = async (req, res) => {
   }
 };
 
-module.exports = { createBillPayment, getAllBillPayments, updateBillPayment, deleteBillPayment };
+module.exports = { createBillPayment, getAllBillPayments, updateBillPayment, deleteBillPayment, syncBillPaidStatus };

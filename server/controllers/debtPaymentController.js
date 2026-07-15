@@ -77,6 +77,15 @@ const updateDebtPayment = async (req, res) => {
             await syncTransactionPaidStatus(debtPayment.transaction);
         }
         res.json(debtPayment);
+
+        if (debtPayment.billPayment) {
+      const BillPayment = require('../models/BillPayment');
+      const { syncBillPaidStatus } = require('./billPaymentController');
+      let deletedBillPayment = await BillPayment.findByIdAndDelete(debtPayment.billPayment);
+      if (deletedBillPayment) {
+        await syncBillPaidStatus(deletedBillPayment.bill);
+      }
+    }
     } catch (error) {
         res.status(500).json({message: error.message});
     }
@@ -96,6 +105,15 @@ const deleteDebtPayment = async (req, res) => {
             await syncTransactionPaidStatus(debtPayment.transaction);
         }
     res.json({ message: 'Debt Payment deleted' });
+
+    if (debtPayment.billPayment) {
+      const BillPayment = require('../models/BillPayment');
+      const { syncBillPaidStatus } = require('./billPaymentController');
+      let deletedBillPayment = await BillPayment.findByIdAndDelete(debtPayment.billPayment);
+      if (deletedBillPayment) {
+        await syncBillPaidStatus(deletedBillPayment.bill);
+      }
+    }
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

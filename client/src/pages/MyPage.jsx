@@ -181,10 +181,8 @@ function MyPage() {
       // undo: remove the most recent payment
       let mostRecent = [...res.data].sort((a, b) => new Date(b.date) - new Date(a.date))[0];
       await deleteBillPayment(mostRecent._id);
-    } else if (bill.paid && res.data.length === 0) {
-      // paid with no backing payments (legacy plain-toggle case): just untoggle
-      await updateBill(bill._id, { paid: false });
-    } else if (res.data.length > 0 && !bill.paid) {
+    } else if (!bill.paid) {
+      // mark paid: log a payment for whatever remains
       let remaining = Math.max(0, bill.amount - paidSoFar);
       if (remaining > 0) {
         await createBillPayment({
@@ -193,14 +191,6 @@ function MyPage() {
           date: new Date().toISOString().split('T')[0]
         });
       }
-    } else if (res.data.length === 0 && !bill.paid && bill.linkedDebt) {
-      await createBillPayment({
-        bill: bill._id,
-        amount: bill.amount,
-        date: new Date().toISOString().split('T')[0]
-      });
-    } else if (res.data.length === 0) {
-      await updateBill(bill._id, { paid: !bill.paid });
     }
 
     if (expandedId === bill._id) {
