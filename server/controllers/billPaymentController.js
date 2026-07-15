@@ -30,7 +30,8 @@ const createBillPayment = async (req, res) => {
                 madeBy: parentBill.owner,
                 date,
                 amount,
-                billPayment: billPayment._id
+                billPayment: billPayment._id,
+                billName: parentBill.name
             });
         }
 
