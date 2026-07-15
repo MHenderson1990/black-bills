@@ -3,7 +3,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { getSharedBills, getSharedBillsWithHistory, getBillShares, markBillSharePaid, getAllDebts, getDebtBalance, getPaychecks, createPaycheck, calculateLeftover, createBill, 
   updateBill, deleteBill, getPersonalBills, getPersonalBillsWithHistory, updatePayAnchorDate, recalculateLeftover, getRecentPayDate, getSpendingCashflow, getBillPayments, 
   createBillPayment, updateBillPayment, deleteBillPayment, updatePaycheck, deletePaycheck, getMySharedCharges, markTransactionPaid, getPaycheckBreakdown, payTransactionPartial,
-getTransactionPayments } from '../services/api';
+  getTransactionPayments, updateDebtPayment, deleteDebtPayment } from '../services/api';
 import { MONTHS, YEARS, CATEGORIES, formatDate } from '../constants';
 
 let BLUE_ACCENTS = [
@@ -61,6 +61,7 @@ function MyPage() {
   let [chargePayments, setChargePayments] = useState([]);
   let [newChargePaymentAmount, setNewChargePaymentAmount] = useState('');
   let [newChargePaymentDate, setNewChargePaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  let [editingChargePaymentId, setEditingChargePaymentId] = useState(null);
   let [loading, setLoading] = useState(true);
   let [expandedId, setExpandedId] = useState(null);
   let [expandedBillPayments, setExpandedBillPayments] = useState([]);
@@ -389,15 +390,38 @@ async function toggleChargeExpand(chargeId) {
 
   async function handleLogPartial(chargeId) {
     if (!newChargePaymentAmount) return;
-    await payTransactionPartial(chargeId, {
-      amount: Number(newChargePaymentAmount),
-      date: newChargePaymentDate
-    });
+    if (editingChargePaymentId) {
+      await updateDebtPayment(editingChargePaymentId, {
+        amount: Number(newChargePaymentAmount),
+        date: newChargePaymentDate
+      });
+    } else {
+      await payTransactionPartial(chargeId, {
+        amount: Number(newChargePaymentAmount),
+        date: newChargePaymentDate
+      });
+    }
     setNewChargePaymentAmount('');
     setNewChargePaymentDate(new Date().toISOString().split('T')[0]);
+    setEditingChargePaymentId(null);
     let res = await getTransactionPayments(chargeId);
     setChargePayments(res.data);
     fetchAll();
+  }
+
+  function startEditChargePayment(p) {
+    setEditingChargePaymentId(p._id);
+    setNewChargePaymentAmount(String(p.amount));
+    setNewChargePaymentDate(p.date ? p.date.slice(0, 10) : new Date().toISOString().split('T')[0]);
+  }
+
+  async function handleDeleteChargePayment(paymentId, chargeId) {
+    if (window.confirm('Delete this payment?')) {
+      await deleteDebtPayment(paymentId);
+      let res = await getTransactionPayments(chargeId);
+      setChargePayments(res.data);
+      fetchAll();
+    }
   }
 
   async function handleMarkChargePaid(charge) {
@@ -1149,9 +1173,22 @@ async function toggleChargeExpand(chargeId) {
                           ${(charge.paidSoFar || 0).toFixed(2)} of ${charge.amount} — ${Math.max(0, charge.amount - (charge.paidSoFar || 0)).toFixed(2)} left
                         </p>
                         {chargePayments.map(p => (
-                          <div key={p._id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
+                          <div key={p._id} style={{
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            fontSize: '11px', marginBottom: '4px', gap: '6px',
+                            border: editingChargePaymentId === p._id ? '1px solid #1DB954' : '1px solid transparent',
+                            borderRadius: '4px', padding: '2px 4px'
+                          }}>
                             <span style={{ color: '#cfcfcf' }}>{formatDate(p.date)}</span>
                             <span style={{ color: '#1DB954', fontWeight: 'bold' }}>-${p.amount}</span>
+                            <button
+                              onClick={() => startEditChargePayment(p)}
+                              style={{ background: 'none', border: 'none', color: '#8B949E', cursor: 'pointer', fontSize: '11px', padding: '2px' }}
+                            >✎</button>
+                            <button
+                              onClick={() => handleDeleteChargePayment(p._id, charge._id)}
+                              style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '11px', padding: '2px' }}
+                            >✕</button>
                           </div>
                         ))}
                         <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
