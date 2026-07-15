@@ -21,6 +21,19 @@ const createBillPayment = async (req, res) => {
     const billPayment = await BillPayment.create({ bill, amount, date });
     await syncBillPaidStatus(bill);
 
+    const Bill = require('../models/Bill');
+        const DebtPayment = require('../models/DebtPayment');
+        let parentBill = await Bill.findById(bill);
+        if (parentBill && parentBill.linkedDebt) {
+            await DebtPayment.create({
+                debt: parentBill.linkedDebt,
+                madeBy: parentBill.owner,
+                date,
+                amount,
+                billPayment: billPayment._id
+            });
+        }
+
     res.status(201).json(billPayment);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -51,6 +64,14 @@ const updateBillPayment = async (req, res) => {
       return res.status(404).json({ message: 'Bill payment not found' });
     }
     await syncBillPaidStatus(billPayment.bill);
+
+    const DebtPayment = require('../models/DebtPayment');
+        await DebtPayment.findOneAndUpdate(
+            { billPayment: billPayment._id },
+            { amount: billPayment.amount, date: billPayment.date }
+        );
+    
+
     res.json(billPayment);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -66,6 +87,8 @@ const deleteBillPayment = async (req, res) => {
       return res.status(404).json({ message: 'Bill payment not found' });
     }
     await syncBillPaidStatus(billPayment.bill);
+    const DebtPayment = require('../models/DebtPayment');
+        await DebtPayment.findOneAndDelete({ billPayment: req.params.id });
     res.json({ message: 'Bill payment deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -68,6 +68,11 @@ isRecurring: {
     type: Boolean,
     default: false
   },
+
+  linkedDebt: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Debt'
+  },
 });
 
 module.exports = mongoose.model('Bill', billSchema);

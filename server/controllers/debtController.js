@@ -115,12 +115,26 @@ const deleteDebt = async (req, res) => {
             return total + p.amount;
           }, 0);
 
-      let balance = debt.startingBalance + transactionTotal - paymentTotal;
+      let monthsElapsed = 0;
+      let created = new Date(debt.createdAt);
+      let now = new Date();
+      let cursor = new Date(created.getFullYear(), created.getMonth() + 1, 1);
+      while (cursor <= now) {
+        monthsElapsed = monthsElapsed + 1;
+        cursor.setMonth(cursor.getMonth() + 1);
+      }
+      let balanceBeforeInterest = debt.startingBalance + transactionTotal - paymentTotal;
+      let interestAccrued = balanceBeforeInterest > 0
+        ? balanceBeforeInterest * (debt.interestRate / 100 / 12) * monthsElapsed
+        : 0;
+
+      let balance = balanceBeforeInterest + interestAccrued;
         res.json({
         balance,
         startingBalance: debt.startingBalance,
         totalCharged: transactionTotal,
-        totalPaid: paymentTotal
+        totalPaid: paymentTotal,
+        interestAccrued
       });
   } catch (error) {
     res.status(500).json({ message: error.message });
