@@ -126,7 +126,7 @@ function MyPage() {
       setPersonalBills([...personalRes.data].sort((a, b) => new Date(b.dueDate || 0) - new Date(a.dueDate || 0)));
       setPaychecks(paychecksRes.data);
       setMySharedCharges(chargesRes.data);
-      setAllDebts(allDebtsRes.data);
+      setAllDebts(DebtsRes.data);
 
       if (recentRes.data.recentPayDate && recentRes.data.periodEnd) {
         setPeriodStart(recentRes.data.recentPayDate);
