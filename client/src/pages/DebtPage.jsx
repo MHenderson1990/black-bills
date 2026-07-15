@@ -59,6 +59,7 @@ function DebtPage() {
             startingBalance: balanceRes.data.startingBalance,
             totalCharged: balanceRes.data.totalCharged,
             totalPaid: balanceRes.data.totalPaid,
+            interestAccrued: balanceRes.data.interestAccrued,
             payoff: payoffRes.data
           };
         })
@@ -438,6 +439,12 @@ function DebtPage() {
                     <span style={{ color: '#8B949E' }}>Total paid</span>
                     <span style={{ color: '#1DB954' }}>-${debt.totalPaid.toFixed(2)}</span>
                   </div>
+                  {debt.interestAccrued > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#8B949E' }}>Est. interest</span>
+                      <span style={{ color: '#FFD700' }}>+${debt.interestAccrued.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #30363D', marginTop: '4px', paddingTop: '6px' }}>
                     <span style={{ color: '#E8F5E9', fontWeight: 'bold' }}>Remaining Balance</span>
                     <span style={{
@@ -750,6 +757,8 @@ function DebtPage() {
                                 <span style={{ color: '#E8F5E9', width: '160px', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                   {members.find(m => m._id === p.madeBy)?.name || 'Payment'}
                                   {p.transaction?.item && <span style={{ color: '#8B949E' }}> · {p.transaction.item}</span>}
+                                  {p.transaction?.item && <span style={{ color: '#8B949E' }}> · {p.transaction.item}</span>}
+                                  {p.billName && <span style={{ color: '#8B949E' }}> · via {p.billName} bill</span>}
                                 </span>
                                 <span style={{ color: '#cfcfcf', width: '80px', flexShrink: 0, textAlign: 'center' }}>{formatDate(p.date)}</span>
                                 <span style={{ fontWeight: 'bold', color: '#1DB954', width: '70px', flexShrink: 0, textAlign: 'right' }}>

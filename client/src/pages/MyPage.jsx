@@ -3,7 +3,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { getSharedBills, getSharedBillsWithHistory, getBillShares, markBillSharePaid, getAllDebts, getDebtBalance, getPaychecks, createPaycheck, calculateLeftover, createBill, 
   updateBill, deleteBill, getPersonalBills, getPersonalBillsWithHistory, updatePayAnchorDate, recalculateLeftover, getRecentPayDate, getSpendingCashflow, getBillPayments, 
   createBillPayment, updateBillPayment, deleteBillPayment, updatePaycheck, deletePaycheck, getMySharedCharges, markTransactionPaid, getPaycheckBreakdown, payTransactionPartial,
-  getTransactionPayments, updateDebtPayment, deleteDebtPayment } from '../services/api';
+  getTransactionPayments, updateDebtPayment, deleteDebtPayment,  } from '../services/api';
 import { MONTHS, YEARS, CATEGORIES, formatDate } from '../constants';
 
 let BLUE_ACCENTS = [
@@ -91,6 +91,8 @@ function MyPage() {
   let now = new Date();
   let [selectedYear, setSelectedYear] = useState(String(now.getFullYear()));
   let [selectedMonthNum, setSelectedMonthNum] = useState(String(now.getMonth() + 1).padStart(2, '0'));
+  let [newLinkedDebt, setNewLinkedDebt] = useState('');
+  let [allDebts, setAllDebts] = useState([]);
 
   let userId = localStorage.getItem('userId');
   let userName = localStorage.getItem('userName');
@@ -117,13 +119,14 @@ function MyPage() {
         getAllDebts(householdId),
         getPaychecks(userId),
         getRecentPayDate(userId),
-        getMySharedCharges(householdId, userId)
+        getMySharedCharges(householdId, userId),
       ]);
 
       setSharedBills([...sharedRes.data].sort((a, b) => new Date(b.dueDate || 0) - new Date(a.dueDate || 0)));
       setPersonalBills([...personalRes.data].sort((a, b) => new Date(b.dueDate || 0) - new Date(a.dueDate || 0)));
       setPaychecks(paychecksRes.data);
       setMySharedCharges(chargesRes.data);
+      setAllDebts(allDebtsRes.data);
 
       if (recentRes.data.recentPayDate && recentRes.data.periodEnd) {
         setPeriodStart(recentRes.data.recentPayDate);
@@ -261,6 +264,7 @@ function MyPage() {
     setNewIsSetAside(false);
     setShowAddBill(false);
     setEditingBillId(null);
+    setNewLinkedDebt('');
   }
 
   function startEditBill(bill) {
@@ -273,6 +277,7 @@ function MyPage() {
     setNewRecurrenceType(bill.recurrenceType || 'monthly');
     setNewIsSetAside(bill.isSetAside || false);
     setShowAddBill(true);
+    setNewLinkedDebt(bill.linkedDebt || '');
   }
 
   async function handleSaveBill() {
@@ -290,7 +295,8 @@ function MyPage() {
           category: newBillCategory,
           isRecurring: newBillIsRecurring,
           recurrenceType: newRecurrenceType,
-          isSetAside: newIsSetAside
+          isSetAside: newIsSetAside,
+          linkedDebt: newLinkedDebt || undefined,
         });
       } else {
         await createBill({
@@ -303,7 +309,8 @@ function MyPage() {
           recurrenceType: newRecurrenceType,
           isSetAside: newIsSetAside,
           owner: userId,
-          householdId
+          householdId,
+          linkedDebt: newLinkedDebt || undefined,
         });
       }
    
@@ -933,6 +940,14 @@ async function toggleChargeExpand(chargeId) {
                   />
                   💰 Set-aside tracker (excluded from totals & Dashboard)
                 </label>
+                <select
+                  value={newLinkedDebt}
+                  onChange={e => setNewLinkedDebt(e.target.value)}
+                  style={{ ...inputStyle }}
+                >
+                  <option value="">Not tied to a debt</option>
+                  {allDebts.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
+                </select>
                 <button
                   onClick={handleSaveBill}
                   style={{
