@@ -186,18 +186,26 @@ function MyPage() {
           date: new Date().toISOString().split('T')[0]
         });
       }
+    } else if (res.data.length === 0 && !bill.paid && bill.linkedDebt) {
+      // no payments yet, but this bill mirrors to a debt — must go through
+      // createBillPayment so the mirror fires
+      await createBillPayment({
+        bill: bill._id,
+        amount: bill.amount,
+        date: new Date().toISOString().split('T')[0]
+      });
     } else if (res.data.length === 0) {
-      // no payments: plain toggle, as before
+      // no payments, not linked: plain toggle, as before
       await updateBill(bill._id, { paid: !bill.paid });
     }
-  
+
     if (expandedId === bill._id) {
       let refreshed = await getBillPayments(bill._id);
       setExpandedBillPayments(refreshed.data);
     }
     fetchAll();
   }
-
+  
   async function handleSavePaycheck() {
     if (!newPaycheckAmount) return;
     try {
