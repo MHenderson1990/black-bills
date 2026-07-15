@@ -585,7 +585,9 @@ function DebtPage() {
                                 </span>
                                 <span style={{ color: '#8B949E', width: '90px', flexShrink: 0, textAlign: 'center' }}>{t.category}</span>
                                 <span style={{ color: '#cfcfcf', width: '80px', flexShrink: 0, textAlign: 'center' }}>{formatDate(t.date)}</span>
-                                <span style={{ fontWeight: 'bold', color: '#E8F5E9', width: '65px', flexShrink: 0, textAlign: 'right' }}>${t.amount}</span>
+                                <span style={{ fontWeight: 'bold', color: '#1DB954', width: '70px', flexShrink: 0, textAlign: 'right' }}>
+                                  -${Number.isInteger(p.amount) ? p.amount : p.amount.toFixed(2)}
+                                </span>
                                 <button
                                   onClick={() => startEditTransaction(t)}
                                   style={{ background: 'none', border: 'none', color: '#8B949E', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
@@ -745,13 +747,14 @@ function DebtPage() {
                                 padding: '8px 12px', background: '#0D1117', borderRadius: '6px', fontSize: '12px', gap: '8px',
                                 border: editingPaymentId === p._id ? '1px solid #1DB954' : '1px solid transparent'
                               }}>
-                                <span style={{ color: '#E8F5E9', flex: 1 }}>
+                                <span style={{ color: '#E8F5E9', width: '160px', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                   {members.find(m => m._id === p.madeBy)?.name || 'Payment'}
                                   {p.transaction?.item && <span style={{ color: '#8B949E' }}> · {p.transaction.item}</span>}
                                 </span>
-                                
-                                <span style={{ color: '#cfcfcf', flex: 1, textAlign: 'center' }}>{formatDate(p.date)}</span>
-                                <span style={{ fontWeight: 'bold', color: '#1DB954' }}>-${p.amount}</span>
+                                <span style={{ color: '#cfcfcf', width: '80px', flexShrink: 0, textAlign: 'center' }}>{formatDate(p.date)}</span>
+                                <span style={{ fontWeight: 'bold', color: '#1DB954', width: '70px', flexShrink: 0, textAlign: 'right' }}>
+                                  -${Number.isInteger(p.amount) ? p.amount : p.amount.toFixed(2)}
+                                </span>
                                 <button
                                   onClick={() => startEditPayment(p)}
                                   style={{ background: 'none', border: 'none', color: '#8B949E', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
