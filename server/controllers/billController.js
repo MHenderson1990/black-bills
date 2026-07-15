@@ -185,6 +185,15 @@ const updateBill = async (req, res) => {
 //DELETE BILL 
 const deleteBill = async (req, res) => {
   try {
+    const BillPayment = require('../models/BillPayment');
+    const DebtPayment = require('../models/DebtPayment');
+
+    let billPayments = await BillPayment.find({ bill: req.params.id });
+    for (let bp of billPayments) {
+      await DebtPayment.findOneAndDelete({ billPayment: bp._id });
+    }
+    await BillPayment.deleteMany({ bill: req.params.id });
+
     let bill = await Bill.findByIdAndDelete(req.params.id);
 
     if (!bill) {
