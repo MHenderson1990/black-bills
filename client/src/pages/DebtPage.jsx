@@ -586,7 +586,7 @@ function DebtPage() {
                                 <span style={{ color: '#8B949E', width: '90px', flexShrink: 0, textAlign: 'center' }}>{t.category}</span>
                                 <span style={{ color: '#cfcfcf', width: '80px', flexShrink: 0, textAlign: 'center' }}>{formatDate(t.date)}</span>
                                 <span style={{ fontWeight: 'bold', color: '#1DB954', width: '70px', flexShrink: 0, textAlign: 'right' }}>
-                                  -${Number.isInteger(p.amount) ? p.amount : p.amount.toFixed(2)}
+                                  ${Number.isInteger(t.amount) ? t.amount : t.amount.toFixed(2)}
                                 </span>
                                 <button
                                   onClick={() => startEditTransaction(t)}
@@ -753,7 +753,7 @@ function DebtPage() {
                                 </span>
                                 <span style={{ color: '#cfcfcf', width: '80px', flexShrink: 0, textAlign: 'center' }}>{formatDate(p.date)}</span>
                                 <span style={{ fontWeight: 'bold', color: '#1DB954', width: '70px', flexShrink: 0, textAlign: 'right' }}>
-                                  -${Number.isInteger(p.amount) ? p.amount : p.amount.toFixed(2)}
+                                  ${Number.isInteger(t.amount) ? t.amount : t.amount.toFixed(2)}
                                 </span>
                                 <button
                                   onClick={() => startEditPayment(p)}
