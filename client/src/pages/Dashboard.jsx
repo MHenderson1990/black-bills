@@ -308,38 +308,39 @@ function Dashboard() {
                       background: style.background,
                       gap: '12px'
                     }}>
-                      <div style={{ minWidth: 0 }}>
-                        <p style={{
-                          fontWeight: 'bold',
-                          fontSize: '15px',
-                          background: style.accent,
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                          backgroundClip: 'text',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          margin: 0
-                        }}>
-                          {bill.name}
-                        </p>
-                        {bill.isAutopay && (
-                          <span style={{
-                            display: 'inline-block',
-                            fontSize: '9px',
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            border: '1px solid #8B949E',
-                            color: '#8B949E',
-                            marginTop: '2px'
+                       <div style={{ minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                          <p style={{
+                            fontWeight: 'bold',
+                            fontSize: '15px',
+                            background: style.accent,
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            backgroundClip: 'text',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            margin: 0
                           }}>
-                            Autopay
-                          </span>
-                        )}
+                            {bill.name}
+                          </p>
+                          {bill.isAutopay && (
+                            <span style={{
+                              flexShrink: 0,
+                              fontSize: '9px',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              border: '1px solid #FF6B6B',
+                              color: '#FF6B6B'
+                            }}>
+                              Autopay
+                            </span>
+                          )}
+                        </div>
                         <p style={{ color: '#cfcfcf', fontSize: '12px', margin: 0 }}>
                           {formatDate(bill.dueDate)}
                         </p>
-                      </div>
+                        </div>
                       <p style={{
                         fontWeight: 'bold',
                         fontSize: '16px',
