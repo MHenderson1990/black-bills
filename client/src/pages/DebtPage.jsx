@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getAllDebts, getDebtBalance, deleteDebt, getDebtTransactions, createDebtTransaction, updateDebtTransaction, deleteDebtTransaction, getHouseholdMembers, createDebt, getDebtPayoff, createDebtPayment, updateDebtPayment, deleteDebtPayment, getDebtPayments } from '../services/api';
+import { getAllDebts, getDebtBalance, deleteDebt, getDebtTransactions, createDebtTransaction, updateDebtTransaction, deleteDebtTransaction, 
+  getHouseholdMembers, createDebt, getDebtPayoff, createDebtPayment, updateDebtPayment, deleteDebtPayment, getDebtPayments, updateDebt } from '../services/api';
 import { CATEGORIES, MONTHS, YEARS, formatDate } from '../constants';
 
 function payoffDateLabel(months) {
@@ -37,6 +38,7 @@ function DebtPage() {
   let [newInterestRate, setNewInterestRate] = useState('');
   let [newIsShared, setNewIsShared] = useState(false);
   let [newOwner, setNewOwner] = useState('');
+  let [editingDebtId, setEditingDebtId] = useState(null);
 
   let userId = localStorage.getItem('userId');
   let householdId = localStorage.getItem('householdId');
@@ -204,23 +206,38 @@ function DebtPage() {
     }
   }
 
-  async function handleAddDebt() {
+  async function handleSaveDebt() {
     if (!newDebtName || !newStartingBalance || newInterestRate === '') return;
-    await createDebt({
+    let data = {
       name: newDebtName,
       startingBalance: Number(newStartingBalance),
       interestRate: Number(newInterestRate),
       isShared: newIsShared,
-      owner: newIsShared ? undefined : (newOwner || userId),
-      householdId
-    });
+      owner: newIsShared ? undefined : (newOwner || userId)
+    };
+    if (editingDebtId) {
+      await updateDebt(editingDebtId, data);
+    } else {
+      await createDebt({ ...data, householdId });
+    }
     setNewDebtName('');
     setNewStartingBalance('');
     setNewInterestRate('');
     setNewIsShared(false);
     setNewOwner('');
+    setEditingDebtId(null);
     setShowAddDebt(false);
     fetchDebts();
+  }
+
+  function startEditDebt(debt) {
+    setEditingDebtId(debt._id);
+    setNewDebtName(debt.name);
+    setNewStartingBalance(String(debt.startingBalance));
+    setNewInterestRate(String(debt.interestRate));
+    setNewIsShared(debt.isShared);
+    setNewOwner(debt.owner || '');
+    setShowAddDebt(true);
   }
 
   function getDebtAccent(debt) {
@@ -296,7 +313,18 @@ function DebtPage() {
           backgroundClip: 'text'
         }}>Debt</h1>
         <button
-          onClick={() => setShowAddDebt(!showAddDebt)}
+          onClick={() => {
+            if (showAddDebt) {
+              setEditingDebtId(null);
+              setNewDebtName('');
+              setNewStartingBalance('');
+              setNewInterestRate('');
+              setNewIsShared(false);
+              setNewOwner('');
+            }
+            setShowAddDebt(!showAddDebt);
+          }}
+          
           style={{
             padding: '8px 16px',
             borderRadius: '20px',
@@ -321,7 +349,7 @@ function DebtPage() {
           padding: '20px',
           marginBottom: '24px'
         }}>
-          <h2 style={{ color: '#E8F5E9', fontSize: '15px', marginTop: 0, marginBottom: '14px' }}>New Debt</h2>
+          <h2 style={{ color: '#E8F5E9', fontSize: '15px', marginTop: 0, marginBottom: '14px' }}>{editingDebtId ? 'Edit Debt' : 'New Debt'}</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <input
@@ -365,7 +393,7 @@ function DebtPage() {
               )}
             </div>
             <button
-              onClick={handleAddDebt}
+              onClick={handleSaveDebt}
               style={{
                 padding: '12px',
                 borderRadius: '8px',
@@ -377,7 +405,7 @@ function DebtPage() {
                 cursor: 'pointer'
               }}
             >
-              Save Debt
+              {editingDebtId ? 'Save Changes' : 'Save Debt'}
             </button>
           </div>
         </div>
@@ -417,6 +445,10 @@ function DebtPage() {
                   </p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
                     <p style={{ color: '#8B949E', fontSize: '13px', margin: 0 }}>{debt.interestRate}% APR</p>
+                    <button
+                      onClick={() => startEditDebt(debt)}
+                      style={{ background: 'none', border: 'none', color: '#8B949E', cursor: 'pointer', fontSize: '14px', padding: '4px' }}
+                    >✎</button>
                     <button
                       onClick={() => handleDelete(debt._id)}
                       style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '16px', padding: '4px' }}
