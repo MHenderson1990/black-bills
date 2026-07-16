@@ -323,6 +323,19 @@ function Dashboard() {
                         }}>
                           {bill.name}
                         </p>
+                        {bill.isAutopay && (
+                          <span style={{
+                            display: 'inline-block',
+                            fontSize: '9px',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            border: '1px solid #8B949E',
+                            color: '#8B949E',
+                            marginTop: '2px'
+                          }}>
+                            Autopay
+                          </span>
+                        )}
                         <p style={{ color: '#cfcfcf', fontSize: '12px', margin: 0 }}>
                           {formatDate(bill.dueDate)}
                         </p>

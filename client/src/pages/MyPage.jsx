@@ -93,6 +93,7 @@ function MyPage() {
   let [selectedMonthNum, setSelectedMonthNum] = useState(String(now.getMonth() + 1).padStart(2, '0'));
   let [newLinkedDebt, setNewLinkedDebt] = useState('');
   let [allDebts, setAllDebts] = useState([]);
+  let [newIsAutopay, setNewIsAutopay] = useState(false);
 
   let userId = localStorage.getItem('userId');
   let userName = localStorage.getItem('userName');
@@ -267,6 +268,7 @@ function MyPage() {
     setShowAddBill(false);
     setEditingBillId(null);
     setNewLinkedDebt('');
+    setNewIsAutopay(false);
   }
 
   function startEditBill(bill) {
@@ -280,6 +282,7 @@ function MyPage() {
     setNewIsSetAside(bill.isSetAside || false);
     setShowAddBill(true);
     setNewLinkedDebt(bill.linkedDebt || '');
+    setNewIsAutopay(bill.isAutopay || false);
   }
 
   async function handleSaveBill() {
@@ -299,6 +302,7 @@ function MyPage() {
           recurrenceType: newRecurrenceType,
           isSetAside: newIsSetAside,
           linkedDebt: newLinkedDebt || undefined,
+          isAutopay: newIsAutopay,
         });
       } else {
         await createBill({
@@ -313,6 +317,7 @@ function MyPage() {
           owner: userId,
           householdId,
           linkedDebt: newLinkedDebt || undefined,
+          isAutopay: newIsAutopay,
         });
       }
    
@@ -941,6 +946,14 @@ async function toggleChargeExpand(chargeId) {
                     onChange={e => setNewIsSetAside(e.target.checked)}
                   />
                   💰 Set-aside tracker (excluded from totals & Dashboard)
+                </label>
+                <label style={{ color: '#8B949E', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input
+                    type="checkbox"
+                    checked={newIsAutopay}
+                    onChange={e => setNewIsAutopay(e.target.checked)}
+                  />
+                  🔄 Autopay
                 </label>
                 <select
                   value={newLinkedDebt}

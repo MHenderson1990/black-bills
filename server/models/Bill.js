@@ -73,6 +73,11 @@ isRecurring: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Debt'
   },
+
+  isAutopay: {
+    type: Boolean,
+    default: false
+  },
 });
 
 module.exports = mongoose.model('Bill', billSchema);
