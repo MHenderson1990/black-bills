@@ -324,7 +324,7 @@ function DebtPage() {
             }
             setShowAddDebt(!showAddDebt);
           }}
-          
+
           style={{
             padding: '8px 16px',
             borderRadius: '20px',
@@ -341,7 +341,7 @@ function DebtPage() {
         </button>
       </div>
 
-      {showAddDebt && (
+      {showAddDebt && !editingDebtId && (
         <div style={{
           background: '#161B22',
           border: '1px solid #30363D',
@@ -456,7 +456,79 @@ function DebtPage() {
                   </div>
                 </div>
 
-                
+                {editingDebtId === debt._id && (
+                  <div style={{ background: '#0D1117', borderRadius: '8px', padding: '14px', marginBottom: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <input
+                        placeholder="Debt name"
+                        value={newDebtName}
+                        onChange={e => setNewDebtName(e.target.value)}
+                        style={{ ...inputStyle, flex: '2 1 140px' }}
+                      />
+                      <input
+                        placeholder="Starting balance"
+                        type="number"
+                        value={newStartingBalance}
+                        onChange={e => setNewStartingBalance(e.target.value)}
+                        style={{ ...inputStyle, flex: '1 1 110px' }}
+                      />
+                      <input
+                        placeholder="Interest rate %"
+                        type="number"
+                        value={newInterestRate}
+                        onChange={e => setNewInterestRate(e.target.value)}
+                        style={{ ...inputStyle, flex: '1 1 100px' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <label style={{ color: '#8B949E', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <input
+                          type="checkbox"
+                          checked={newIsShared}
+                          onChange={e => setNewIsShared(e.target.checked)}
+                        />
+                        Shared debt
+                      </label>
+                      {!newIsShared && (
+                        <select
+                          value={newOwner}
+                          onChange={e => setNewOwner(e.target.value)}
+                          style={{ ...inputStyle, flex: '1 1 120px' }}
+                        >
+                          {members.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
+                        </select>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={handleSaveDebt}
+                        style={{
+                          flex: 1, padding: '10px', borderRadius: '6px', border: 'none',
+                          background: accent, color: 'white', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'
+                        }}
+                      >
+                        Save Changes
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingDebtId(null);
+                          setNewDebtName('');
+                          setNewStartingBalance('');
+                          setNewInterestRate('');
+                          setNewIsShared(false);
+                          setNewOwner('');
+                          setShowAddDebt(false);
+                        }}
+                        style={{
+                          flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #30363D',
+                          background: 'transparent', color: '#8B949E', fontSize: '13px', cursor: 'pointer'
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px', marginBottom: '10px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
