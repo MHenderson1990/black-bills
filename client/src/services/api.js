@@ -52,6 +52,10 @@ export let recalculateLeftover = (userId) => api.put(`/paychecks/recalculate-lef
 export let getSpendingCashflow = (owner, start, end) => api.get(`/dashboard?owner=${owner}&start=${start}&end=${end}&mode=cashflow`);
 export let getSpendingHousehold = (householdId, start, end) =>
   api.get(`/dashboard?householdId=${householdId}&start=${start}&end=${end}&mode=household`);
+export let createNote = (data) => api.post('/notes', data);
+export let getAllNotes = (householdId) => api.get(`/notes?householdId=${householdId}`);
+export let updateNote = (id, data) => api.put(`/notes/${id}`, data);
+export let deleteNote = (id) => api.delete(`/notes/${id}`);
 export let updateDebtTransaction = (id, data) => api.put(`/debt-transactions/${id}`, data);
 export let deleteDebtTransaction = (id) => api.delete(`/debt-transactions/${id}`);
 export let updateDebtPayment = (id, data) => api.put(`/debt-payments/${id}`, data);
