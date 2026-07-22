@@ -524,7 +524,7 @@ async function handleSaveNote() {
                         background: accent, WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                       }}>
-                        {authorName}
+                        
                       </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ color: '#8B949E', fontSize: '11px' }}>{formatDate(note.date)}</span>
@@ -538,7 +538,11 @@ async function handleSaveNote() {
                         >✕</button>
                       </div>
                     </div>
-                    <p style={{ color: '#E8F5E9', fontSize: '13px', margin: 0, whiteSpace: 'pre-wrap' }}>{note.text}</p>
+                    <p style={{
+                      fontSize: '13px', margin: 0, whiteSpace: 'pre-wrap', fontWeight: 'bold',
+                      background: accent, WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent', backgroundClip: 'text'
+                    }}>{note.text}</p>
                   </div>
                 );
               })}
@@ -595,7 +599,7 @@ async function handleSaveNote() {
                             background: accent, WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent', backgroundClip: 'text'
                           }}>
-                            {authorName}
+                           
                           </span>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ color: '#8B949E', fontSize: '11px' }}>{formatDate(note.date)}</span>
@@ -603,7 +607,11 @@ async function handleSaveNote() {
                             <button onClick={() => handleDeleteNote(note._id)} style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '12px', padding: '2px' }}>✕</button>
                           </div>
                         </div>
-                        <p style={{ color: '#E8F5E9', fontSize: '13px', margin: 0, whiteSpace: 'pre-wrap' }}>{note.text}</p>
+                      <p style={{
+                      fontSize: '13px', margin: 0, whiteSpace: 'pre-wrap', fontWeight: 'bold',
+                      background: accent, WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent', backgroundClip: 'text'
+                    }}>{note.text}</p>
                       </div>
                     );
                   })}
