@@ -519,13 +519,7 @@ async function handleSaveNote() {
                     borderImage: `${accent} 1`
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <span style={{
-                        fontWeight: 'bold', fontSize: '12px',
-                        background: accent, WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent', backgroundClip: 'text'
-                      }}>
-                        
-                      </span>
+                      <span style={{ display: 'none' }}></span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ color: '#8B949E', fontSize: '11px' }}>{formatDate(note.date)}</span>
                         <button
@@ -594,13 +588,7 @@ async function handleSaveNote() {
                     return (
                       <div key={note._id} style={{ background: '#0D1117', borderRadius: '8px', padding: '10px 12px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                          <span style={{
-                            fontWeight: 'bold', fontSize: '12px',
-                            background: accent, WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent', backgroundClip: 'text'
-                          }}>
-                           
-                          </span>
+                          <span style={{ display: 'none' }}></span>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ color: '#8B949E', fontSize: '11px' }}>{formatDate(note.date)}</span>
                             <button onClick={() => startEditNote(note)} style={{ background: 'none', border: 'none', color: '#8B949E', cursor: 'pointer', fontSize: '12px', padding: '2px' }}>✎</button>
@@ -610,7 +598,7 @@ async function handleSaveNote() {
                       <p style={{
                       fontSize: '13px', margin: 0, whiteSpace: 'pre-wrap', fontWeight: 'bold',
                       background: accent, WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent', backgroundClip: 'text'
+                      WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginTop: 0
                     }}>{note.text}</p>
                       </div>
                     );
