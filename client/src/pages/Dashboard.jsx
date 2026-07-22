@@ -466,7 +466,7 @@ async function handleSaveNote() {
           </div>
         </div>
       </div>
-      <div style={{ background: '#161B22', padding: '20px', borderRadius: '12px', border: '1px solid #30363D', marginTop: '20px' }}>
+      <div style={{ background: '#161B22', padding: '20px', borderRadius: '12px', border: '1px solid #30363D', marginTop: '20px', marginBottom: '100px' }}>
           <h2 style={{ fontSize: '16px', marginBottom: '16px', color: '#E8F5E9' }}>Notes</h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
@@ -609,7 +609,7 @@ async function handleSaveNote() {
           )}
         </div>
     </div>
-    
+  
   );
 }
 
