@@ -87,6 +87,12 @@ async function handleSaveNote() {
     setNotes(notesRes.data);
   }
 
+async function handleToggleSeen(note) {
+    await updateNote(note._id, { seen: !note.seen });
+    let notesRes = await getAllNotes(householdId);
+    setNotes(notesRes.data);
+  }
+
   function startEditNote(note) {
     setEditingNoteId(note._id);
     setNewNoteText(note.text);
@@ -522,6 +528,19 @@ async function handleSaveNote() {
                       <span style={{ display: 'none' }}></span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ color: '#8B949E', fontSize: '11px' }}>{formatDate(note.date)}</span>
+                        {note.author !== userId && (
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#8B949E', fontSize: '11px', cursor: 'pointer' }}>
+                            <input
+                              type="checkbox"
+                              checked={note.seen}
+                              onChange={() => handleToggleSeen(note)}
+                            />
+                            Seen
+                          </label>
+                        )}
+                        {note.author === userId && note.seen && (
+                          <span style={{ color: '#1DB954', fontSize: '11px' }}>✓ Seen</span>
+                        )}
                         <button
                           onClick={() => startEditNote(note)}
                           style={{ background: 'none', border: 'none', color: '#8B949E', cursor: 'pointer', fontSize: '12px', padding: '2px' }}
@@ -591,6 +610,19 @@ async function handleSaveNote() {
                           <span style={{ display: 'none' }}></span>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ color: '#8B949E', fontSize: '11px' }}>{formatDate(note.date)}</span>
+                            {note.author !== userId && (
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#8B949E', fontSize: '11px', cursor: 'pointer' }}>
+                            <input
+                              type="checkbox"
+                              checked={note.seen}
+                              onChange={() => handleToggleSeen(note)}
+                            />
+                            Seen
+                          </label>
+                        )}
+                        {note.author === userId && note.seen && (
+                          <span style={{ color: '#1DB954', fontSize: '11px' }}>✓ Seen</span>
+                        )}
                             <button onClick={() => startEditNote(note)} style={{ background: 'none', border: 'none', color: '#8B949E', cursor: 'pointer', fontSize: '12px', padding: '2px' }}>✎</button>
                             <button onClick={() => handleDeleteNote(note._id)} style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '12px', padding: '2px' }}>✕</button>
                           </div>
