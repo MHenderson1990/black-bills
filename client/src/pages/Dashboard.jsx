@@ -207,7 +207,7 @@ async function handleSaveNote() {
         </button>
       </div>
 
-      <div style={{ padding: 'clamp(16px, 4vw, 32px)', paddingBottom: '110px' }}>
+      <div style={{ padding: 'clamp(16px, 4vw, 32px)', paddingBottom: '180px' }}>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
