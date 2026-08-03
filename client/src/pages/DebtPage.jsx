@@ -44,17 +44,31 @@ function DebtPage() {
   let householdId = localStorage.getItem('householdId');
 
   useEffect(function() {
-    fetchDebts();
-    fetchMembers();
+    async function loadEverything() {
+      let freshMembers = await fetchMembers();
+      await fetchDebts(freshMembers);
+    }
+    loadEverything();
   }, []);
 
-  async function fetchDebts() {
+  async function fetchDebts(membersList) {
     try {
+      let list = membersList || members;
       let debtsRes = await getAllDebts(householdId);
       let debtsWithData = await Promise.all(
         debtsRes.data.map(async (debt) => {
           let balanceRes = await getDebtBalance(debt._id);
           let payoffRes = await getDebtPayoff(debt._id);
+          let owedByMember = {};
+          if (debt.isShared) {
+            let tRes = await getDebtTransactions(debt._id);
+            for (let m of list) {
+              let owed = tRes.data
+                .filter(t => t.madeBy === m._id && !t.madeByBoth && !t.paid)
+                .reduce((total, t) => total + t.amount, 0);
+              if (owed > 0) owedByMember[m._id] = owed;
+            }
+          }
           return {
             ...debt,
             currentBalance: balanceRes.data.balance,
@@ -62,6 +76,7 @@ function DebtPage() {
             totalCharged: balanceRes.data.totalCharged,
             totalPaid: balanceRes.data.totalPaid,
             interestAccrued: balanceRes.data.interestAccrued,
+            owedByMember,
             payoff: payoffRes.data
           };
         })
@@ -77,13 +92,9 @@ function DebtPage() {
   async function fetchMembers() {
     let res = await getHouseholdMembers(householdId);
     setMembers(res.data);
-    if (res.data.length > 0) {
-      let me = res.data.find(m => m._id === userId)?._id || res.data[0]._id;
-      setNewMadeBy(me);
-      setNewPaymentMadeBy(me);
-      setNewOwner(me);
-    }
+    return res.data;
   }
+  
 
   async function handleDelete(debtId) {
     if (window.confirm('Delete this debt? This cannot be undone.')) {
@@ -558,6 +569,21 @@ function DebtPage() {
                     }}>${debt.currentBalance.toFixed(2)}</span>
                   </div>
                 </div>
+                
+                {debt.isShared && Object.keys(debt.owedByMember || {}).length > 0 && (
+                  <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #30363D', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {members.map(m => {
+                      let owed = debt.owedByMember?.[m._id];
+                      if (!owed) return null;
+                      return (
+                        <div key={m._id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                          <span style={{ color: '#8B949E' }}>{m.name} owes</span>
+                          <span style={{ color: '#FF6B6B', fontWeight: 'bold' }}>${owed.toFixed(2)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
 
                 {renderPayoff(debt)}
 
@@ -584,6 +610,7 @@ function DebtPage() {
                           color: expandedView === 'transactions' ? 'white' : '#8B949E'
                         }}
                       >
+
                         Charges
                       </button>
                       <button

@@ -1157,6 +1157,16 @@ async function toggleChargeExpand(chargeId) {
               <h2 style={{ fontSize: '15px', marginTop: 0, marginBottom: '12px', color: '#E8F5E9' }}>
                 My Charges on Shared Cards
               </h2>
+              {Object.entries(
+                unpaidSharedCharges.reduce((totals, c) => {
+                  totals[c.debtName] = (totals[c.debtName] || 0) + c.amount;
+                  return totals;
+                }, {})
+              ).map(([cardName, total]) => (
+                <p key={cardName} style={{ color: '#8B949E', fontSize: '12px', margin: '0 0 8px 0' }}>
+                  You owe <span style={{ color: '#FF6B6B', fontWeight: 'bold' }}>${total.toFixed(2)}</span> on {cardName}
+                </p>
+              ))}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {unpaidSharedCharges.map(charge => (
                   <div key={charge._id} style={{
