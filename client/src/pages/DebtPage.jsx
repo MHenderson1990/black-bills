@@ -65,7 +65,7 @@ function DebtPage() {
             for (let m of list) {
               let owed = tRes.data
                 .filter(t => t.madeBy === m._id && !t.madeByBoth && !t.paid)
-                .reduce((total, t) => total + t.amount, 0);
+                .reduce((total, t) => total + (t.amount - (t.paidSoFar || 0)), 0);
               if (owed > 0) owedByMember[m._id] = owed;
             }
           }
