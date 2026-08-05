@@ -381,10 +381,7 @@ function SharedBills() {
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
-                    background: accent,
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text'
+                    color: bill.paid ? '#1DB954' : '#FFD700'
                   }}>
                     {bill.name}
                   </p>
@@ -392,11 +389,10 @@ function SharedBills() {
                     <p style={{
                       fontWeight: 'bold',
                       margin: 0,
-                      background: accent,
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text'
-                    }}>${bill.amount}</p>
+                      color: bill.paid ? '#1DB954' : '#FFD700'
+                    }}>
+                      ${bill.amount}
+                    </p>
                     <button
                       onClick={() => startEdit(bill)}
                       style={{ background: 'none', border: 'none', color: '#FFD700', cursor: 'pointer', fontSize: '15px', padding: '4px' }}
@@ -426,9 +422,13 @@ function SharedBills() {
                     fontWeight: 'bold'
                   }}>
                     {bill.paid ? '✓ Paid' : 'Unpaid'}
-
-                  {bill.isArchived && <span style={{ color: '#8B949E' }}>📁 Archived</span>}
                   </span>
+
+                  {bill.isArchived && (
+                    <span style={{ color: '#8B949E' }}>
+                      📁 Archived
+                    </span>
+                  )}
                 </div>
 
                 <button
