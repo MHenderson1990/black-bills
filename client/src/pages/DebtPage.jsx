@@ -61,14 +61,19 @@ function DebtPage() {
           let payoffRes = await getDebtPayoff(debt._id);
           let owedByMember = {};
           if (debt.isShared) {
-            let tRes = await getDebtTransactions(debt._id);
-            for (let m of list) {
-              let owed = tRes.data
-                .filter(t => t.madeBy === m._id && !t.madeByBoth && !t.paid)
-                .reduce((total, t) => total + (t.amount - (t.paidSoFar || 0)), 0);
-              if (owed > 0) owedByMember[m._id] = owed;
+            try {
+              let tRes = await getDebtTransactions(debt._id);
+              for (let m of list) {
+                let owed = tRes.data
+                  .filter(t => t.madeBy === m._id && !t.madeByBoth && !t.paid)
+                  .reduce((total, t) => total + (t.amount - (t.paidSoFar || 0)), 0);
+                if (owed > 0) owedByMember[m._id] = owed;
+              }
+            } catch (err) {
+              console.error('owedByMember calc failed for debt', debt._id, err);
             }
           }
+
           return {
             ...debt,
             currentBalance: balanceRes.data.balance,
@@ -122,35 +127,59 @@ function DebtPage() {
 
 
   async function handleSaveTransaction(debtId) {
-    if (!newItem || !newAmount || !newMadeBy) return;
-    let isBoth = newMadeBy === 'both';
-    let data = {
-      item: newItem,
-      madeBy: isBoth ? userId : newMadeBy,
-      madeByBoth: isBoth,
-      date: newDate,
-      amount: Number(newAmount),
-      category: newCategory
-    };
-    try {
-      if (editingTransactionId) {
-        await updateDebtTransaction(editingTransactionId, data);
-      } else {
-        await createDebtTransaction({ ...data, debt: debtId });
-      }
-      setNewItem('');
-      setNewAmount('');
-      setNewCategory('Misc.');
-      setNewDate(new Date().toISOString().split('T')[0]);
-      setEditingTransactionId(null);
-      let res = await getDebtTransactions(debtId);
-      setTransactions([...res.data].sort((a, b) => new Date(b.date) - new Date(a.date)));
-      fetchDebts();
-    } catch (error) {
-      console.error(error);
-      alert('Failed to save charge');
-    }
+  console.log('1. handleSaveTransaction started');
+  console.log('newMadeBy:', newMadeBy);
+  console.log('newItem:', newItem);
+  console.log('newAmount:', newAmount);
+
+  if (!newItem || !newAmount || !newMadeBy) {
+    console.log('STOPPED at validation');
+    return;
   }
+
+  console.log('2. Passed validation');
+
+  let isBoth = newMadeBy === 'both';
+
+  let data = {
+    item: newItem,
+    madeBy: isBoth ? userId : newMadeBy,
+    madeByBoth: isBoth,
+    date: newDate,
+    amount: Number(newAmount),
+    category: newCategory
+  };
+
+  console.log('3. Data being sent:', data);
+
+  try {
+    if (editingTransactionId) {
+      console.log('4. Updating transaction');
+      await updateDebtTransaction(editingTransactionId, data);
+    } else {
+      console.log('4. Creating transaction');
+      await createDebtTransaction({ ...data, debt: debtId });
+    }
+
+    console.log('5. Save successful');
+
+    setNewItem('');
+    setNewAmount('');
+    setNewCategory('Misc.');
+    setNewDate(new Date().toISOString().split('T')[0]);
+    setEditingTransactionId(null);
+
+    let res = await getDebtTransactions(debtId);
+    setTransactions(
+      [...res.data].sort((a, b) => new Date(b.date) - new Date(a.date))
+    );
+
+    fetchDebts();
+  } catch (error) {
+    console.error('SAVE ERROR:', error);
+    alert('Failed to save charge');
+  }
+}
 
   async function handleSavePayment(debtId) {
     if (!newPaymentAmount || !newPaymentMadeBy) return;
@@ -768,9 +797,14 @@ function DebtPage() {
                                       <select
                                         value={newMadeBy}
                                         onChange={e => setNewMadeBy(e.target.value)}
-                                        style={{ ...inputStyle, flex: '1 1 90px', padding: '8px' }}
+                                        style={{ ...inputStyle, flex: '1 1 100px' }}
                                       >
-                                        {members.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
+                                        <option value="">Select person</option>
+                                        {members.map(m => (
+                                          <option key={m._id} value={m._id}>
+                                            {m.name}
+                                          </option>
+                                        ))}
                                         <option value="both">Both</option>
                                       </select>
                                     </div>
@@ -845,7 +879,12 @@ function DebtPage() {
                               onChange={e => setNewPaymentMadeBy(e.target.value)}
                               style={{ ...inputStyle, flex: '1 1 100px' }}
                             >
-                              {members.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
+                              <option value="">Select person</option>
+                              {members.map(m => (
+                                <option key={m._id} value={m._id}>
+                                  {m.name}
+                                </option>
+                              ))}
                             </select>
                           </div>
                           <button
