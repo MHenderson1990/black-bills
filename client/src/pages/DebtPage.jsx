@@ -95,10 +95,17 @@ function DebtPage() {
   }
 
   async function fetchMembers() {
-    let res = await getHouseholdMembers(householdId);
-    setMembers(res.data);
-    return res.data;
+  let res = await getHouseholdMembers(householdId);
+
+  setMembers(res.data);
+
+  if (res.data.length > 0) {
+    setNewMadeBy(res.data[0]._id);
+    setNewPaymentMadeBy(res.data[0]._id);
   }
+
+  return res.data;
+}
   
 
   async function handleDelete(debtId) {
