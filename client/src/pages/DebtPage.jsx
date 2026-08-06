@@ -754,6 +754,20 @@ function DebtPage() {
                                 border: editingTransactionId === t._id ? '1px solid #4DA3FF' : '1px solid transparent'
                               }}>
                                 <span style={{ color: '#E8F5E9', width: '140px', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.item}</span>
+                                <span style={{ width: '50px', flexShrink: 0 }}>
+                                  {t.paid && (
+                                    <span style={{
+                                      fontSize: '9px',
+                                      padding: '2px 6px',
+                                      borderRadius: '4px',
+                                      border: '1px solid #1DB954',
+                                      color: '#1DB954',
+                                      display: 'inline-block'
+                                    }}>
+                                      Paid
+                                    </span>
+                                  )}
+                                </span>
                                 <span style={{ color: '#8B949E', width: '60px', flexShrink: 0, textAlign: 'center' }}>
                                   {t.madeByBoth ? 'Both' : (members.find(m => m._id === t.madeBy)?.name || '')}
                                 </span>
