@@ -1159,7 +1159,8 @@ async function toggleChargeExpand(chargeId) {
               </h2>
               {Object.entries(
                 unpaidSharedCharges.reduce((totals, c) => {
-                  totals[c.debtName] = (totals[c.debtName] || 0) + c.amount;
+                  let remaining = c.amount - (c.paidSoFar || 0);
+                  totals[c.debtName] = (totals[c.debtName] || 0) + remaining;
                   return totals;
                 }, {})
               ).map(([cardName, total]) => (
@@ -1178,7 +1179,7 @@ async function toggleChargeExpand(chargeId) {
                       <p style={{ color: '#E8F5E9', margin: 0, fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{charge.item}</p>
                       <p style={{ color: '#8B949E', margin: 0, fontSize: '11px' }}>{charge.debtName} · {formatDate(charge.date)}</p>
                     </div>
-                    <span style={{ fontWeight: 'bold', color: '#E8F5E9' }}>${charge.amount}</span>
+                    <span style={{ fontWeight: 'bold', color: '#E8F5E9' }}>${Number.isInteger(charge.amount) ? charge.amount : charge.amount.toFixed(2)}</span>
                     {charge.paidSoFar > 0 && (
                       <span style={{ color: '#1DB954', fontSize: '10px' }}>${charge.paidSoFar} paid</span>
                     )}
