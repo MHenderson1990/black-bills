@@ -1,0 +1,719 @@
+[
+  {
+    "_id": "6a576ebd4b175ebf9baa7e5d",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-16T00:00:00.000Z",
+    "amount": 23,
+    "transaction": "6a56b1b06635b675f4443f35",
+    "__v": 0
+  },
+  {
+    "_id": "6a5771264b175ebf9baa7e60",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 216.64,
+    "transaction": "6a56b1ec6635b675f4443f36",
+    "__v": 0
+  },
+  {
+    "_id": "6a5771944b175ebf9baa7e61",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 9,
+    "transaction": "6a56c4cc9209096e5762d8e5",
+    "__v": 0
+  },
+  {
+    "_id": "6a5771d84b175ebf9baa7e62",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 35,
+    "transaction": "6a56c50a9209096e5762d8e9",
+    "__v": 0
+  },
+  {
+    "_id": "6a5772604b175ebf9baa7e63",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 34.13,
+    "transaction": "6a56c52e9209096e5762d8ea",
+    "__v": 0
+  },
+  {
+    "_id": "6a5772b74b175ebf9baa7e64",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 4.87,
+    "transaction": "6a56c5499209096e5762d8eb",
+    "__v": 0
+  },
+  {
+    "_id": "6a5772f14b175ebf9baa7e65",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 55.07,
+    "transaction": "6a56c5649209096e5762d8ec",
+    "__v": 0
+  },
+  {
+    "_id": "6a5773214b175ebf9baa7e66",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 10,
+    "transaction": "6a56c5839209096e5762d8ed",
+    "__v": 0
+  },
+  {
+    "_id": "6a5773584b175ebf9baa7e67",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 36.26,
+    "transaction": "6a56cb3f9209096e5762d900",
+    "__v": 0
+  },
+  {
+    "_id": "6a57737f4b175ebf9baa7e68",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 50,
+    "transaction": "6a56c5c49209096e5762d8ee",
+    "__v": 0
+  },
+  {
+    "_id": "6a57739a4b175ebf9baa7e69",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 9,
+    "transaction": "6a56c5f79209096e5762d8ef",
+    "__v": 0
+  },
+  {
+    "_id": "6a5774064b175ebf9baa7e6a",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 23,
+    "transaction": "6a56c6149209096e5762d8f0",
+    "__v": 0
+  },
+  {
+    "_id": "6a5774304b175ebf9baa7e6b",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 21,
+    "transaction": "6a56c8ed9209096e5762d8f1",
+    "__v": 0
+  },
+  {
+    "_id": "6a5774514b175ebf9baa7e6c",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 31.52,
+    "transaction": "6a56c9089209096e5762d8f2",
+    "__v": 0
+  },
+  {
+    "_id": "6a57747d4b175ebf9baa7e6d",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 70.17,
+    "transaction": "6a56c9299209096e5762d8f3",
+    "__v": 0
+  },
+  {
+    "_id": "6a57749c4b175ebf9baa7e6e",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 55,
+    "transaction": "6a56c9919209096e5762d8f5",
+    "__v": 0
+  },
+  {
+    "_id": "6a5775214b175ebf9baa7e70",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 19,
+    "transaction": "6a56ca4d9209096e5762d8fb",
+    "__v": 0
+  },
+  {
+    "_id": "6a5775394b175ebf9baa7e71",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 24.5,
+    "transaction": "6a56ca159209096e5762d8f9",
+    "__v": 0
+  },
+  {
+    "_id": "6a5775674b175ebf9baa7e72",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 15,
+    "transaction": "6a56ca2f9209096e5762d8fa",
+    "__v": 0
+  },
+  {
+    "_id": "6a5777d14b175ebf9baa7e75",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-15T12:06:41.335Z",
+    "amount": 34.480000000000004,
+    "transaction": "6a56c50a9209096e5762d8e9",
+    "__v": 0
+  },
+  {
+    "_id": "6a577d474b175ebf9baa7e76",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-15T12:29:59.067Z",
+    "amount": 79.98,
+    "transaction": "6a56c9739209096e5762d8f4",
+    "__v": 0
+  },
+  {
+    "_id": "6a577d874b175ebf9baa7e77",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-15T12:31:03.151Z",
+    "amount": 14.87,
+    "transaction": "6a56c9fd9209096e5762d8f8",
+    "__v": 0
+  },
+  {
+    "_id": "6a577dbe4b175ebf9baa7e78",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 48.5,
+    "transaction": "6a56c5c49209096e5762d8ee",
+    "__v": 0
+  },
+  {
+    "_id": "6a577de04b175ebf9baa7e79",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 14.15,
+    "transaction": "6a56ca2f9209096e5762d8fa",
+    "__v": 0
+  },
+  {
+    "_id": "6a577df54b175ebf9baa7e7a",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 22.09,
+    "transaction": "6a56b1b06635b675f4443f35",
+    "__v": 0
+  },
+  {
+    "_id": "6a577e054b175ebf9baa7e7b",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 8.41,
+    "transaction": "6a56c4cc9209096e5762d8e5",
+    "__v": 0
+  },
+  {
+    "_id": "6a577e1e4b175ebf9baa7e7c",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 4.68,
+    "transaction": "6a56c5499209096e5762d8eb",
+    "__v": 0
+  },
+  {
+    "_id": "6a577e2b4b175ebf9baa7e7d",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 9,
+    "transaction": "6a56c5f79209096e5762d8ef",
+    "__v": 0
+  },
+  {
+    "_id": "6a577e444b175ebf9baa7e7e",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 22.55,
+    "transaction": "6a56c6149209096e5762d8f0",
+    "__v": 0
+  },
+  {
+    "_id": "6a577e594b175ebf9baa7e7f",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 20.56,
+    "transaction": "6a56c8ed9209096e5762d8f1",
+    "__v": 0
+  },
+  {
+    "_id": "6a577e684b175ebf9baa7e80",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 9.03,
+    "transaction": "6a56c9dd9209096e5762d8f7",
+    "__v": 0
+  },
+  {
+    "_id": "6a577e774b175ebf9baa7e81",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 9.17,
+    "transaction": "6a56ca4d9209096e5762d8fb",
+    "__v": 0
+  },
+  {
+    "_id": "6a577efe4b175ebf9baa7e82",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 13.66,
+    "transaction": "6a56c9c79209096e5762d8f6",
+    "__v": 0
+  },
+  {
+    "_id": "6a577f3c4b175ebf9baa7e83",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 140.71,
+    "__v": 0
+  },
+  {
+    "_id": "6a57e08b81ba6db457c82877",
+    "debt": "6a57e06c81ba6db457c82875",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 22,
+    "billPayment": "6a57e08b81ba6db457c82876",
+    "billName": "RX11",
+    "__v": 0
+  },
+  {
+    "_id": "6a57e2a681ba6db457c82882",
+    "debt": "6a57e29181ba6db457c82880",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 35,
+    "billPayment": "6a57e2a681ba6db457c82881",
+    "billName": "Zzounds",
+    "__v": 0
+  },
+  {
+    "_id": "6a57e5ce81ba6db457c8288f",
+    "debt": "6a57e5a981ba6db457c8288c",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 25,
+    "billPayment": "6a57e5ce81ba6db457c8288e",
+    "billName": "Sallie Mae ",
+    "__v": 0
+  },
+  {
+    "_id": "6a57e60a81ba6db457c82898",
+    "debt": "6a57daaa81ba6db457c82864",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 30,
+    "billPayment": "6a57e60a81ba6db457c82897",
+    "billName": "Academy ",
+    "__v": 0
+  },
+  {
+    "_id": "6a58b661e8aaf389f5952845",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 171,
+    "transaction": "6a56cbca9209096e5762d902",
+    "__v": 0
+  },
+  {
+    "_id": "6a58b718e8aaf389f5952847",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-16T00:00:00.000Z",
+    "amount": 165.67,
+    "transaction": "6a56ca829209096e5762d8fd",
+    "__v": 0
+  },
+  {
+    "_id": "6a58bef384a686f34b2cf627",
+    "debt": "6a58bed584a686f34b2cf625",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-16T00:00:00.000Z",
+    "amount": 50,
+    "__v": 0
+  },
+  {
+    "_id": "6a6150e9598afd55326d0152",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-22T23:23:21.368Z",
+    "amount": 12.82,
+    "transaction": "6a60d8774078cb2f878698e5",
+    "__v": 0
+  },
+  {
+    "_id": "6a61517d598afd55326d0153",
+    "debt": "6a53aa48c53fb0bb10508044",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-22T00:00:00.000Z",
+    "amount": 41,
+    "__v": 0
+  },
+  {
+    "_id": "6a6153b7598afd55326d0156",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-22T00:00:00.000Z",
+    "amount": 128.34,
+    "__v": 0,
+    "transaction": "6a60d80a4078cb2f878698e4"
+  },
+  {
+    "_id": "6a615545598afd55326d0158",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-22T00:00:00.000Z",
+    "amount": 19,
+    "transaction": "6a61552d598afd55326d0157",
+    "__v": 0
+  },
+  {
+    "_id": "6a6155a1598afd55326d0159",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-22T00:00:00.000Z",
+    "amount": 44.55,
+    "transaction": "6a56cb729209096e5762d901",
+    "__v": 0
+  },
+  {
+    "_id": "6a6155ba598afd55326d015a",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-22T00:00:00.000Z",
+    "amount": 33.43,
+    "transaction": "6a60d7684078cb2f878698e3",
+    "__v": 0
+  },
+  {
+    "_id": "6a6155ec598afd55326d015b",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-22T00:00:00.000Z",
+    "amount": 18.5,
+    "transaction": "6a57aced925d3291ee5da6f6",
+    "__v": 0
+  },
+  {
+    "_id": "6a615610598afd55326d015c",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-22T00:00:00.000Z",
+    "amount": 34.52,
+    "transaction": "6a60c7b3545cf1e80391cba7",
+    "__v": 0
+  },
+  {
+    "_id": "6a615b15598afd55326d016b",
+    "debt": "6a53aa48c53fb0bb10508044",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-22T00:00:00.000Z",
+    "amount": 150,
+    "__v": 0
+  },
+  {
+    "_id": "6a615b22598afd55326d016d",
+    "debt": "6a53aa48c53fb0bb10508044",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-23T00:00:00.000Z",
+    "amount": 150,
+    "billPayment": "6a615b22598afd55326d016c",
+    "billName": "Citi Card",
+    "__v": 0
+  },
+  {
+    "_id": "6a615b7e598afd55326d0170",
+    "debt": "6a53aa48c53fb0bb10508044",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-23T00:00:00.000Z",
+    "amount": 150,
+    "billPayment": "6a615b7e598afd55326d016f",
+    "billName": "Credit Card Payment",
+    "__v": 0
+  },
+  {
+    "_id": "6a615c6d598afd55326d0173",
+    "debt": "6a5782a84b175ebf9baa7e85",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-23T00:00:00.000Z",
+    "amount": 30,
+    "billPayment": "6a615c6d598afd55326d0172",
+    "billName": "Kohl's ",
+    "__v": 0
+  },
+  {
+    "_id": "6a615cd2598afd55326d0176",
+    "debt": "6a57d89681ba6db457c82862",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-23T00:00:00.000Z",
+    "amount": 30,
+    "billPayment": "6a615cd2598afd55326d0175",
+    "billName": "Dick's ",
+    "__v": 0
+  },
+  {
+    "_id": "6a616276598afd55326d017d",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-23T00:00:00.000Z",
+    "amount": 200,
+    "transaction": "6a56cabb9209096e5762d8ff",
+    "__v": 0
+  },
+  {
+    "_id": "6a616938598afd55326d0182",
+    "debt": "6a57e35781ba6db457c82884",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-23T00:00:00.000Z",
+    "amount": 24,
+    "billPayment": "6a616938598afd55326d0181",
+    "billName": "Affirm Tux ",
+    "__v": 0
+  },
+  {
+    "_id": "6a61693c598afd55326d0185",
+    "debt": "6a57e4a281ba6db457c82889",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-23T00:00:00.000Z",
+    "amount": 25,
+    "billPayment": "6a61693c598afd55326d0184",
+    "billName": "Zip",
+    "__v": 0
+  },
+  {
+    "_id": "6a72303b4c9da0488b4c9eb0",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-08-04T00:00:00.000Z",
+    "amount": 150,
+    "transaction": "6a6f7b180ba7d062ff193136",
+    "__v": 0
+  },
+  {
+    "_id": "6a7492652589fd0c7629a672",
+    "debt": "6a57daaa81ba6db457c82864",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-08-06T00:00:00.000Z",
+    "amount": 41,
+    "billPayment": "6a7492642589fd0c7629a671",
+    "billName": "Academy ",
+    "__v": 0
+  },
+  {
+    "_id": "6a7492d52589fd0c7629a674",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-08-05T00:00:00.000Z",
+    "amount": 75,
+    "transaction": "6a6f7b180ba7d062ff193136",
+    "__v": 0
+  },
+  {
+    "_id": "6a749b422589fd0c7629a67e",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-08-06T00:00:00.000Z",
+    "amount": 6.8,
+    "transaction": "6a727ef58f3ab8bb2668538a",
+    "__v": 0
+  },
+  {
+    "_id": "6a749d8d2589fd0c7629a67f",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-08-06T00:00:00.000Z",
+    "amount": 17.32,
+    "transaction": "6a7497522589fd0c7629a67c",
+    "__v": 0
+  },
+  {
+    "_id": "6a749da52589fd0c7629a680",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-08-06T00:00:00.000Z",
+    "amount": 10.67,
+    "transaction": "6a6d4cab0b27873f7c533c52",
+    "__v": 0
+  },
+  {
+    "_id": "6a74a2db2589fd0c7629a687",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-08-06T15:06:03.535Z",
+    "amount": 149,
+    "transaction": "6a56caa09209096e5762d8fe",
+    "__v": 0
+  },
+  {
+    "_id": "6a74a2ed2589fd0c7629a688",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-08-06T15:06:21.201Z",
+    "amount": 27.66,
+    "transaction": "6a6201dca43773e42c9777d8",
+    "__v": 0
+  },
+  {
+    "_id": "6a74a3192589fd0c7629a689",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-08-06T15:07:05.393Z",
+    "amount": 18.36,
+    "transaction": "6a625f5962df7893d49a286f",
+    "__v": 0
+  },
+  {
+    "_id": "6a74a3212589fd0c7629a68a",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-08-06T15:07:13.870Z",
+    "amount": 0.22,
+    "transaction": "6a62648b90be6a6bc8db2c4c",
+    "__v": 0
+  },
+  {
+    "_id": "6a74a3292589fd0c7629a68b",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-08-06T15:07:21.784Z",
+    "amount": 3.04,
+    "transaction": "6a62649b90be6a6bc8db2c4d",
+    "__v": 0
+  },
+  {
+    "_id": "6a74a3312589fd0c7629a68c",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-08-06T15:07:29.965Z",
+    "amount": 2.14,
+    "transaction": "6a62661090be6a6bc8db2c4e",
+    "__v": 0
+  },
+  {
+    "_id": "6a74a33a2589fd0c7629a68d",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-08-06T15:07:38.646Z",
+    "amount": 31.13,
+    "transaction": "6a62adff2731a157199bda1b",
+    "__v": 0
+  },
+  {
+    "_id": "6a74a3462589fd0c7629a68e",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-08-06T15:07:50.763Z",
+    "amount": 12.99,
+    "transaction": "6a62ae072731a157199bda1c",
+    "__v": 0
+  },
+  {
+    "_id": "6a74a3502589fd0c7629a68f",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-08-06T15:08:00.981Z",
+    "amount": 33.69,
+    "transaction": "6a677eb0dfebf26b69c64b63",
+    "__v": 0
+  },
+  {
+    "_id": "6a74a3652589fd0c7629a690",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-08-06T15:08:21.294Z",
+    "amount": 15.05,
+    "transaction": "6a6df53b8fa3433a4bd21e67",
+    "__v": 0
+  },
+  {
+    "_id": "6a74a36e2589fd0c7629a691",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-08-06T15:08:30.787Z",
+    "amount": 79.54,
+    "transaction": "6a6df59c8fa3433a4bd21e68",
+    "__v": 0
+  },
+  {
+    "_id": "6a74a3882589fd0c7629a692",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-08-06T00:00:00.000Z",
+    "amount": 14.18,
+    "transaction": "6a74a1cf2589fd0c7629a686",
+    "__v": 0
+  },
+  {
+    "_id": "6a74a74f2589fd0c7629a69f",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-15T00:00:00.000Z",
+    "amount": 13,
+    "transaction": "6a56c9c79209096e5762d8f6",
+    "__v": 0
+  },
+  {
+    "_id": "6a74a82d2589fd0c7629a6a5",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-07-22T00:00:00.000Z",
+    "amount": 25.13,
+    "transaction": "6a60c76c545cf1e80391cba5",
+    "__v": 0
+  },
+  {
+    "_id": "6a74a83d2589fd0c7629a6a6",
+    "debt": "6a47cd53abf2e3169b3224d8",
+    "madeBy": "6a45546f46e4c31d9c0ae4c0",
+    "date": "2026-07-22T00:00:00.000Z",
+    "amount": 25.13,
+    "transaction": "6a60c76c545cf1e80391cba5",
+    "__v": 0
+  },
+  {
+    "_id": "6a74aaa62589fd0c7629a6ab",
+    "debt": "6a53aa48c53fb0bb10508044",
+    "madeBy": "6a45544346e4c31d9c0ae4bf",
+    "date": "2026-08-14T00:00:00.000Z",
+    "amount": 173,
+    "__v": 0
+  }
+]
