@@ -74,13 +74,15 @@ export let markTransactionPaid = (id) => api.put(`/debt-transactions/${id}/mark-
 export let payTransactionPartial = (id, data) => api.put(`/debt-transactions/${id}/pay-partial`, data);
 export let getTransactionPayments = (id) => api.get(`/debt-transactions/${id}/payments`);
 export let getMySharedCharges = (householdId, userId) => api.get(`/debt-transactions/my-shared-charges?householdId=${householdId}&userId=${userId}`);
-export let setCardBudget = (data) => api.post('/card-budgets', data);
-export let getCardBudgetSummary = (householdId, debt, periodStart, periodEnd) =>
-  api.get(`/card-budgets/summary?householdId=${householdId}&debt=${debt}&periodStart=${periodStart}&periodEnd=${periodEnd}`);
-export let getCardBudgetHistory = (householdId, debt) =>
-  api.get(`/card-budgets/history?householdId=${householdId}&debt=${debt}`);
 export let getBudgetPurchases = (debt, start, end) =>
   api.get(`/debt-transactions?debt=${debt}&fromBudget=true&start=${start}&end=${end}`);
-export let deleteCardBudget = (householdId, debt, periodStart) =>
-  api.delete(`/card-budgets?householdId=${householdId}&debt=${debt}&periodStart=${periodStart}`);
 export let updateDebt = (id, data) => api.put(`/debts/${id}`, data);
+export let createRunningBudget = (data) => api.post('/running-budgets', data);
+export let getRunningBudgets = (householdId) => api.get(`/running-budgets?householdId=${householdId}`);
+export let updateRunningBudget = (id, data) => api.put(`/running-budgets/${id}`, data);
+export let deleteRunningBudget = (id) => api.delete(`/running-budgets/${id}`);
+
+export let createBudgetEntry = (data) => api.post('/running-budgets/entries', data);
+export let getBudgetEntries = (budgetId) => api.get(`/running-budgets/entries?budget=${budgetId}`);
+export let updateBudgetEntry = (id, data) => api.put(`/running-budgets/entries/${id}`, data);
+export let deleteBudgetEntry = (id) => api.delete(`/running-budgets/entries/${id}`);

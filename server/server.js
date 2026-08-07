@@ -42,6 +42,7 @@ app.use('/api/contributions', contributionRoutes);
 app.use('/api/paychecks', paycheckRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/notes', require('./routes/noteRoutes'));
+app.use('/api/running-budgets', require('./routes/runningBudgetRoutes'));
 
 //test route 
 app.get('/', (req, res) => {
