@@ -1,10 +1,39 @@
 const DebtTransaction = require('../models/DebtTransaction');
+const Debt = require('../models/Debt');
+const DebtPayment = require('../models/DebtPayment');
 
+async function getPaidSoFar(transactionId) {
+  let payments = await DebtPayment.find({ transaction: transactionId });
+  return payments.reduce((total, p) => total + p.amount, 0);
+}
 
 //CREATE 
 const createDebtTransaction = async (req,res) => {
     try { 
         let { debt, item, madeBy, date, amount, category, madeByBoth, fromBudget } = req.body;
+
+        if (madeByBoth) {
+            const User = require('../models/User');
+            let debtDoc = await Debt.findById(debt);
+            let members = await User.find({ householdId: debtDoc.householdId });
+            let half = amount / 2;
+
+            let created = [];
+            for (let m of members) {
+                let charge = await DebtTransaction.create({
+                    debt,
+                    item,
+                    madeBy: m._id,
+                    date,
+                    amount: half,
+                    category,
+                    madeByBoth: false,
+                    fromBudget
+                });
+                created.push(charge);
+            }
+            return res.status(201).json(created);
+        }
 
         const debtTransaction = await DebtTransaction.create({
             debt, 
@@ -15,7 +44,6 @@ const createDebtTransaction = async (req,res) => {
             category,
             madeByBoth,
             fromBudget
-
         });
 
         res.status(201).json(debtTransaction);
@@ -46,8 +74,7 @@ const getAllDebtTransactions = async (req, res) => {
         const debtTransactions = await DebtTransaction.find(filter);
         let enriched = [];
         for (let t of debtTransactions) {
-            let payments = await DebtPayment.find({ transaction: t._id });
-            let paidSoFar = payments.reduce((total, p) => total + p.amount, 0);
+            let paidSoFar = await getPaidSoFar(t._id);
             enriched.push({ ...t.toObject(), paidSoFar });
         }
         res.json(enriched);
@@ -106,8 +133,6 @@ const deleteDebtTransaction = async (req, res) => {
 };
 
 // MARK TRANSACTION PAID: flags it and logs a matching DebtPayment
-const DebtPayment = require('../models/DebtPayment');
-
 const markTransactionPaid = async (req, res) => {
   try {
     let transaction = await DebtTransaction.findById(req.params.id);
@@ -118,11 +143,12 @@ const markTransactionPaid = async (req, res) => {
       return res.status(400).json({ message: 'Transaction already marked paid' });
     }
 
+    let alreadyPaid = await getPaidSoFar(transaction._id);
     await DebtPayment.create({
       debt: transaction.debt,
       madeBy: transaction.madeBy,
       date: new Date(),
-      amount: transaction.amount - (await DebtPayment.find({ transaction: transaction._id })).reduce((t, p) => t + p.amount, 0),
+      amount: transaction.amount - alreadyPaid,
       transaction: transaction._id
     });
 
@@ -137,8 +163,6 @@ const markTransactionPaid = async (req, res) => {
 };
 
 // GET MY UNPAID CHARGES ON SHARED DEBTS (for the personal checklist)
-const Debt = require('../models/Debt');
-
 const getMySharedCharges = async (req, res) => {
   try {
     let { householdId, userId } = req.query;
@@ -160,10 +184,10 @@ const getMySharedCharges = async (req, res) => {
     for (let d of sharedDebts) {
       debtNameById[String(d._id)] = d.name;
     }
+
     let result = [];
     for (let t of transactions) {
-      let linkedPayments = await DebtPayment.find({ transaction: t._id });
-      let paidSoFar = linkedPayments.reduce((total, p) => total + p.amount, 0);
+      let paidSoFar = await getPaidSoFar(t._id);
       result.push({
         ...t.toObject(),
         debtName: debtNameById[String(t.debt)],
