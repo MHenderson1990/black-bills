@@ -78,38 +78,48 @@ const deletePaycheck = async (req, res) => {
   }
 };
 
-
-// shared calculation logic
-// shared calculation logic
-async function computeLeftoverForPaycheck(paycheck) {
+// shared item-building logic — used by both the leftover calc and the breakdown view
+async function buildPaycheckItems(paycheck) {
   let periodStart = new Date(paycheck.date);
   let periodEnd = new Date(periodStart.getTime() + 14 * 24 * 60 * 60 * 1000);
 
-  let allBillShares = await BillShare.find({ owner: paycheck.earnedBy });
+  let items = [];
 
-  let billShareTotal = 0;
+  // shared bill splits due in window
+  let allBillShares = await BillShare.find({ owner: paycheck.earnedBy });
   for (let share of allBillShares) {
     let parentBill = await Bill.findById(share.bill);
     if (!parentBill || !parentBill.dueDate) continue;
     if (parentBill.isSetAside) continue;
     if (parentBill.dueDate >= periodStart && parentBill.dueDate < periodEnd) {
-      billShareTotal = billShareTotal + share.amount;
+      items.push({
+        type: 'Shared split',
+        name: parentBill.name,
+        date: parentBill.dueDate,
+        amount: share.amount
+      });
     }
   }
 
+  // personal bills due in window: remaining after payments
   let personalBills = await Bill.find({
     owner: paycheck.earnedBy,
     isShared: false,
     isSetAside: { $ne: true },
     dueDate: { $gte: periodStart, $lt: periodEnd }
   });
-
-  let personalBillsTotal = 0;
   for (let personal of personalBills) {
     let billPayments = await BillPayment.find({ bill: personal._id });
     let paidSoFar = billPayments.reduce((total, p) => total + p.amount, 0);
     let remaining = Math.max(0, personal.amount - paidSoFar);
-    personalBillsTotal = personalBillsTotal + remaining;
+    if (remaining > 0) {
+      items.push({
+        type: 'Personal bill (remaining)',
+        name: personal.name,
+        date: personal.dueDate,
+        amount: remaining
+      });
+    }
   }
 
   // payments made THIS window count as money already gone from this check,
@@ -121,10 +131,21 @@ async function computeLeftoverForPaycheck(paycheck) {
     let parentBill = await Bill.findById(payment.bill);
     if (!parentBill || String(parentBill.owner) !== String(paycheck.earnedBy)) continue;
     if (parentBill.isShared || parentBill.isSetAside) continue;
-    personalBillsTotal = personalBillsTotal + payment.amount;
+    items.push({
+      type: 'Payment made',
+      name: parentBill.name,
+      date: payment.date,
+      amount: payment.amount
+    });
   }
 
-  let leftoverAmount = paycheck.amount - (billShareTotal + personalBillsTotal);
+  return { items, periodStart, periodEnd };
+}
+
+async function computeLeftoverForPaycheck(paycheck) {
+  let { items } = await buildPaycheckItems(paycheck);
+  let totalDeductions = items.reduce((total, item) => total + item.amount, 0);
+  let leftoverAmount = paycheck.amount - totalDeductions;
   return await Paycheck.findByIdAndUpdate(paycheck._id, { leftoverAmount }, { new: true });
 }
 
@@ -228,64 +249,7 @@ const getPaycheckBreakdown = async (req, res) => {
       return res.status(404).json({ message: 'Paycheck not found' });
     }
 
-    let periodStart = new Date(paycheck.date);
-    let periodEnd = new Date(periodStart.getTime() + 14 * 24 * 60 * 60 * 1000);
-
-    let items = [];
-
-    // shared bill splits due in window
-    let allBillShares = await BillShare.find({ owner: paycheck.earnedBy });
-    for (let share of allBillShares) {
-      let parentBill = await Bill.findById(share.bill);
-      if (!parentBill || !parentBill.dueDate) continue;
-      if (parentBill.isSetAside) continue;
-      if (parentBill.dueDate >= periodStart && parentBill.dueDate < periodEnd) {
-        items.push({
-          type: 'Shared split',
-          name: parentBill.name,
-          date: parentBill.dueDate,
-          amount: share.amount
-        });
-      }
-    }
-
-    // personal bills due in window: remaining after payments
-    let personalBills = await Bill.find({
-      owner: paycheck.earnedBy,
-      isShared: false,
-      isSetAside: { $ne: true },
-      dueDate: { $gte: periodStart, $lt: periodEnd }
-    });
-    for (let personal of personalBills) {
-      let billPayments = await BillPayment.find({ bill: personal._id });
-      let paidSoFar = billPayments.reduce((total, p) => total + p.amount, 0);
-      let remaining = Math.max(0, personal.amount - paidSoFar);
-      if (remaining > 0) {
-        items.push({
-          type: 'Personal bill (remaining)',
-          name: personal.name,
-          date: personal.dueDate,
-          amount: remaining
-        });
-      }
-    }
-
-    // payments dated in window
-    let windowPayments = await BillPayment.find({
-      date: { $gte: periodStart, $lt: periodEnd }
-    });
-    for (let payment of windowPayments) {
-      let parentBill = await Bill.findById(payment.bill);
-      if (!parentBill || String(parentBill.owner) !== String(paycheck.earnedBy)) continue;
-      if (parentBill.isShared || parentBill.isSetAside) continue;
-      items.push({
-        type: 'Payment made',
-        name: parentBill.name,
-        date: payment.date,
-        amount: payment.amount
-      });
-    }
-
+    let { items, periodStart, periodEnd } = await buildPaycheckItems(paycheck);
     let totalDeductions = items.reduce((total, item) => total + item.amount, 0);
 
     res.json({
