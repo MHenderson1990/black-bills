@@ -203,11 +203,12 @@ const getMySharedCharges = async (req, res) => {
 
   // derive a transaction's paid status from its linked payments
 const syncTransactionPaidStatus = async (transactionId) => {
-  let payments = await DebtPayment.find({ transaction: transactionId });
-  let totalPaid = payments.reduce((total, p) => total + p.amount, 0);
+  let totalPaid = await getPaidSoFar(transactionId);
   let transaction = await DebtTransaction.findById(transactionId);
+
   if (!transaction) return;
   let shouldBePaid = totalPaid >= transaction.amount;
+
   if (transaction.paid !== shouldBePaid) {
     transaction.paid = shouldBePaid;
     transaction.paidDate = shouldBePaid ? new Date() : undefined;
