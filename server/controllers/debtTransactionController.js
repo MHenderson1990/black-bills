@@ -7,6 +7,33 @@ async function getPaidSoFar(transactionId) {
   return payments.reduce((total, p) => total + p.amount, 0);
 }
 
+async function getOwedByMember(debtId) {
+  let transactions = await DebtTransaction.find({
+    debt: debtId,
+    madeByBoth: { $ne: true },
+    paid: { $ne: true }
+  });
+
+  let owedByMember = {};
+  for (let t of transactions) {
+    let paidSoFar = await getPaidSoFar(t._id);
+    let remaining = t.amount - paidSoFar;
+    if (remaining > 0) {
+      owedByMember[t.madeBy] = (owedByMember[t.madeBy] || 0) + remaining;
+    }
+  }
+  return owedByMember;
+}
+
+const getOwedByMemberForDebt = async (req, res) => {
+  try {
+    let owed = await getOwedByMember(req.params.debtId);
+    res.json(owed);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 //CREATE 
 const createDebtTransaction = async (req,res) => {
     try { 
@@ -252,5 +279,6 @@ const getTransactionPayments = async (req, res) => {
 };
 
 module.exports = { createDebtTransaction, getAllDebtTransactions, getDebtTransactionById, updateDebtTransaction, 
-    deleteDebtTransaction, markTransactionPaid, getMySharedCharges, syncTransactionPaidStatus, payTransactionPartial, getTransactionPayments };
+    deleteDebtTransaction, markTransactionPaid, getMySharedCharges, syncTransactionPaidStatus, payTransactionPartial, 
+    getTransactionPayments, getOwedByMemberForDebt };
 

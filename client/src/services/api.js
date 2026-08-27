@@ -27,6 +27,8 @@ export let deleteDebt = (debtId) => api.delete(`/debts/${debtId}`);
 export let deleteSavingsGoal = (goalId) => api.delete(`/savings-goals/${goalId}`);
 export let getDebtTransactions = (debtId) => api.get(`/debt-transactions?debt=${debtId}`);
 export let createDebtTransaction = (data) => api.post('/debt-transactions', data);
+export const getOwedByMember = (debtId) =>
+  api.get(`/debt-transactions/owed-by-member/${debtId}`);
 export let getHouseholdMembers = (householdId) => api.get(`/auth/household-members?householdId=${householdId}`);
 export let getContributions = (goalId) => api.get(`/contributions?savingsGoal=${goalId}`);
 export let createContribution = (data) => api.post('/contributions', data);

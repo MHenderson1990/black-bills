@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getAllDebts, getDebtBalance, deleteDebt, getDebtTransactions, createDebtTransaction, updateDebtTransaction, deleteDebtTransaction, 
-  getHouseholdMembers, createDebt, getDebtPayoff, createDebtPayment, updateDebtPayment, deleteDebtPayment, getDebtPayments, updateDebt } from '../services/api';
+  getHouseholdMembers, createDebt, getDebtPayoff, createDebtPayment, updateDebtPayment, deleteDebtPayment, getDebtPayments, updateDebt, getOwedByMember } from '../services/api';
 import { CATEGORIES, MONTHS, YEARS, formatDate } from '../constants';
 import { formatMoney } from '../utils';
 
@@ -63,13 +63,8 @@ function DebtPage() {
           let owedByMember = {};
           if (debt.isShared) {
             try {
-              let tRes = await getDebtTransactions(debt._id);
-              for (let m of list) {
-                let owed = tRes.data
-                  .filter(t => t.madeBy === m._id && !t.madeByBoth && !t.paid)
-                  .reduce((total, t) => total + (t.amount - (t.paidSoFar || 0)), 0);
-                if (owed > 0) owedByMember[m._id] = owed;
-              }
+              let owedRes = await getOwedByMember(debt._id);
+              owedByMember = owedRes.data;
             } catch (err) {
               console.error('owedByMember calc failed for debt', debt._id, err);
             }
