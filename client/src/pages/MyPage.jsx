@@ -5,6 +5,7 @@ import { getSharedBills, getSharedBillsWithHistory, getBillShares, markBillShare
   createBillPayment, updateBillPayment, deleteBillPayment, updatePaycheck, deletePaycheck, getMySharedCharges, markTransactionPaid, getPaycheckBreakdown, payTransactionPartial,
   getTransactionPayments, updateDebtPayment, deleteDebtPayment,  } from '../services/api';
 import { MONTHS, YEARS, CATEGORIES, formatDate } from '../constants';
+import { formatMoney } from '../utils';
 
 let BLUE_ACCENTS = [
   'linear-gradient(135deg, #4DA3FF, #0080FF)',
@@ -1179,7 +1180,7 @@ async function toggleChargeExpand(chargeId) {
                       <p style={{ color: '#E8F5E9', margin: 0, fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{charge.item}</p>
                       <p style={{ color: '#8B949E', margin: 0, fontSize: '11px' }}>{charge.debtName} · {formatDate(charge.date)}</p>
                     </div>
-                    <span style={{ fontWeight: 'bold', color: '#E8F5E9' }}>${Number.isInteger(charge.amount) ? charge.amount : charge.amount.toFixed(2)}</span>
+                    <span style={{ fontWeight: 'bold', color: '#E8F5E9' }}>${formatMoney(charge.amount)}</span>
                     {charge.paidSoFar > 0 && (
                       <span style={{ color: '#1DB954', fontSize: '10px' }}>${charge.paidSoFar} paid</span>
                     )}
