@@ -2,6 +2,32 @@ const Debt = require('../models/Debt');
 const DebtTransaction = require('../models/DebtTransaction');
 const DebtPayment = require('../models/DebtPayment');
 
+
+async function calculateDebtBalance(debt) {
+  const debtTransactions = await DebtTransaction.find({ debt: debt._id });
+  let transactionTotal = debtTransactions.reduce((total, t) => total + t.amount, 0);
+
+  const debtPayment = await DebtPayment.find({ debt: debt._id });
+  let paymentTotal = debtPayment.reduce((total, p) => total + p.amount, 0);
+
+  let monthsElapsed = 0;
+  let created = new Date(debt.createdAt);
+  let now = new Date();
+  let cursor = new Date(created.getFullYear(), created.getMonth() + 1, 1);
+  while (cursor <= now) {
+    monthsElapsed = monthsElapsed + 1;
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+
+  let balanceBeforeInterest = debt.startingBalance + transactionTotal - paymentTotal;
+  let interestAccrued = balanceBeforeInterest > 0
+    ? balanceBeforeInterest * (debt.interestRate / 100 / 12) * monthsElapsed
+    : 0;
+
+  let balance = balanceBeforeInterest + interestAccrued;
+
+  return { balance, transactionTotal, paymentTotal, interestAccrued };
+}
 // CREATE DEBT
 const createDebt = async (req, res) => {
   try {
@@ -101,47 +127,22 @@ const deleteDebt = async (req, res) => {
   //BALANCE CALCULATION
   const getDebtBalance = async (req, res) => {
   try {
-    // 1. find the debt by id
     const debt = await Debt.findById(req.params.id);
-        if (!debt) return res.status(404).json({message: 'Debt not found'});
+    if (!debt) return res.status(404).json({ message: 'Debt not found' });
 
-    const debtTransactions = await DebtTransaction.find({ debt: req.params.id });
-      let transactionTotal = debtTransactions.reduce((total, t) => {
-              return total + t.amount;
-            }, 0);
+    let { balance, transactionTotal, paymentTotal, interestAccrued } = await calculateDebtBalance(debt);
 
-     const debtPayment = await DebtPayment.find({ debt: req.params.id });
-      let paymentTotal = debtPayment.reduce((total, p) => {
-            return total + p.amount;
-          }, 0);
-
-      let monthsElapsed = 0;
-      let created = new Date(debt.createdAt);
-      let now = new Date();
-      let cursor = new Date(created.getFullYear(), created.getMonth() + 1, 1);
-      while (cursor <= now) {
-        monthsElapsed = monthsElapsed + 1;
-        cursor.setMonth(cursor.getMonth() + 1);
-      }
-      let balanceBeforeInterest = debt.startingBalance + transactionTotal - paymentTotal;
-      let interestAccrued = balanceBeforeInterest > 0
-        ? balanceBeforeInterest * (debt.interestRate / 100 / 12) * monthsElapsed
-        : 0;
-
-      let balance = balanceBeforeInterest + interestAccrued;
-        res.json({
-        balance,
-        startingBalance: debt.startingBalance,
-        totalCharged: transactionTotal,
-        totalPaid: paymentTotal,
-        interestAccrued
-      });
+    res.json({
+      balance,
+      startingBalance: debt.startingBalance,
+      totalCharged: transactionTotal,
+      totalPaid: paymentTotal,
+      interestAccrued
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-
 };
-
 
 //GET AVERAGE PAYMENT 
 const getAveragePayment = async (req, res) => {
@@ -175,22 +176,9 @@ const getDebtPayoffProjection = async (req, res) => {
     const debt = await Debt.findById(req.params.id);
     if (!debt) return res.status(404).json({ message: 'Debt not found' });
 
-    // you need the CURRENT BALANCE here — same logic as
-    // getDebtBalance (find transactions, find payments, combine)
-    const debtTransactions = await DebtTransaction.find({ debt: req.params.id });
-      let transactionTotal = debtTransactions.reduce((total, t) => {
-              return total + t.amount;
-            }, 0);
-
-     const debtPayment = await DebtPayment.find({ debt: req.params.id });
-      let paymentTotal = debtPayment.reduce((total, p) => {
-            return total + p.amount;
-          }, 0);
-
-      let balance = debt.startingBalance + transactionTotal - paymentTotal;
+    let { balance } = await calculateDebtBalance(debt);
 
       
-
     // you need the AVERAGE PAYMENT here — same logic as
     // getAveragePayment (find recent payments, sum, divide)
     let recentPayments = await DebtPayment.find({ debt: req.params.id })
