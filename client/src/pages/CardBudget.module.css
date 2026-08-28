@@ -76,7 +76,11 @@
 }
 
 .deleteBtn {
-  composes: iconBtn;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px;
   color: #FF6B6B;
 }
 
@@ -115,12 +119,26 @@
 }
 
 .addBtn {
-  composes: actionBtn;
+  flex: 1;
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
   background: linear-gradient(135deg, #1DB954, #107C41);
 }
 
 .subtractBtn {
-  composes: actionBtn;
+  flex: 1;
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
   background: linear-gradient(135deg, #FF6B6B, #CC4444);
 }
 
