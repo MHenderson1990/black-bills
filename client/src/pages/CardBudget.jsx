@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createRunningBudget, getRunningBudgets, updateRunningBudget, deleteRunningBudget, createBudgetEntry, getBudgetEntries, updateBudgetEntry, deleteBudgetEntry } from '../services/api';
 import { formatDate } from '../constants';
+import styles from './CardBudget.module.css';
 
 function CardBudget() {
   let [budgets, setBudgets] = useState([]);
@@ -134,131 +135,82 @@ function CardBudget() {
 
   let selectedBudget = budgets.find(b => b._id === selectedBudgetId);
 
-  let inputStyle = {
-    padding: '10px',
-    borderRadius: '6px',
-    border: '1px solid #30363D',
-    background: '#0D1117',
-    color: '#fff',
-    fontSize: '16px',
-    minWidth: 0,
-    boxSizing: 'border-box'
-  };
-
-  if (loading) return <p style={{ padding: '40px', color: '#fff', background: '#0D1117', minHeight: '100vh' }}>Loading...</p>;
+  if (loading) return <p className={styles.loading}>Loading...</p>;
 
   return (
-    <div style={{ background: '#0D1117', minHeight: '100vh', padding: 'clamp(16px, 4vw, 32px)', paddingBottom: '110px' }}>
-      <h1 style={{
-        fontSize: 'clamp(20px, 5vw, 24px)',
-        marginBottom: '20px',
-        marginTop: 0,
-        background: 'linear-gradient(135deg, #FFD700, #E6C200)',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text'
-      }}>Running Totals</h1>
+    <div className={styles.page}>
+      <h1 className={styles.title}>Running Totals</h1>
 
       {budgets.length > 1 && (
         <select
           value={selectedBudgetId}
           onChange={e => setSelectedBudgetId(e.target.value)}
-          style={{ ...inputStyle, width: '100%', marginBottom: '16px' }}
+          className={`${styles.input} ${styles.budgetSelect}`}
         >
           {budgets.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
         </select>
       )}
 
       {budgets.length === 0 ? (
-        <p style={{ color: '#8B949E', marginBottom: '16px' }}>No running totals yet — create one below.</p>
+        <p className={styles.emptyState}>No running totals yet — create one below.</p>
       ) : selectedBudget && (
-        <div style={{
-          background: '#161B22',
-          border: '1px solid #FFD70044',
-          borderRadius: '12px',
-          padding: '24px',
-          marginBottom: '16px',
-          textAlign: 'center'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <p style={{ color: '#8B949E', fontSize: '13px', margin: 0 }}>{selectedBudget.name}</p>
+               <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <p className={styles.cardHeaderLabel}>{selectedBudget.name}</p>
             <button
               onClick={() => startEditBudget(selectedBudget)}
-              style={{ background: 'none', border: 'none', color: '#8B949E', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
+              className={styles.iconBtn}
             >✎</button>
             <button
               onClick={() => handleDeleteBudget(selectedBudget._id)}
-              style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
+              className={styles.deleteBtn}
             >✕</button>
           </div>
-          <p style={{
-            fontSize: '40px', fontWeight: 'bold', margin: 0,
-            background: selectedBudget.total >= 0
-              ? 'linear-gradient(135deg, #FFD700, #E6C200)'
-              : 'linear-gradient(135deg, #FF6B6B, #CC4444)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text'
-          }}>
+          <p className={`${styles.total} ${selectedBudget.total >= 0 ? styles.totalPositive : styles.totalNegative}`}>
             ${selectedBudget.total.toFixed(2)}
           </p>
 
-          <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+          <div className={styles.actionsRow}>
             <button
               onClick={() => { setShowQuickLog('add'); setEditingEntryId(null); setQuickAmount(''); setQuickNote(''); }}
-              style={{
-                flex: 1, padding: '14px', borderRadius: '10px', border: 'none',
-                background: 'linear-gradient(135deg, #1DB954, #107C41)',
-                color: 'white', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer'
-              }}
+              className={styles.addBtn}
             >
               + Add
             </button>
             <button
               onClick={() => { setShowQuickLog('subtract'); setEditingEntryId(null); setQuickAmount(''); setQuickNote(''); }}
-              style={{
-                flex: 1, padding: '14px', borderRadius: '10px', border: 'none',
-                background: 'linear-gradient(135deg, #FF6B6B, #CC4444)',
-                color: 'white', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer'
-              }}
+              className={styles.subtractBtn}
             >
               − Spend
             </button>
           </div>
 
           {showQuickLog && (
-            <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div className={styles.quickLogForm}>
               <input
                 placeholder="Amount"
                 type="number"
                 value={quickAmount}
                 onChange={e => setQuickAmount(e.target.value)}
-                style={{ ...inputStyle }}
+                className={styles.input}
                 autoFocus
               />
               <input
                 placeholder="Note (optional)"
                 value={quickNote}
                 onChange={e => setQuickNote(e.target.value)}
-                style={{ ...inputStyle }}
+                className={styles.input}
               />
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div className={styles.quickLogActions}>
                 <button
                   onClick={editingEntryId ? handleSaveEntryEdit : handleQuickLog}
-                  style={{
-                    flex: 1, padding: '10px', borderRadius: '6px', border: 'none',
-                    background: showQuickLog === 'add'
-                      ? 'linear-gradient(135deg, #1DB954, #107C41)'
-                      : 'linear-gradient(135deg, #FF6B6B, #CC4444)',
-                    color: 'white', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'
-                  }}
+                  className={`${styles.saveBtn} ${showQuickLog === 'add' ? styles.saveBtnAdd : styles.saveBtnSubtract}`}
                 >
                   {editingEntryId ? 'Save Changes' : 'Log It'}
                 </button>
                 <button
                   onClick={() => { setShowQuickLog(null); setEditingEntryId(null); setQuickAmount(''); setQuickNote(''); }}
-                  style={{
-                    padding: '10px 14px', borderRadius: '6px', border: '1px solid #30363D',
-                    background: 'transparent', color: '#8B949E', fontSize: '13px', cursor: 'pointer'
-                  }}
+                  className={styles.cancelBtn}
                 >
                   Cancel
                 </button>
@@ -276,30 +228,22 @@ function CardBudget() {
           }
           setShowNewBudget(!showNewBudget);
         }}
-        style={{
-          width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #30363D',
-          background: 'transparent', color: '#8B949E', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer',
-          marginBottom: '16px'
-        }}
+        className={styles.newBudgetToggle}
       >
         {showNewBudget ? '✕ Cancel' : '+ New Running Total'}
       </button>
 
       {showNewBudget && (
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+        <div className={styles.newBudgetRow}>
           <input
             placeholder="Name (e.g. Vacation Fund)"
             value={newBudgetName}
             onChange={e => setNewBudgetName(e.target.value)}
-            style={{ ...inputStyle, flex: 1 }}
+            className={`${styles.input} ${styles.newBudgetInput}`}
           />
           <button
             onClick={handleSaveBudget}
-            style={{
-              padding: '10px 16px', borderRadius: '6px', border: 'none',
-              background: 'linear-gradient(135deg, #FFD700, #E6C200)',
-              color: '#0D1117', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'
-            }}
+            className={styles.createBtn}
           >
             {editingBudgetId ? 'Save' : 'Create'}
           </button>
@@ -310,44 +254,35 @@ function CardBudget() {
         <>
           <button
             onClick={() => setShowHistory(!showHistory)}
-            style={{
-              width: '100%', padding: '8px', background: '#161B22',
-              border: '1px solid #30363D', borderRadius: '8px',
-              color: '#8B949E', fontSize: '13px', cursor: 'pointer'
-            }}
+            className={styles.historyToggle}
           >
             {showHistory ? '▲ Hide History' : '▼ View History'}
           </button>
 
           {showHistory && (
-            <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div className={styles.historyList}>
               {entries.length === 0 ? (
-                <p style={{ color: '#8B949E', fontSize: '13px' }}>No entries yet</p>
+                <p className={styles.emptyState}>No entries yet</p>
               ) : (
                 entries.map(entry => (
-                  <div key={entry._id} style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '10px 12px', background: '#161B22', borderRadius: '8px',
-                    border: `1px solid ${entry.type === 'add' ? '#1DB95444' : '#FF6B6B44'}`,
-                    gap: '8px', flexWrap: 'wrap'
-                  }}>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <p style={{
-                        margin: 0, fontWeight: 'bold', fontSize: '14px',
-                        color: entry.type === 'add' ? '#1DB954' : '#FF6B6B'
-                      }}>
+                  <div
+                    key={entry._id}
+                    className={`${styles.entry} ${entry.type === 'add' ? styles.entryAdd : styles.entrySubtract}`}
+                  >
+                    <div className={styles.entryInfo}>
+                      <p className={`${styles.entryAmount} ${entry.type === 'add' ? styles.entryAmountAdd : styles.entryAmountSubtract}`}>
                         {entry.type === 'add' ? '+' : '−'}${entry.amount.toFixed(2)}
                       </p>
-                      {entry.note && <p style={{ color: '#8B949E', fontSize: '12px', margin: 0 }}>{entry.note}</p>}
-                      <p style={{ color: '#8B949E', fontSize: '11px', margin: 0 }}>{formatDate(entry.date)}</p>
+                      {entry.note && <p className={styles.entryNote}>{entry.note}</p>}
+                      <p className={styles.entryDate}>{formatDate(entry.date)}</p>
                     </div>
                     <button
                       onClick={() => startEditEntry(entry)}
-                      style={{ background: 'none', border: 'none', color: '#8B949E', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
+                      className={styles.iconBtn}
                     >✎</button>
                     <button
                       onClick={() => handleDeleteEntry(entry._id)}
-                      style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', fontSize: '13px', padding: '2px' }}
+                      className={styles.deleteBtn}
                     >✕</button>
                   </div>
                 ))

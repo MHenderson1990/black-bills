@@ -1,0 +1,266 @@
+.page {
+  background: #0D1117;
+  min-height: 100vh;
+  padding: clamp(16px, 4vw, 32px);
+  padding-bottom: 110px;
+}
+
+.loading {
+  padding: 40px;
+  color: #fff;
+  background: #0D1117;
+  min-height: 100vh;
+}
+
+.title {
+  font-size: clamp(20px, 5vw, 24px);
+  margin-bottom: 20px;
+  margin-top: 0;
+  background: linear-gradient(135deg, #FFD700, #E6C200);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.input {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #30363D;
+  background: #0D1117;
+  color: #fff;
+  font-size: 16px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.budgetSelect {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.emptyState {
+  color: #8B949E;
+  margin-bottom: 16px;
+}
+
+.card {
+  background: #161B22;
+  border: 1px solid #FFD70044;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.cardHeaderLabel {
+  color: #8B949E;
+  font-size: 13px;
+  margin: 0;
+}
+
+.iconBtn {
+  background: none;
+  border: none;
+  color: #8B949E;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px;
+}
+
+.deleteBtn {
+  composes: iconBtn;
+  color: #FF6B6B;
+}
+
+.total {
+  font-size: 40px;
+  font-weight: bold;
+  margin: 0;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.totalPositive {
+  background: linear-gradient(135deg, #FFD700, #E6C200);
+}
+
+.totalNegative {
+  background: linear-gradient(135deg, #FF6B6B, #CC4444);
+}
+
+.actionsRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.actionBtn {
+  flex: 1;
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.addBtn {
+  composes: actionBtn;
+  background: linear-gradient(135deg, #1DB954, #107C41);
+}
+
+.subtractBtn {
+  composes: actionBtn;
+  background: linear-gradient(135deg, #FF6B6B, #CC4444);
+}
+
+.quickLogForm {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quickLogActions {
+  display: flex;
+  gap: 8px;
+}
+
+.saveBtn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  color: white;
+  font-weight: bold;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.saveBtnAdd {
+  background: linear-gradient(135deg, #1DB954, #107C41);
+}
+
+.saveBtnSubtract {
+  background: linear-gradient(135deg, #FF6B6B, #CC4444);
+}
+
+.cancelBtn {
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid #30363D;
+  background: transparent;
+  color: #8B949E;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.newBudgetToggle {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #30363D;
+  background: transparent;
+  color: #8B949E;
+  font-weight: bold;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.newBudgetRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.newBudgetInput {
+  flex: 1;
+}
+
+.createBtn {
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: none;
+  background: linear-gradient(135deg, #FFD700, #E6C200);
+  color: #0D1117;
+  font-weight: bold;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.historyToggle {
+  width: 100%;
+  padding: 8px;
+  background: #161B22;
+  border: 1px solid #30363D;
+  border-radius: 8px;
+  color: #8B949E;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.historyList {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: #161B22;
+  border-radius: 8px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.entryAdd {
+  border: 1px solid #1DB95444;
+}
+
+.entrySubtract {
+  border: 1px solid #FF6B6B44;
+}
+
+.entryInfo {
+  min-width: 0;
+  flex: 1;
+}
+
+.entryAmount {
+  margin: 0;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.entryAmountAdd {
+  color: #1DB954;
+}
+
+.entryAmountSubtract {
+  color: #FF6B6B;
+}
+
+.entryNote, .entryDate {
+  color: #8B949E;
+  font-size: 12px;
+  margin: 0;
+}
+
+.entryDate {
+  font-size: 11px;
+}
