@@ -16,7 +16,7 @@
   font-size: clamp(20px, 5vw, 24px);
   margin-bottom: 20px;
   margin-top: 0;
-  background: linear-gradient(135deg, #FFD700, #E6C200);
+  background: linear-gradient(135deg, #FFEB80, #FFD700, #B8960C);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -91,14 +91,14 @@
 }
 
 .totalPositive {
-  background: linear-gradient(135deg, #FFD700, #E6C200);
+background: linear-gradient(135deg, #FFEB80, #FFD700, #B8960C);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .totalNegative {
-  background: linear-gradient(135deg, #FF6B6B, #CC4444);
+  background: linear-gradient(135deg, #FF9494, #FF6B6B, #A62F2F);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -142,7 +142,7 @@
   font-weight: bold;
   font-size: 16px;
   cursor: pointer;
-  background: linear-gradient(135deg, #FF6B6B, #CC4444);
+  background: linear-gradient(135deg, #FF9494, #FF6B6B, #A62F2F);
 }
 
 .quickLogForm {
@@ -173,7 +173,7 @@
 }
 
 .saveBtnSubtract {
-  background: linear-gradient(135deg, #FF6B6B, #CC4444);
+  background: linear-gradient(135deg, #FF9494, #FF6B6B, #A62F2F);
 }
 
 .cancelBtn {
@@ -213,7 +213,7 @@
   padding: 10px 16px;
   border-radius: 6px;
   border: none;
-  background: linear-gradient(135deg, #FFD700, #E6C200);
+  background: linear-gradient(135deg, #FFEB80, #FFD700, #B8960C);
   color: #0D1117;
   font-weight: bold;
   font-size: 13px;
