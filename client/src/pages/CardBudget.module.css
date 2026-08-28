@@ -88,17 +88,20 @@
   font-size: 40px;
   font-weight: bold;
   margin: 0;
+}
+
+.totalPositive {
+  background: linear-gradient(135deg, #FFD700, #E6C200);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.totalPositive {
-  background: linear-gradient(135deg, #FFD700, #E6C200);
-}
-
 .totalNegative {
   background: linear-gradient(135deg, #FF6B6B, #CC4444);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .actionsRow {
