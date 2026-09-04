@@ -6,6 +6,7 @@ import SpendingChart from '../components/dashboard/SpendingChart';
 import UpcomingBills from '../components/dashboard/UpcomingBills';
 import PayDateCard from '../components/dashboard/PayDateCard';
 import PayPeriodCard from '../components/dashboard/PayPeriodCard';
+import DashboardHeader from '../components/dashboard/DashboardHeader';
 
 
 function Dashboard() {
@@ -61,49 +62,7 @@ function Dashboard() {
 
   return (
     <div style={{ background: '#0D1117', minHeight: '100vh' }}>
-      <div style={{
-        background: '#161B22',
-        borderBottom: '1px solid #30363D',
-        padding: 'clamp(16px, 4vw, 32px)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        gap: '12px'
-      }}>
-        <h1 style={{
-          fontSize: 'clamp(22px, 5vw, 28px)',
-          margin: 0,
-          fontWeight: 'bold',
-          background: 'linear-gradient(135deg, #FFD700, #E6C200)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text'
-        }}>
-          BlackBills Dashboard
-        </h1>
-        <button
-          onClick={function() {
-            if (window.confirm('Log out of BlackBills?')) {
-              localStorage.clear();
-              window.location.href = '/';
-            }
-          }}
-          style={{
-            padding: '8px 16px',
-            borderRadius: '20px',
-            border: '1px solid #30363D',
-            background: 'transparent',
-            color: '#8B949E',
-            fontWeight: 'bold',
-            fontSize: '13px',
-            cursor: 'pointer',
-            whiteSpace: 'nowrap',
-            flexShrink: 0
-          }}
-        >
-          Log Out
-        </button>
-      </div>
+      <DashboardHeader />
 
       <div style={{ padding: 'clamp(16px, 4vw, 32px)', paddingBottom: '180px' }}>
         <div style={{
