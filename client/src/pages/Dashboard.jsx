@@ -7,6 +7,7 @@ import UpcomingBills from '../components/dashboard/UpcomingBills';
 import PayDateCard from '../components/dashboard/PayDateCard';
 import PayPeriodCard from '../components/dashboard/PayPeriodCard';
 import DashboardHeader from '../components/dashboard/DashboardHeader';
+import styles from './Dashboard.module.css';
 
 
 function Dashboard() {
@@ -16,6 +17,7 @@ function Dashboard() {
   let [spending, setSpending] = useState({});
   let [bills, setBills] = useState([]);
   let [loading, setLoading] = useState(true);
+
   let userId = localStorage.getItem('userId');
   let householdId = localStorage.getItem('householdId');
   let [members, setMembers] = useState([]);
@@ -58,28 +60,19 @@ function Dashboard() {
     await fetchData();
   }
 
-  if (loading) return <p style={{ padding: '40px', color: '#fff', background: '#0D1117', minHeight: '100vh' }}>Loading...</p>;
+  if (loading) return <p className={styles.loading}>Loading...</p>;
 
   return (
-    <div style={{ background: '#0D1117', minHeight: '100vh' }}>
+    <div className={styles.page}>
       <DashboardHeader />
 
-      <div style={{ padding: 'clamp(16px, 4vw, 32px)', paddingBottom: '180px' }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '16px',
-          marginBottom: '24px'
-        }}>
+      <div className={styles.content}>
+        <div className={styles.payGrid}>
           <PayDateCard nextPayDate={nextPayDate} onSaved={handlePayDateSaved} />
           <PayPeriodCard periodStart={periodStart} periodEnd={periodEnd} />
         </div>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '20px'
-        }}>
+        <div className={styles.summaryGrid}>
           <UpcomingBills bills={bills} members={members} />
           <SpendingChart spending={spending} />
         </div>

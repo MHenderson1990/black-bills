@@ -1,0 +1,29 @@
+.loading {
+  padding: 40px;
+  color: #fff;
+  background: #0D1117;
+  min-height: 100vh;
+}
+
+.page {
+  background: #0D1117;
+  min-height: 100vh;
+}
+
+.content {
+  padding: clamp(16px, 4vw, 32px);
+  padding-bottom: 180px;
+}
+
+.payGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
